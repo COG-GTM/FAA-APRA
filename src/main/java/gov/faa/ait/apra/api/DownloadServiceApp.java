@@ -21,6 +21,11 @@ import javax.ws.rs.core.Application;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import gov.faa.ait.apra.security.AuditFilter;
+import gov.faa.ait.apra.security.AuthenticationFilter;
+import gov.faa.ait.apra.security.InputValidationFilter;
+import gov.faa.ait.apra.security.RateLimitFilter;
+import gov.faa.ait.apra.security.SecurityHeadersFilter;
 import io.swagger.jaxrs.config.BeanConfig;
 
 /**
@@ -56,6 +61,15 @@ public class DownloadServiceApp extends Application {
 		
 		//Manually adding MOXyJSONFeature
         s.add(org.glassfish.jersey.moxy.json.MoxyJsonFeature.class);
+        
+        // Security filters (STIG/NIST 800-53 compliance)
+        s.add(SecurityHeadersFilter.class);
+        s.add(RateLimitFilter.class);
+        s.add(AuditFilter.class);
+        s.add(InputValidationFilter.class);
+        s.add(AuthenticationFilter.class);
+        
+        logger.info("Security filters registered for STIG/NIST 800-53 compliance");
         
 		return s;
 	}
