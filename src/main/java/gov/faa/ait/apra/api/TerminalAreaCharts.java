@@ -20,6 +20,7 @@ import static gov.faa.ait.apra.bootstrap.ErrorCodes.RESPONSE_200;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -187,27 +188,26 @@ public class TerminalAreaCharts extends BaseService {
      */
     public Response getRelease (ChartCycleElementsJson cycle) {   	
     	int specialCase;
-    	StringBuilder tacPath = new StringBuilder(Config.getTACPath());
     	
-    	if ("pdf".equalsIgnoreCase(getFormat())) {
-    		tacPath = new StringBuilder(Config.getTACPdfPath());
-    	}
+    	SimpleDateFormat dateFormatter = new SimpleDateFormat("MM-dd-yyyy");
+    	String effectiveDate = dateFormatter.format(cycle.getChart_effective_date());
+    	
+    	StringBuilder tacPath = new StringBuilder("/visual/");
+    	tacPath.append(effectiveDate);
     	   	
-    	// the path looks like this http://www.aeronav.faa.gov/content/aeronav/tac_files/Anchorage-Fairbanks_TAC_77.zip
     	specialCase = TACSpecialCase.getSpecialCase(this.getCity());
     	
     	if (specialCase != -1) {
-    		String fileName = TACSpecialCase.getTACFileName(specialCase, cycle.getChart_cycle_number(), this.getFormat());
+    		String fileName = TACSpecialCase.getTACFileNameWithoutCycle(specialCase, this.getFormat());
     		tacPath = tacPath.append("/").append(fileName);
     	}
     	else { 
-    		StringBuilder fileName = new StringBuilder(this.formatCity()+"_TAC_");
-    		fileName.append(cycle.getChart_cycle_number());
+    		StringBuilder fileName = new StringBuilder(this.formatCity()+"_TAC");
     		if ("tiff".equalsIgnoreCase(getFormat())) { 
     			fileName.append(".zip");
     		}
     		else {
-     			fileName.append("_P.pdf");
+     			fileName.append(".pdf");
     		}
     		tacPath = tacPath.append("/").append(fileName.toString());
     	}

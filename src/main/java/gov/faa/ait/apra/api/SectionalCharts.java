@@ -20,6 +20,7 @@ import static gov.faa.ait.apra.bootstrap.ErrorCodes.RESPONSE_200;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 
 import javax.ws.rs.GET;
@@ -152,17 +153,20 @@ public class SectionalCharts extends AbstractTableDataService {
 		Product prod = of.createProductSetEditionProduct();
 		prod.setProductName(ProductCodeList.SECTIONAL);
 		StringBuilder productUrl = new StringBuilder();
-		productUrl.append(Config.getAeronavHost()).append(Config.getAeronavSectionalFolder());
 		
 		logger.info("Starting call to create sectional product.");
 		
-		if("PDF".equalsIgnoreCase(this.getFormat())) {
-			productUrl.append("/PDFs");
-		}
+		SimpleDateFormat dateFormatter = new SimpleDateFormat("MM-dd-yyyy");
+		String effectiveDate = dateFormatter.format(element.getChart_effective_date());
+		
+		productUrl.append(Config.getAeronavHost());
+		productUrl.append("/visual/");
+		productUrl.append(effectiveDate);
+		
 		String cityFileName = element.getChart_city_name().replace(" ", "_");
-		productUrl.append("/").append(cityFileName).append("_").append(element.getChart_cycle_number());
+		productUrl.append("/").append(cityFileName);
 		if("PDF".equalsIgnoreCase(this.getFormat())) {
-			productUrl.append("_P.pdf");
+			productUrl.append(".pdf");
 		} else if ("TIFF".equalsIgnoreCase(this.getFormat()) || "ZIP".equalsIgnoreCase(this.getFormat())) {
 			productUrl.append(".zip");
 		}
