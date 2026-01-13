@@ -84,4 +84,42 @@ public class TACSpecialCase {
 		
 		return -1;
 	}
+	
+	public static String getTACFileNameWithoutCycle (int specialCase, String format) {
+		
+		if ("pdf".equalsIgnoreCase(format)) {
+			switch (specialCase) {
+			case DENVER_COLORADO_SPRINGS:
+				return "Denver_TAC.pdf";
+				
+			case ANCHORAGE_FAIRBANKS:
+				return "Anchorage-Fairbanks_TAC.pdf";
+			
+			case PUERTO_RICO_VI:
+				return "Puerto_Rico-VI_TAC.pdf";
+			
+			default:
+				break;
+			
+			}
+		}
+		else if ("tiff".equalsIgnoreCase(format)) {
+			switch (specialCase) {
+			case DENVER_COLORADO_SPRINGS:
+				return "Denver_TAC"+ZIP;
+						
+			case ANCHORAGE_FAIRBANKS:
+				return "Anchorage-Fairbanks_TAC"+ZIP;
+				
+			case PUERTO_RICO_VI:
+				return "Puerto_Rico-VI_TAC"+ZIP;
+				
+			default:
+				break;
+				
+			}			
+		}
+		
+		return "";
+	}
 }

@@ -151,15 +151,14 @@ public class VFRCharts extends BaseService {
 	 */
 
 	public ProductSet getRelease(ChartCycleElementsJson cycle) {
-		StringBuilder vfrPath = new StringBuilder(Config.getVFRUploadFolder());
-		
 		try {
-
-			// the path looks like this:
-			// /content/aeronav/grand_canyon_files/Grand_Canyon_<cycle_numbe>.zip
+			SimpleDateFormat dateFormatter = new SimpleDateFormat("MM-dd-yyyy");
+			String effectiveDate = dateFormatter.format(cycle.getChart_effective_date());
+			
+			StringBuilder vfrPath = new StringBuilder("/visual/");
+			vfrPath.append(effectiveDate);
+			
 			StringBuilder fileName = new StringBuilder(getGeoname());
-			fileName.append("_");
-			fileName.append(cycle.getChart_cycle_number());
 			fileName.append(".zip");
 			
 			vfrPath.append("/").append(fileName);

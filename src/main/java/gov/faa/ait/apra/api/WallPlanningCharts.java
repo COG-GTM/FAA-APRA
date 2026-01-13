@@ -34,6 +34,7 @@ import static gov.faa.ait.apra.bootstrap.ErrorCodes.RESPONSE_200;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -156,15 +157,17 @@ public class WallPlanningCharts extends BaseService {
 	 */
 	public ProductSet getRelease(ChartCycleElementsJson cycle) {
 		
-		StringBuilder wallPlanPath = new StringBuilder(Config.getWallplanUploadFolder());
-		
 		if (cycle.getChart_effective_date() != null) {
-			// the path looks like this:
-			// /content/aeronav/grand_canyon_files/US_WallPlan_<cycle_numbe>.zip/US_WallPlan_<cycle_numbe>_P.pdf
-			StringBuilder fileName = new StringBuilder("US_WallPlan_");
-			fileName.append(cycle.getChart_cycle_number());
+			SimpleDateFormat dateFormatter = new SimpleDateFormat("MM-dd-yyyy");
+			String effectiveDate = dateFormatter.format(cycle.getChart_effective_date());
+			
+			StringBuilder wallPlanPath = new StringBuilder("/visual/");
+			wallPlanPath.append(effectiveDate);
+			wallPlanPath.append("/Planning");
+			
+			StringBuilder fileName = new StringBuilder("US_WallPlan");
 			if (PDF.equalsIgnoreCase(this.getFormat())) {
-				fileName.append("_P.pdf");
+				fileName.append(".pdf");
 			} else {
 				fileName.append(".zip");
 			}
@@ -178,7 +181,6 @@ public class WallPlanningCharts extends BaseService {
 				if (!verifyURL(downloadURL)) {
 					logger.warn(downloadURL.toExternalForm()
 							+ " returned a non 200 response code when completing a HTTP HEAD check.");
-					//downloadURL = null;
 				}
 			} catch (MalformedURLException emalformed) {
 				logger.error("getRelease", emalformed);

@@ -34,6 +34,7 @@ import io.swagger.annotations.ApiResponses;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 
 import java.util.HashMap;
 import java.util.Locale;
@@ -238,6 +239,12 @@ public class HelicopterCharts extends AbstractTableDataService {
 		StringBuilder productUrl = new StringBuilder();
 		productUrl.append(Config.getAeronavHost());
 		
+		SimpleDateFormat dateFormatter = new SimpleDateFormat("MM-dd-yyyy");
+		String effectiveDate = dateFormatter.format(element.getChart_effective_date());
+		
+		productUrl.append("/visual/");
+		productUrl.append(effectiveDate);
+		
 		String cityFileName = cityPathMap.get(element.getChart_city_name()
 				.toLowerCase());
 		if (cityFileName == null) {
@@ -247,12 +254,10 @@ public class HelicopterCharts extends AbstractTableDataService {
 		cityFileName = cityFileName.replace(" ", "_");
 		
 		if (TIFF.equalsIgnoreCase(getFormat())) {
-			productUrl.append(Config.getHelicopterTIFFPath()).append("/").append(cityFileName).append("_");
-			productUrl.append(element.getChart_cycle_number()).append(".zip");
+			productUrl.append("/").append(cityFileName).append(".zip");
 		}
 		else {
-			productUrl.append(Config.getHelicopterPDFPath()).append("/").append(cityFileName).append("_");			
-			productUrl.append(element.getChart_cycle_number()).append("_P").append(".pdf");
+			productUrl.append("/").append(cityFileName).append(".pdf");
 		}
 
 		try {
