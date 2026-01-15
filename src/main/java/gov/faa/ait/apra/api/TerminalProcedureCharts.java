@@ -218,77 +218,95 @@ public class TerminalProcedureCharts extends BaseService {
     
     private ProductSet getChartProductSet (ChartCycleElementsJson cycle) {
     	logger.info("Getting the chart product set for "+getEdition()+" "+capitalizeGeoname()+" with change flag = "+isChangeFlag());
-    	ObjectFactory of = new ObjectFactory();
     	TPPMetadataClient tppClient = new TPPMetadataClient (cycle, isChangeFlag()); 
     	TPPMetadata [] elements = tppClient.getChartMetadataByState(capitalizeGeoname()).getElements();
-    	HashSet <String> processedFiles = new HashSet <> ();
-    	int processTotal = 0;
     	
-    	if (elements == null || elements.length == 0) 
+    	if (elements == null || elements.length == 0) {
     		return getErrorResponse(404, ErrorCodes.ERROR_404);
+    	}
     	
     	logger.info(elements.length+" total charts found for "+getEdition()+" "+capitalizeGeoname()+" with change flag = "+isChangeFlag());
     	
     	String edition = tppClient.getEdition();
     	ProductSet ps = initPositiveResponse();
+    	int processTotal = processChartElements(cycle, elements, edition, ps);
     	
-    	for (int i = 0; i < elements.length; i++) {
-    		if (processedFiles.contains(elements[i].getChart_name())) {
-    			//skip the chart if we've already processed it
-    			continue;
-    		}
-    		else {
-    			// add the chart to our processed list and we build the response
-    			processedFiles.add(elements[i].getChart_name());
-    			processTotal++;
-    		}
-    		
-    		StringBuilder path = new StringBuilder(Config.getTPPChartPath());
-    		Edition ed = initEdition(cycle);
-    		ed.setFormat(FormatCodeList.PDF);
-    		ed.setGeoname(elements[i].getState_fullname());
-    		ed.setVolume(elements[i].getVolume());
-
-        	Product product = of.createProductSetEditionProduct();      	
-        	product.setProductName(ProductCodeList.TPP);
-        	product.setChartName(elements[i].getChart_name());   
-        	
-        	if (! isNullValue(elements[i].getAirport_icao_identifier()))
-        		product.setIcao(elements[i].getAirport_icao_identifier());
-        	
-        	if (! isNullValue(elements[i].getAirport_identifier()))
-        		product.setAirportId(elements[i].getAirport_identifier());
-        	
-        	if (! isNullValue(elements[i].getCity_name()))
-        		product.setCityName(elements[i].getCity_name());
-        	
-        	if (! isNullValue(elements[i].getAirport_name())) 
-        		product.setAirportName(elements[i].getAirport_name());
-        	
-    		path.append("/").append(edition);
-    		path.append("/").append(elements[i].getPdf_name());
-    		
-    		product.setUrl(Config.getAeronavHost()+path.toString());
-    		
-        	setChangeType(product, elements[i].getUseraction());
-    		
-    		// The HEAD check for TPP files can introduce a significant performance penalty. This is controlled by a flag in the Configuration. 
-    		// Recommendation is to enable the flag in DEV only and leave disabled in TEST and PROD unless someone wants to check and verify in TEST
-    		
-    		if (Config.getTPPCheckFlag()) {
-    			logger.warn("URL validation check is enabled for the DTPP product set. This can cause serious performance issues for the DTTP product responses."
-    					+ " Consider changing the configuration parameter gov.faa.ait.tpp.check.flag = false and re-deploy.");
-    			validateAndSetUrl(Config.getAeronavHost()+path.toString(), ps, product);
-    		}
-   		
-           	ed.setProduct(product);
-        	ps.getEdition().add(ed);
-    	}
-    	
-    	processedFiles.clear();
     	logger.info("Processed a total of "+processTotal+" charts for "+this.getGeoname());
     	
        	return ps;
+    }
+    
+    private int processChartElements(ChartCycleElementsJson cycle, TPPMetadata[] elements, String edition, ProductSet ps) {
+    	ObjectFactory of = new ObjectFactory();
+    	HashSet<String> processedFiles = new HashSet<>();
+    	int processTotal = 0;
+    	
+    	for (int i = 0; i < elements.length; i++) {
+    		if (processedFiles.contains(elements[i].getChart_name())) {
+    			continue;
+    		}
+    		processedFiles.add(elements[i].getChart_name());
+    		processTotal++;
+    		
+    		Edition ed = createChartEdition(cycle, elements[i]);
+    		Product product = createChartProduct(of, elements[i], edition, ps);
+    		ed.setProduct(product);
+    		ps.getEdition().add(ed);
+    	}
+    	
+    	processedFiles.clear();
+    	return processTotal;
+    }
+    
+    private Edition createChartEdition(ChartCycleElementsJson cycle, TPPMetadata element) {
+    	Edition ed = initEdition(cycle);
+    	ed.setFormat(FormatCodeList.PDF);
+    	ed.setGeoname(element.getState_fullname());
+    	ed.setVolume(element.getVolume());
+    	return ed;
+    }
+    
+    private Product createChartProduct(ObjectFactory of, TPPMetadata element, String edition, ProductSet ps) {
+    	Product product = of.createProductSetEditionProduct();
+    	product.setProductName(ProductCodeList.TPP);
+    	product.setChartName(element.getChart_name());
+    	
+    	setProductIdentifiers(product, element);
+    	
+    	String url = buildChartUrl(edition, element);
+    	product.setUrl(url);
+    	
+    	setChangeType(product, element.getUseraction());
+    	
+    	if (Config.getTPPCheckFlag()) {
+    		logger.warn("URL validation check is enabled for the DTPP product set. This can cause serious performance issues for the DTTP product responses."
+    				+ " Consider changing the configuration parameter gov.faa.ait.tpp.check.flag = false and re-deploy.");
+    		validateAndSetUrl(url, ps, product);
+    	}
+    	
+    	return product;
+    }
+    
+    private void setProductIdentifiers(Product product, TPPMetadata element) {
+    	if (!isNullValue(element.getAirport_icao_identifier())) {
+    		product.setIcao(element.getAirport_icao_identifier());
+    	}
+    	if (!isNullValue(element.getAirport_identifier())) {
+    		product.setAirportId(element.getAirport_identifier());
+    	}
+    	if (!isNullValue(element.getCity_name())) {
+    		product.setCityName(element.getCity_name());
+    	}
+    	if (!isNullValue(element.getAirport_name())) {
+    		product.setAirportName(element.getAirport_name());
+    	}
+    }
+    
+    private String buildChartUrl(String edition, TPPMetadata element) {
+    	StringBuilder path = new StringBuilder(Config.getTPPChartPath());
+    	path.append("/").append(edition);
+    	path.append("/").append(element.getPdf_name());
+    	return Config.getAeronavHost() + path.toString();
     }   
     
     // This is where we get the full US product set file path that is divided into 5 separate ZIP files for download. The files are named A through E

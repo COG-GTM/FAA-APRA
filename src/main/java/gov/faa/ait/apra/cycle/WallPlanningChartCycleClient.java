@@ -193,12 +193,19 @@ public class WallPlanningChartCycleClient extends DenodoClient {
 
 	@Override
 	protected void setLastUpdate() {
+		setLastUpdateStatic();
+	}
+	
+	private static void setLastUpdateStatic() {
 		WallPlanningChartCycleClient.wpLastUpdate = new Date(System.currentTimeMillis());
-		
 	}
 
 	@Override
 	protected void setChartCycle(ChartCycleData value) {
+		setChartCycleStatic(value);
+	}
+	
+	private static void setChartCycleStatic(ChartCycleData value) {
 		WallPlanningChartCycleClient.wpCycle = value;
 	}
 

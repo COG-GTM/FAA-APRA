@@ -54,7 +54,9 @@ public class TPPMetadata {
 	private String cnsection;
 	private String filepath;
 	
-	public TPPMetadata () { }
+	public TPPMetadata() {
+		super();
+	}
 	
 	public String getChart_cycle_period_code() {
 		return chart_cycle_period_code;

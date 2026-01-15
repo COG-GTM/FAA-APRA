@@ -151,10 +151,20 @@ public class SectionalCharts extends AbstractTableDataService {
 		gov.faa.ait.apra.jaxb.ObjectFactory of = new gov.faa.ait.apra.jaxb.ObjectFactory();
 		Product prod = of.createProductSetEditionProduct();
 		prod.setProductName(ProductCodeList.SECTIONAL);
-		StringBuilder productUrl = new StringBuilder();
-		productUrl.append(Config.getAeronavHost()).append(Config.getAeronavSectionalFolder());
 		
 		logger.info("Starting call to create sectional product.");
+		
+		String productUrl = buildProductUrl(element);
+		setProductUrlWithVerification(prod, productUrl);
+		
+		logger.info("Ending call to create sectional product.");
+		
+		return prod;
+	}
+	
+	private String buildProductUrl(ChartCycleElementsJson element) {
+		StringBuilder productUrl = new StringBuilder();
+		productUrl.append(Config.getAeronavHost()).append(Config.getAeronavSectionalFolder());
 		
 		if("PDF".equalsIgnoreCase(this.getFormat())) {
 			productUrl.append("/PDFs");
@@ -166,37 +176,50 @@ public class SectionalCharts extends AbstractTableDataService {
 		} else if ("TIFF".equalsIgnoreCase(this.getFormat()) || "ZIP".equalsIgnoreCase(this.getFormat())) {
 			productUrl.append(".zip");
 		}
+		return productUrl.toString();
+	}
+	
+	private void setProductUrlWithVerification(Product prod, String productUrl) {
 		try {
 			logger.info("HEAD check flag is "+Config.getTPPCheckFlag());
 			
 			if (Config.getSectioanlCheckFlag()) {
-				if (this.verifyURL(new URL(productUrl.toString()))) {
-					
-					if (logger.isInfoEnabled()) {
-						logger.info("HEAD check succeeeded for Sectional product URL: "+productUrl.toString());
-					}
-					prod.setUrl(productUrl.toString());
-				}
-				else {
-					if (logger.isWarnEnabled()) {
-						logger.warn("HEAD check failed for Sectional product URL: "+productUrl.toString());
-					}
-					prod.setUrl("");
-				}
-			}
-			else {
-				if (logger.isDebugEnabled()) {
-					logger.debug("HEAD check not executed for Sectional product URL: "+productUrl.toString());
-				}
-				prod.setUrl(productUrl.toString());
+				verifyAndSetUrl(prod, productUrl);
+			} else {
+				logDebugSkipVerification(productUrl);
+				prod.setUrl(productUrl);
 			}
 		} catch (MalformedURLException emalformed) {
-    		logger.warn("The download URL "+productUrl.toString()+" is not valid", emalformed);
-		}	
-		
-		logger.info("Ending call to create sectional product.");
-		
-		return prod;
+			logger.warn("The download URL "+productUrl+" is not valid", emalformed);
+		}
+	}
+	
+	private void verifyAndSetUrl(Product prod, String productUrl) throws MalformedURLException {
+		if (this.verifyURL(new URL(productUrl))) {
+			logInfoVerificationSuccess(productUrl);
+			prod.setUrl(productUrl);
+		} else {
+			logWarnVerificationFailed(productUrl);
+			prod.setUrl("");
+		}
+	}
+	
+	private void logInfoVerificationSuccess(String productUrl) {
+		if (logger.isInfoEnabled()) {
+			logger.info("HEAD check succeeeded for Sectional product URL: "+productUrl);
+		}
+	}
+	
+	private void logWarnVerificationFailed(String productUrl) {
+		if (logger.isWarnEnabled()) {
+			logger.warn("HEAD check failed for Sectional product URL: "+productUrl);
+		}
+	}
+	
+	private void logDebugSkipVerification(String productUrl) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("HEAD check not executed for Sectional product URL: "+productUrl);
+		}
 	}
 
 	@Override

@@ -268,67 +268,88 @@ public class IFREnrouteCharts extends BaseService {
 			filename.append("d");
 		}
 		logger.debug("computing filename for "+ geoname + ", "+format+", "+ altLevel +", "+ setIndex);
-		if(US.equalsIgnoreCase(geoname) ) {
-			if( TIFF.equalsIgnoreCase(format) ) {
-				if (LOW.equalsIgnoreCase(altLevel)) {
-					filename.append("enr_l").append(String.format("%02d", setIndex));
-				} else if (HIGH.equalsIgnoreCase(altLevel)) {
-					filename.append("enr_h").append(String.format("%02d", setIndex));
-				} else if (US.equalsIgnoreCase(geoname) && TIFF.equalsIgnoreCase(format) && AREA.equalsIgnoreCase(altLevel)) {
-					filename.append("enr_a").append(String.format("%02d", setIndex));
-				}
-			} else if (PDF.equalsIgnoreCase(format) ) {
-				if (LOW.equalsIgnoreCase(altLevel)) {
-					filename.append("elus").append(setIndex);
-				} else if (HIGH.equalsIgnoreCase(altLevel)) {
-					filename.append("ehus").append(setIndex);
-				} else if (US.equalsIgnoreCase(geoname) && PDF.equalsIgnoreCase(format) && AREA.equalsIgnoreCase(altLevel)) {
-					filename.append("area");
-				}
-			}
+		
+		if(US.equalsIgnoreCase(geoname)) {
+			buildUSFileName(filename, format, altLevel, setIndex);
 		} else if(ALASKA.equalsIgnoreCase(geoname)) {
-			if (TIFF.equalsIgnoreCase(format)) {
-				if(LOW.equalsIgnoreCase(altLevel)) {
-					filename.append("enr_akl").append(String.format("%02d", setIndex));
-				} else if(HIGH.equalsIgnoreCase(altLevel)) {
-					filename.append("enr_akh").append(String.format("%02d", setIndex));
-				}
-			} else if(PDF.equalsIgnoreCase(format)) {
-				if (LOW.equalsIgnoreCase(altLevel)) {
-					filename.append("elak").append(setIndex);
-				} else if(HIGH.equalsIgnoreCase(altLevel)) {
-					filename.append("ehak").append(setIndex);
-				}
-			}
+			buildAlaskaFileName(filename, format, altLevel, setIndex);
 		} else if (PACIFIC.equalsIgnoreCase(geoname)) {
-			if (TIFF.equalsIgnoreCase(format)) {
-				if (HIGH.equalsIgnoreCase(altLevel)) {
-					filename.append("enr_p").append(String.format("%02d", setIndex));
-				}
-			} else if (PDF.equalsIgnoreCase(format) ) {
-				if (HIGH.equalsIgnoreCase(altLevel)) {
-					filename.append("ephi").append(setIndex);
-				}	
-			}
+			buildPacificFileName(filename, format, altLevel, setIndex);
 		} else if (CARIBBEAN.equalsIgnoreCase(geoname)) {
-			if (PDF.equalsIgnoreCase(format)) {
-				if (LOW.equalsIgnoreCase(altLevel)) {
-					filename.append("elcb").append(setIndex);
-				} else if (HIGH.equalsIgnoreCase(altLevel)) {
-					filename.append("ehcb").append(setIndex);
-				} else if (AREA.equalsIgnoreCase(altLevel) ) {
-					if (setIndex == 3) {
-						filename.append("elcb3"); // special case where area and low are zipped together
-					} else {
-						filename.append("elcba").append(setIndex);
-					}
-				}
-			}
+			buildCaribbeanFileName(filename, format, altLevel, setIndex);
 		}
 		
 		filename.append(".zip");
 		
 		return filename.toString();
+	}
+	
+	private void buildUSFileName(StringBuilder filename, String format, String altLevel, int setIndex) {
+		if(TIFF.equalsIgnoreCase(format)) {
+			if (LOW.equalsIgnoreCase(altLevel)) {
+				filename.append("enr_l").append(String.format("%02d", setIndex));
+			} else if (HIGH.equalsIgnoreCase(altLevel)) {
+				filename.append("enr_h").append(String.format("%02d", setIndex));
+			} else if (AREA.equalsIgnoreCase(altLevel)) {
+				filename.append("enr_a").append(String.format("%02d", setIndex));
+			}
+		} else if (PDF.equalsIgnoreCase(format)) {
+			if (LOW.equalsIgnoreCase(altLevel)) {
+				filename.append("elus").append(setIndex);
+			} else if (HIGH.equalsIgnoreCase(altLevel)) {
+				filename.append("ehus").append(setIndex);
+			} else if (AREA.equalsIgnoreCase(altLevel)) {
+				filename.append("area");
+			}
+		}
+	}
+	
+	private void buildAlaskaFileName(StringBuilder filename, String format, String altLevel, int setIndex) {
+		if (TIFF.equalsIgnoreCase(format)) {
+			if(LOW.equalsIgnoreCase(altLevel)) {
+				filename.append("enr_akl").append(String.format("%02d", setIndex));
+			} else if(HIGH.equalsIgnoreCase(altLevel)) {
+				filename.append("enr_akh").append(String.format("%02d", setIndex));
+			}
+		} else if(PDF.equalsIgnoreCase(format)) {
+			if (LOW.equalsIgnoreCase(altLevel)) {
+				filename.append("elak").append(setIndex);
+			} else if(HIGH.equalsIgnoreCase(altLevel)) {
+				filename.append("ehak").append(setIndex);
+			}
+		}
+	}
+	
+	private void buildPacificFileName(StringBuilder filename, String format, String altLevel, int setIndex) {
+		if (TIFF.equalsIgnoreCase(format)) {
+			if (HIGH.equalsIgnoreCase(altLevel)) {
+				filename.append("enr_p").append(String.format("%02d", setIndex));
+			}
+		} else if (PDF.equalsIgnoreCase(format)) {
+			if (HIGH.equalsIgnoreCase(altLevel)) {
+				filename.append("ephi").append(setIndex);
+			}
+		}
+	}
+	
+	private void buildCaribbeanFileName(StringBuilder filename, String format, String altLevel, int setIndex) {
+		if (PDF.equalsIgnoreCase(format)) {
+			if (LOW.equalsIgnoreCase(altLevel)) {
+				filename.append("elcb").append(setIndex);
+			} else if (HIGH.equalsIgnoreCase(altLevel)) {
+				filename.append("ehcb").append(setIndex);
+			} else if (AREA.equalsIgnoreCase(altLevel)) {
+				buildCaribbeanAreaFileName(filename, setIndex);
+			}
+		}
+	}
+	
+	private void buildCaribbeanAreaFileName(StringBuilder filename, int setIndex) {
+		if (setIndex == 3) {
+			filename.append("elcb3");
+		} else {
+			filename.append("elcba").append(setIndex);
+		}
 	}
 
 	@Override
