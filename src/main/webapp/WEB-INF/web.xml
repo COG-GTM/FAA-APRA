@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- This web.xml file is not required when using Servlet 3.0 container,
-     see implementation details http://jersey.java.net/nonav/documentation/latest/jax-rs.html -->
-<web-app version="2.5" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
+<web-app version="4.0" xmlns="http://xmlns.jcp.org/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd">
     <servlet>
         <servlet-name>gov.faa.ait.apra.api.DownloadServiceApp</servlet-name>
         
@@ -12,26 +10,12 @@
         </init-param>
         <init-param>
             <param-name>jersey.config.server.provider.packages</param-name>
-            <param-value>io.swagger.jaxrs.listing, gov.faa.ait.apra.api</param-value>
+            <param-value>io.swagger.v3.jaxrs2.integration.resources, gov.faa.ait.apra.api</param-value>
         </init-param>
         <init-param>
-        	<param-name>com.sun.jersey.config.feature.Debug</param-name>
-        	<param-value>true</param-value>
+        	<param-name>jersey.config.server.provider.classnames</param-name>
+        	<param-value>io.swagger.v3.jaxrs2.integration.JaxrsOpenApiContextBuilder</param-value>
         </init-param>
-        <!-- 
-        <init-param>
-        	<param-name>gov.faa.proxy.host</param-name>
-        	<param-value>dmzproxy.esc.gov</param-value>
-        </init-param>
-        <init-param>
-        	<param-name>gov.faa.proxy.port</param-name>
-        	<param-value>8080</param-value>
-        </init-param>
-        <init-param>
-        	<param-name>jersey.config.server.tracing</param-name>
-        	<param-value>ALL</param-value>
-        </init-param>
-        -->
         <load-on-startup>1</load-on-startup>       
     </servlet>
     	
@@ -39,24 +23,6 @@
         <servlet-name>gov.faa.ait.apra.api.DownloadServiceApp</servlet-name>
         <url-pattern>/*</url-pattern>
     </servlet-mapping>
-    
-  <servlet>
-    <servlet-name>DefaultJaxrsConfig</servlet-name>
-    <servlet-class>io.swagger.jaxrs.config.DefaultJaxrsConfig</servlet-class>
-    <init-param>
-      <param-name>api.version</param-name>
-      <param-value>2.0.0</param-value>
-    </init-param>
-    <init-param>
-      <param-name>swagger.api.title</param-name>
-      <param-value>Aeronautic Product Release API</param-value>
-    </init-param>
-    <init-param>
-      <param-name>swagger.api.basepath</param-name>
-      <param-value>https://soa.smext.faa.gov/apra</param-value>
-    </init-param>
-    <load-on-startup>2</load-on-startup>
-  </servlet>
       
 	<security-constraint>
 		<display-name>APRA Security</display-name>
