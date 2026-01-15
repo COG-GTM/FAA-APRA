@@ -13,8 +13,8 @@
  */
 package gov.faa.ait.apra.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 import gov.faa.ait.apra.api.VFRCharts;
 import gov.faa.ait.apra.jaxb.ProductSet;
 
@@ -24,40 +24,34 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.stream.Stream;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@RunWith(Parameterized.class)
 public class VFRChartsTest {
 	@SuppressWarnings("unused")
 	private Date releaseDate = null;
 	private  static final Logger logger = LoggerFactory.getLogger(VFRChartsTest.class);
 	private VFRCharts vfr;
 
-	public VFRChartsTest (Date date) {
+	public VFRChartsTest () {
 		GregorianCalendar cal = new GregorianCalendar();
 		cal.clear();
 		cal.set(2015,  5, 1);
 		releaseDate = cal.getTime();
 	}
-/**
- * initialize
- */
-	@Before
+
+	@BeforeEach
 	public void initialize() {
 		vfr = new VFRCharts();
 	}
-/**
- * cycleNumbers
- * @return
- */
-	@Parameterized.Parameters
-	public static Collection<Date> cycleNumbers() {
+
+	public static Stream<Date> cycleNumbers() {
 		Date[] params = new Date[10];
 
 		GregorianCalendar cal = new GregorianCalendar();
@@ -80,7 +74,7 @@ public class VFRChartsTest {
 		cal.set(2016, 2, 31);
 		params[9] = cal.getTime();
 
-		return Arrays.asList(params);
+		return Arrays.stream(params);
 	}
 
 	/**

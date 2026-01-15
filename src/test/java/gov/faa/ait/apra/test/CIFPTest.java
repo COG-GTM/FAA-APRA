@@ -13,18 +13,19 @@
  */
 package gov.faa.ait.apra.test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.stream.Stream;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +35,6 @@ import gov.faa.ait.apra.jaxb.ProductSet;
 import gov.faa.ait.apra.cycle.ChartCycleClient;
 import gov.faa.ait.apra.cycle.ChartCycleData;
 
-@RunWith(Parameterized.class)
 public class CIFPTest {
 	private Date releaseDate = null;
 	
@@ -42,21 +42,20 @@ public class CIFPTest {
 	private ChartCycleClient client;
 	private CIFP cifp;
 	
-	public CIFPTest (Date date) {
+	public CIFPTest () {
 		GregorianCalendar cal = new GregorianCalendar();
 		cal.clear();
 		cal.set(2015,  5, 1);
 		this.releaseDate = cal.getTime();
 	}
 	
-	@Before
+	@BeforeEach
 	public void initialize() {
 		client = new ChartCycleClient();
 		cifp = new CIFP();
 	}
 	
-	@Parameterized.Parameters
-	public static Collection<Date> cycleNumbers () {
+	public static Stream<Date> cycleNumbers () {
 		Date [] params = new Date [10];	
 
 			GregorianCalendar cal = new GregorianCalendar();
@@ -79,7 +78,7 @@ public class CIFPTest {
 			params[9] = cal.getTime();
 
 
-		return Arrays.asList(params);
+		return Arrays.stream(params);
 	}
 	
 	@Test

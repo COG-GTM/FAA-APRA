@@ -13,18 +13,20 @@
  */
 package gov.faa.ait.apra.test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Stream;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,35 +36,16 @@ import gov.faa.ait.apra.util.ChartInfoTable;
 import gov.faa.ait.apra.util.ChartInfoTableKey;
 import gov.faa.ait.apra.util.TableChartClient;
 
-@RunWith(Parameterized.class)
 public class SectionalChartClientTest {
 
-	//private static final Logger logger = LoggerFactory.getLogger(SectionalChartClientTest.class);
-
-	//private static final String CURRENT_CODE = "CURRENT";
-	
 	private TableChartClient client;
-	private Date targetDate;
-	private String cityKey;
-	private String editionKey;
-	private String typeKey;
-	private Integer expectedVersion;
 	
-	public SectionalChartClientTest(Date targetDate, String city, String edition, String type, Integer cycle) {
-		this.targetDate = new Date(targetDate.getTime());
-		this.cityKey = city;
-		this.editionKey = edition;
-		this.typeKey = type;
-		this.expectedVersion = cycle;
-	}
-	
-	@Before
+	@BeforeEach
 	public void init() {
 		this.client = new TableChartClient();
 	}
 	
-	@Parameterized.Parameters
-	public static List<Object[]> cycleNumbers () {
+	public static Stream<Arguments> cycleNumbers () {
 		//ArrayList <Date> arrayList = new ArrayList <Date>();	
 		SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy");
 		Object [] [] params = null;
@@ -90,19 +73,20 @@ public class SectionalChartClientTest {
 			};
 		}
 
-		return Arrays.asList(params);
+		return Arrays.stream(params).map(Arguments::of);
 	}	
-	@Test
-	public void test() {
+	@ParameterizedTest
+	@MethodSource("cycleNumbers")
+	public void test(Date targetDate, String cityKey, String editionKey, String typeKey, Integer expectedVersion) {
 		
 		ChartCycleData jsonChart = TableChartClient.callResource(targetDate);
 		ChartInfoTable table = new ChartInfoTable(jsonChart);
 		ChartInfoTableKey key = new ChartInfoTableKey();
-		key.setCityRegion(this.cityKey);
-		key.setPeriodCode(this.editionKey);
-		key.setChartType(this.typeKey);
+		key.setCityRegion(cityKey);
+		key.setPeriodCode(editionKey);
+		key.setChartType(typeKey);
 		ChartCycleElementsJson element = table.get(key);
-		assertEquals(this.expectedVersion, Integer.valueOf(Integer.parseInt(element.getChart_cycle_number())));
+		assertEquals(expectedVersion, Integer.valueOf(Integer.parseInt(element.getChart_cycle_number())));
 	}
 
 }
