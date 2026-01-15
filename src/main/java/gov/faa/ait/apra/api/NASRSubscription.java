@@ -60,7 +60,9 @@ public class NASRSubscription extends BaseService {
 	private Date fromDate;
 	private Date toDate;
 
-	public NASRSubscription() { } 
+	public NASRSubscription() {
+		super();
+	} 
 	
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})

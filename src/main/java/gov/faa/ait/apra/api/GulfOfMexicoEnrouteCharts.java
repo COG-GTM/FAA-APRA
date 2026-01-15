@@ -66,7 +66,9 @@ public class GulfOfMexicoEnrouteCharts extends BaseService {
 	private static final String ALL = "ALL";
 	private static final String ERRMSG = " Error response being generated and returned.";
 	
-	public GulfOfMexicoEnrouteCharts() {}
+	public GulfOfMexicoEnrouteCharts() {
+		super();
+	}
 	
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})

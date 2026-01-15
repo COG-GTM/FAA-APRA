@@ -186,7 +186,7 @@ public class ChartCycleClient extends DenodoClient {
 				ChartCycleElementsJson element = elements[i];
 				
 				found = element.getChart_cycle_period_code().equalsIgnoreCase(periodCode)
-						& element.getChart_cycle_type_code().equalsIgnoreCase(typeCode);
+						&& element.getChart_cycle_type_code().equalsIgnoreCase(typeCode);
 				if (found) {
 					return element;
 				}

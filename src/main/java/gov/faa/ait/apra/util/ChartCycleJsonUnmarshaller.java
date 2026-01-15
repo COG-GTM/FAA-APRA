@@ -17,7 +17,7 @@ import gov.faa.ait.apra.cycle.ChartCycleData;
 
 public class ChartCycleJsonUnmarshaller  extends JsonUtil<ChartCycleData> {
 	public ChartCycleJsonUnmarshaller() {
-		
+		super();
 	}
 
 }

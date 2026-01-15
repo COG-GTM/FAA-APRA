@@ -248,15 +248,19 @@ public class VFRChartCycleClient {
 			return;
 		}
 
-		VFRChartCycleClient.chartCycleTypeCode = typeCode;
+		setChartCycleTypeCodeStatic(typeCode);
 		forceUpdate();
 	}
+	
+	private static void setChartCycleTypeCodeStatic(String typeCode) {
+		VFRChartCycleClient.chartCycleTypeCode = typeCode;
+	}
 
-	public void setLastUpdate () {
+	public static void setLastUpdate () {
 		VFRChartCycleClient.lastUpdate = new Date (System.currentTimeMillis());
 	}
 	
-	public void setChartCycle(ChartCycleData data) {
+	public static void setChartCycle(ChartCycleData data) {
 		VFRChartCycleClient.cycle = data;
 	}
 }

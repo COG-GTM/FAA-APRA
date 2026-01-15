@@ -178,43 +178,57 @@ public abstract class AbstractTableDataService extends BaseService {
 	protected void buildChartResponse(ProductSet response, ChartInfoTable table, String chartType, OutputMode mode ) {
 		LOGGER.info("Building chart response using "+this.getCity());
 		if(this.getCity()==null || this.getCity().length()==0) {
-			// add all sectional with the edition
-			table.entrySet().stream().filter( entry -> entry.getKey().getChartType().equals(chartType)
-					&& entry.getKey().getPeriodCode().equals(this.getEdition()))
-				.sorted((entry1, entry2) -> entry1.getKey().getCityRegion().compareTo(entry2.getKey().getCityRegion()))
-				.forEach(entry -> {
-					Edition ed = this.createEdition(entry.getValue());
-					if(mode.equals(OutputMode.PRODUCT)) {
-						ed.setProduct(this.createProduct(entry.getValue()));
-					}
-					response.getEdition().add(ed);
-			});
+			buildAllChartsResponse(response, table, chartType, mode);
 		} else {
-			LOGGER.info("Building chart response using "+
-				this.getCity().toUpperCase(Locale.ENGLISH)+" "+this.getEdition().toUpperCase()+" "+chartType);
-			
-			ChartInfoTableKey key = new ChartInfoTableKey(
-				this.getCity().toUpperCase(Locale.ENGLISH), this.getEdition().toUpperCase(), chartType);
-			
-			if(table.containsKey(key)) {
-				ChartCycleElementsJson element = table.get(key);
-				Edition ed = this.createEdition(element);
+			buildSingleChartResponse(response, table, chartType, mode);
+		}
+	}
+	
+	private void buildAllChartsResponse(ProductSet response, ChartInfoTable table, String chartType, OutputMode mode) {
+		table.entrySet().stream().filter( entry -> entry.getKey().getChartType().equals(chartType)
+				&& entry.getKey().getPeriodCode().equals(this.getEdition()))
+			.sorted((entry1, entry2) -> entry1.getKey().getCityRegion().compareTo(entry2.getKey().getCityRegion()))
+			.forEach(entry -> {
+				Edition ed = this.createEdition(entry.getValue());
 				if(mode.equals(OutputMode.PRODUCT)) {
-					ed.setProduct(this.createProduct(element));
-					if (EMPTY_STRING.equals(ed.getProduct().getUrl())) {
-						response.getStatus().setCode(NOT_FOUND);
-						response.getStatus().setMessage(ErrorCodes.ERROR_404);
-					}
+					ed.setProduct(this.createProduct(entry.getValue()));
 				}
 				response.getEdition().add(ed);
-			}
-			else {
-				LOGGER.warn("Table data key not found for key "
-					+key.toString()+". Returning a 404 not found for this request.");
+		});
+	}
+	
+	private void buildSingleChartResponse(ProductSet response, ChartInfoTable table, String chartType, OutputMode mode) {
+		LOGGER.info("Building chart response using "+
+			this.getCity().toUpperCase(Locale.ENGLISH)+" "+this.getEdition().toUpperCase()+" "+chartType);
+		
+		ChartInfoTableKey key = new ChartInfoTableKey(
+			this.getCity().toUpperCase(Locale.ENGLISH), this.getEdition().toUpperCase(), chartType);
+		
+		if(table.containsKey(key)) {
+			addEditionFromTable(response, table, key, mode);
+		} else {
+			handleKeyNotFound(response, key);
+		}
+	}
+	
+	private void addEditionFromTable(ProductSet response, ChartInfoTable table, ChartInfoTableKey key, OutputMode mode) {
+		ChartCycleElementsJson element = table.get(key);
+		Edition ed = this.createEdition(element);
+		if(mode.equals(OutputMode.PRODUCT)) {
+			ed.setProduct(this.createProduct(element));
+			if (EMPTY_STRING.equals(ed.getProduct().getUrl())) {
 				response.getStatus().setCode(NOT_FOUND);
 				response.getStatus().setMessage(ErrorCodes.ERROR_404);
 			}
 		}
+		response.getEdition().add(ed);
+	}
+	
+	private void handleKeyNotFound(ProductSet response, ChartInfoTableKey key) {
+		LOGGER.warn("Table data key not found for key "
+			+key.toString()+". Returning a 404 not found for this request.");
+		response.getStatus().setCode(NOT_FOUND);
+		response.getStatus().setMessage(ErrorCodes.ERROR_404);
 	}
 	
 	/**

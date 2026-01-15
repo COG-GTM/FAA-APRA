@@ -137,6 +137,10 @@ public class TACCycleClient extends DenodoClient {
 	
 	@Override
 	public void setLastUpdate () {
+		setLastUpdateStatic();
+	}
+	
+	private static void setLastUpdateStatic() {
 		TACCycleClient.tacLastUpdate = new Date (System.currentTimeMillis());
 	}
 	
