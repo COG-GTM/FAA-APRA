@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 980 380" width="980" height="380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Service decomposition diagram">
+  <title>FAA APRA Rust Re-architecture: Service Decomposition</title>
+  <defs>
+    <style>
+      .b { fill:#0e1f3c; stroke:#1f3a5f; stroke-width:1.2; }
+      .t { fill:#dbeafe; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 13px; }
+      .s { fill:#1e3a8a; }
+      .l { stroke:#64748b; stroke-width:1.2; marker-end:url(#arrow2); }
+      .bg { fill: #0b1220; }
+    </style>
+    <marker id="arrow2" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b" />
+    </marker>
+  </defs>
+  
+  <rect width="100%" height="100%" class="bg"/>
+  
+  <rect x="20" y="20" width="200" height="60" rx="8" class="b s"/>
+  <text x="40" y="55" class="t">Compatibility Gateway</text>
+
+  <rect x="260" y="20" width="200" height="60" rx="8" class="b"/>
+  <text x="300" y="55" class="t">Cycle Service</text>
+
+  <rect x="480" y="20" width="200" height="60" rx="8" class="b"/>
+  <text x="520" y="55" class="t">IFR/Enroute</text>
+
+  <rect x="700" y="20" width="200" height="60" rx="8" class="b"/>
+  <text x="740" y="55" class="t">CIFP/NASR</text>
+
+  <rect x="260" y="120" width="200" height="60" rx="8" class="b"/>
+  <text x="296" y="155" class="t">VFR Sectional/TAC</text>
+
+  <rect x="480" y="120" width="200" height="60" rx="8" class="b"/>
+  <text x="530" y="155" class="t">DDOF</text>
+
+  <rect x="700" y="120" width="200" height="60" rx="8" class="b"/>
+  <text x="752" y="155" class="t">Shared Model</text>
+
+  <rect x="260" y="220" width="200" height="60" rx="8" class="b"/>
+  <text x="300" y="255" class="t">Config &amp; Security</text>
+
+  <line x1="220" y1="50" x2="260" y2="50" class="l"/>
+  <line x1="220" y1="50" x2="480" y2="50" class="l"/>
+  <line x1="220" y1="50" x2="700" y2="50" class="l"/>
+  <line x1="360" y1="80" x2="360" y2="120" class="l"/>
+  <line x1="580" y1="80" x2="580" y2="120" class="l"/>
+  <line x1="800" y1="80" x2="800" y2="120" class="l"/>
+  <line x1="360" y1="180" x2="360" y2="220" class="l"/>
+  <line x1="580" y1="180" x2="360" y2="220" class="l"/>
+</svg>
