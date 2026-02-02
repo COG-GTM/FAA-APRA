@@ -24,15 +24,14 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import gov.faa.ait.apra.bootstrap.Config;
 import gov.faa.ait.apra.bootstrap.ErrorCodes;
@@ -50,14 +49,18 @@ import gov.faa.ait.apra.cycle.ChartCycleClient;
 import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
 
 import gov.faa.ait.apra.util.TPPMetadataClient;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
 
-@Path("/dtpp")
-@Api(value="US Terminal Procedures Publication (TPP)")
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@RestController
+@RequestMapping("/dtpp")
+@Tag(name = "US Terminal Procedures Publication (TPP)", description = "Terminal Procedures Publication chart download and edition information")
 /**
  * This class services requests for the digital terminal procedures publication. Currently, the allowed publication sets are US complete set and state complete set. If a changeset parameter is specified,
  * the service responds with only charts that have changed since the previous release of dTPP
@@ -68,123 +71,96 @@ public class TerminalProcedureCharts extends BaseService {
 	private static final Logger logger = LoggerFactory.getLogger(TerminalProcedureCharts.class);
 	private static final String US = "US";
 
-    @GET
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
-    @Path("/chart")
-    @ApiOperation(value="Get Terminal Procedure Publication chart download information by requesting an edition with geographic area of United States or a valid US State Name.", 
-    	notes="The complete United States Terminal Procedure Publication (TPP) release is distributed as a set of zip files containing charts and verification software. "
-    			+ "Requests for charts by state returns a list of download URLs which can be quite extensive. "
-    			+" All 50 US states are valid for requesting chart publication download URLs. The special 'changeset' edition operates against "
-    			+ "the current release and returns the charts that were changed since the previous release. ",
-    	response=ProductSet.class)
+	@GetMapping(value = "/chart", produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+	@Operation(
+		summary = "Get Terminal Procedure Publication chart download information",
+		description = "Get Terminal Procedure Publication chart download information by requesting an edition with geographic area of United States or a valid US State Name. The complete United States Terminal Procedure Publication (TPP) release is distributed as a set of zip files containing charts and verification software."
+	)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
- 
-	/**
-	 * This is the base chart download URL. Parameters are provided for edition and geoname. The geoname can be US, US state, or publication volume
-	 * 
-	 * @param ed the edition for which you want a URL
-	 * @param geo the geographic name for which a download URL is requested
-	 * @return the product set
-	 */
-    public Response getTPPRelease (
-    		@ApiParam(name="edition", value="Requested product edition. If omitted, the default current edition is returned.", allowableValues="current, next, changeset", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed,
-    		@ApiParam(name="geoname", value="Requested geographic region of Terminal Procedures Publication chart set. Specify either US or a valid full state name such as Alaska. If omitted, the default US complete set is returned.", defaultValue="US", allowMultiple=false, required=false) @QueryParam("geoname") String geo) {
-    	ChartCycleElementsJson cycle;
-    	
-    	logger.info("Received call to retrieve current TPP product release for edition '"+ed+"'.");
-    	
-    	// Default the geoname to US, but we also accept states at this time
+		@ApiResponse(responseCode = "200", description = RESPONSE_200, content = @Content(schema = @Schema(implementation = ProductSet.class))),
+		@ApiResponse(responseCode = "400", description = ERROR_400),
+		@ApiResponse(responseCode = "404", description = ERROR_404),
+		@ApiResponse(responseCode = "500", description = ERROR_500)
+	})
+	public ResponseEntity<ProductSet> getTPPRelease(
+			@Parameter(description = "Requested product edition", schema = @Schema(allowableValues = {"current", "next", "changeset"}, defaultValue = "current"))
+			@RequestParam(value = "edition", required = false, defaultValue = "current") String ed,
+			@Parameter(description = "Requested geographic region of Terminal Procedures Publication chart set")
+			@RequestParam(value = "geoname", required = false, defaultValue = "US") String geo) {
+		ChartCycleElementsJson cycle;
+
+		logger.info("Received call to retrieve current TPP product release for edition '{}'.", ed);
+
 		setGeoname(geo != null ? geo : US);
 		setFormat(ZIP);
-		
+
 		if (!verifyGeoname()) {
-    		logger.error("Expected a geographic name of a US state or just US, but received '"+geo+"' instead. Error response being generated and returned.");
-    		return Response.status(400).entity(getErrorResponse (400, "Geographic name must be a full US state name or 'US'")).build();    					
+			logger.error("Expected a geographic name of a US state or just US, but received '{}' instead.", geo);
+			return ResponseEntity.status(400).body(getErrorResponse(400, "Geographic name must be a full US state name or 'US'"));
 		}
-		// Check the base service class for what happens here. If someone specifies the "changeset" edition, the setEdition method 
-		// actually sets the edition to CURRENT and adds a change flag. This is becasue we are looking for the changed charts
-		// in the current edition as compared to the prior edition. This is really only valid for TPP at this time
 		setEdition(ed != null ? ed : CURRENT);
-    	cycle = initParameters();
-		
-    	if (!verifyEdition()) {
-    		logger.error("Expected edition current, next, or changeset and received '"+ed+"' instead. Error response being generated and returned.");
-    		return Response.status(400).entity(getErrorResponse (400, "Edition must be current, next, or changeset.")).build();    		
-    	}
-    	
-    	// 2 cases where we want to get the charts and not the full zip set. If this is a state or if someone requests ALL US changed files, we go to get charts rather than the full set
-    	// If someone specifies both US and the changeset edition, we return all changed files across entire US. Otherwise, we drop down to providing the zip full set
-    	if ( (isChangeFlag() && isUnitedStates()) || (! isUnitedStates())) {
-    		logger.info("Retrieving individual TPP charts rather than full US set. User asked for a state, volume, or US changes.");
-    		setFormat(PDF);
-    		ProductSet ps = getChartProductSet(cycle);
-        	return Response.status(ps.getStatus().getCode()).entity(ps).build();
+		cycle = initParameters();
 
-    	}
-    	
-    	// By default, we return the zippped US product set
-    	ProductSet ps = buildResponse(cycle); 
-    	return Response.status(ps.getStatus().getCode()).entity(ps).build();
+		if (!verifyEdition()) {
+			logger.error("Expected edition current, next, or changeset and received '{}' instead.", ed);
+			return ResponseEntity.status(400).body(getErrorResponse(400, "Edition must be current, next, or changeset."));
+		}
 
-    }	
-	
+		if ((isChangeFlag() && isUnitedStates()) || (!isUnitedStates())) {
+			logger.info("Retrieving individual TPP charts rather than full US set. User asked for a state, volume, or US changes.");
+			setFormat(PDF);
+			ProductSet ps = getChartProductSet(cycle);
+			return ResponseEntity.status(ps.getStatus().getCode()).body(ps);
+		}
 
-    @GET
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
-    @Path("/info")
-    @ApiOperation(value="Get Terminal Procedure Publication chart edition information by requesting an edition with geographic area of United States or one of the 50 US states", 
-    	notes="The US Terminal Procedure Publication is released on a 28 day airspace cycle. Edition information is identical regardless of the geographic area or format of the desired charts.",
-    	response=ProductSet.class)
+		ProductSet ps = buildResponse(cycle);
+		return ResponseEntity.status(ps.getStatus().getCode()).body(ps);
+	}
+
+	@GetMapping(value = "/info", produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+	@Operation(
+		summary = "Get Terminal Procedure Publication chart edition information",
+		description = "Get Terminal Procedure Publication chart edition information by requesting an edition with geographic area of United States or one of the 50 US states"
+	)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
-    
-	/**
-	 * This is the base chart download URL. Parameters are provided for edition and geoname. The geoname can be US, US state, or publication volume
-	 * 
-	 * @param ed the edition for which you want a URL
-	 * @param geo the geographic name for which edition information is requested
-	 * @return
-	 */    
-    public Response getTPPEdition (
-    		@ApiParam(name="edition", value="Requested product edition. If omitted, the default current edition information is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed,
-    		@ApiParam(name="geoname", value="Requested geographic region of Terminal Procedures Publication chart set. Specify US or a valid full US state name such as Alaska. If omitted, edition information for the complete US set is returned.", defaultValue="US", allowMultiple=false, required=false) @QueryParam("geoname") String geo) {
-    	ChartCycleElementsJson cycle;
-    	
-    	logger.info("Received call to retrieve current TPP product release for edition '"+ed+"'.");
-    	
+		@ApiResponse(responseCode = "200", description = RESPONSE_200, content = @Content(schema = @Schema(implementation = ProductSet.class))),
+		@ApiResponse(responseCode = "400", description = ERROR_400),
+		@ApiResponse(responseCode = "404", description = ERROR_404),
+		@ApiResponse(responseCode = "500", description = ERROR_500)
+	})
+	public ResponseEntity<ProductSet> getTPPEdition(
+			@Parameter(description = "Requested product edition", schema = @Schema(allowableValues = {"current", "next"}, defaultValue = "current"))
+			@RequestParam(value = "edition", required = false, defaultValue = "current") String ed,
+			@Parameter(description = "Requested geographic region of Terminal Procedures Publication chart set")
+			@RequestParam(value = "geoname", required = false, defaultValue = "US") String geo) {
+		ChartCycleElementsJson cycle;
+
+		logger.info("Received call to retrieve current TPP product release for edition '{}'.", ed);
+
 		setGeoname(geo != null ? geo : US);
 		setEdition(ed != null ? ed : CURRENT);
-		
+
 		if (US.equalsIgnoreCase(getGeoname())) {
 			setFormat(ZIP);
-		}
-		else {
+		} else {
 			setFormat(PDF);
 		}
-		
-    	cycle = initParameters();
-    	
-		if (!verifyGeoname()) {
-    		logger.error("Expected a geographic name of a US state or just US, but received '"+geo+"' instead. Error response being generated and returned.");
-    		return Response.status(400).entity(getErrorResponse (400, "Geographic name must be a full US state name or 'US'")).build();    					
-		}
-		
-    	if (!verifyEdition()) {
-    		logger.error("Expected edition 'current' or 'next' and received '"+ed+"' instead. Error response being generated and returned.");
-    		return Response.status(400).entity(getErrorResponse (400, "Edition must be current, next, or changeset.")).build();    		
-    	}
-    	
-    	ProductSet ps = getEditionResponse(cycle);  	
-    	return Response.status(ps.getStatus().getCode()).entity(ps).build();
 
-    }
+		cycle = initParameters();
+
+		if (!verifyGeoname()) {
+			logger.error("Expected a geographic name of a US state or just US, but received '{}' instead.", geo);
+			return ResponseEntity.status(400).body(getErrorResponse(400, "Geographic name must be a full US state name or 'US'"));
+		}
+
+		if (!verifyEdition()) {
+			logger.error("Expected edition 'current' or 'next' and received '{}' instead.", ed);
+			return ResponseEntity.status(400).body(getErrorResponse(400, "Edition must be current, next, or changeset."));
+		}
+
+		ProductSet ps = getEditionResponse(cycle);
+		return ResponseEntity.status(ps.getStatus().getCode()).body(ps);
+	}
     
 	@Override
 	protected ProductSet buildResponse(ChartCycleElementsJson cycle) {

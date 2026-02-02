@@ -13,21 +13,25 @@
  */
 package gov.faa.ait.apra.api;
 
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
-import java.net.Proxy;
+import java.net.URI;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
 
-import org.apache.commons.lang3.text.WordUtils;
+import org.apache.commons.text.WordUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import gov.faa.ait.apra.bootstrap.Config;
 import gov.faa.ait.apra.bootstrap.ErrorCodes;
+import gov.faa.ait.apra.config.CacheConfig;
 import gov.faa.ait.apra.jaxb.EditionCodeList;
 import gov.faa.ait.apra.jaxb.FormatCodeList;
 import gov.faa.ait.apra.jaxb.ObjectFactory;
@@ -36,6 +40,7 @@ import gov.faa.ait.apra.jaxb.ProductSet.Edition;
 import gov.faa.ait.apra.jaxb.ProductSet.Edition.Product;
 import gov.faa.ait.apra.jaxb.ProductSet.Status;
 import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
+import reactor.core.publisher.Mono;
 
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.DEPRECATED;
 
@@ -181,68 +186,66 @@ public abstract class BaseService {
      */
 	protected abstract ProductSet buildResponse (ChartCycleElementsJson cycle); 
 	
+	private static final WebClient webClient = WebClient.builder()
+			.codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(1024))
+			.build();
+	
+	private static final Duration URL_VERIFICATION_TIMEOUT = Duration.ofSeconds(5);
+
 	/**
-	 * Given a URL, this method attempts to execute an HTTP HEAD check against the URL. If a 200 response is returned, the URL is valid
+	 * Given a URL, this method attempts to execute an HTTP HEAD check against the URL. If a 200 response is returned, the URL is valid.
+	 * This is the synchronous version that blocks until completion.
 	 * @param url the url to be checked
 	 * @return true if the url response is 200 when issuing a HTTP HEAD check; false otherwise
 	 */
-	public boolean verifyURL (URL url) {
-		boolean ok = false; 
-		HttpURLConnection connection = null;
-		Proxy proxy = null;
-		
-		logger.info("Verifying URL "+url.toExternalForm()+" before responding to call");
+	@Cacheable(value = CacheConfig.URL_VERIFICATION_CACHE, key = "#url.toExternalForm()")
+	public boolean verifyURL(URL url) {
+		logger.info("Verifying URL {} before responding to call", url.toExternalForm());
 		try {
-			if (Config.getFAADMZProxyHost() != null && (! EMPTY_STRING.equals(Config.getFAADMZProxyHost()))) {
-				int port = Integer.parseInt(Config.getFAADMZProxyPort());
-				InetSocketAddress proxyAddress = new InetSocketAddress(Config.getFAADMZProxyHost(), port);
-				proxy = new Proxy(Proxy.Type.HTTP, proxyAddress);			
-			}
-			
-			/*
-			 * Determine if we are going to use a proxy server to check the validity
-			 * of the URL we return
-			 */
-			if (proxy != null) {
-				logger.info("Using proxy server "+proxy.toString());
-				connection = (HttpURLConnection) url.openConnection(proxy);
-			}
-			else {
-				logger.info("Direct connection. No proxy server defined.");
-				connection = (HttpURLConnection) url.openConnection();
-			}
-			
-			/*
-			 * This is the actual HTTP HEAD check to determine if the URL is valid
-			 * and exists on the FAA web server
-			 */
-			connection.setRequestMethod("HEAD");
-			int responseCode = connection.getResponseCode();
-			if (responseCode == 200 || responseCode == 302) {
-				logger.info("URL HEAD check returned response code "+responseCode+" for url "+url.toExternalForm());
-			    ok = true;
-			}
-			else {
-				logger.warn("URL HEAD check returned response code "+responseCode+" for url "+url.toExternalForm());
-			}
+			return verifyURLAsync(url).block(URL_VERIFICATION_TIMEOUT);
+		} catch (Exception e) {
+			logger.error("HEAD check failed for url: {}", url.toExternalForm(), e);
+			return false;
 		}
-		catch (IllegalArgumentException eillegal) {
-			logger.error("HEAD heck failed for url: "+url.toExternalForm(), eillegal);
-			ok = false;
-		}
-		catch (IOException eio) {
-			logger.error("HEAD heck failed for url: "+url.toExternalForm(), eio);
-			ok = false;
-		}
+	}
+
+	/**
+	 * Asynchronously verify a URL using non-blocking WebClient.
+	 * This method performs an HTTP HEAD request and returns a CompletableFuture.
+	 * @param url the url to be checked
+	 * @return CompletableFuture that resolves to true if URL is valid, false otherwise
+	 */
+	public CompletableFuture<Boolean> verifyURLFuture(URL url) {
+		return verifyURLAsync(url).toFuture();
+	}
+
+	/**
+	 * Reactive URL verification using Spring WebClient.
+	 * Performs a non-blocking HTTP HEAD request.
+	 * @param url the url to be checked
+	 * @return Mono that emits true if URL is valid, false otherwise
+	 */
+	public Mono<Boolean> verifyURLAsync(URL url) {
+		logger.info("Async verifying URL {} before responding to call", url.toExternalForm());
 		
-
-		/*
-		 * Close down the connection as cleanup action
-		 */
-		if (connection != null)
-			connection.disconnect();
-
-		return ok;
+		return webClient.method(HttpMethod.HEAD)
+				.uri(URI.create(url.toExternalForm()))
+				.exchangeToMono(response -> {
+					HttpStatusCode status = response.statusCode();
+					int statusCode = status.value();
+					if (statusCode == 200 || statusCode == 302) {
+						logger.info("URL HEAD check returned response code {} for url {}", statusCode, url.toExternalForm());
+						return Mono.just(true);
+					} else {
+						logger.warn("URL HEAD check returned response code {} for url {}", statusCode, url.toExternalForm());
+						return Mono.just(false);
+					}
+				})
+				.timeout(URL_VERIFICATION_TIMEOUT)
+				.onErrorResume(e -> {
+					logger.error("HEAD check failed for url: {}", url.toExternalForm(), e);
+					return Mono.just(false);
+				});
 	}
 	
 	/**

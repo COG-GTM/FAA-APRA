@@ -22,16 +22,9 @@ import gov.faa.ait.apra.jaxb.ProductSet;
 import gov.faa.ait.apra.jaxb.ProductSet.Edition;
 import gov.faa.ait.apra.jaxb.ProductSet.Edition.Product;
 import gov.faa.ait.apra.json.SupplementMetadata;
-
 import gov.faa.ait.apra.cycle.ChartCycleClient;
 import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
-
 import gov.faa.ait.apra.util.SupplementMetadataClient;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
 
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_400;
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_404;
@@ -40,25 +33,26 @@ import static gov.faa.ait.apra.bootstrap.ErrorCodes.RESPONSE_200;
 
 import java.text.SimpleDateFormat;
 
-
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-/**
- * This class services requests for the Supplement Chart. Currently, the allowed
- * publication sets are US complete set and state complete set.
- * 
- * @author FAA
- */
-@Path("/supplement")
-@Api(value = "Supplement Chart ")
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@RestController
+@RequestMapping("/supplement")
+@Tag(name = "Supplement Chart", description = "Supplement chart download and edition information")
 public class SupplementCharts extends BaseService {
 	private static final Logger logger = LoggerFactory
 			.getLogger(SupplementCharts.class);
@@ -67,32 +61,25 @@ public class SupplementCharts extends BaseService {
 	private String volume = "";
 	private static final String CSALL = "CS_ALL_";
 
-/**
- * Get Supplement chart download information
- * @param ed - edition	
- * @param vol - volume
- * @return
- */
-
-	@GET
-	@Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML })
-	@Path("/chart")
-	@ApiOperation(value = "Get Supplement chart download information by requesting an edition with a valid US volume.", 
-			notes="The Supplement chart is distributed in two formats - zip and pdf. The US complete set is returned as a ZIP file while all other volumes consist of individual PDF files."			
-			+ "Requests for charts by volume other than US complete set returns a list of download URLs which can be quite extensive."
-			, response = ProductSet.class)
+	@GetMapping(value = "/chart", produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+	@Operation(
+		summary = "Get Supplement chart download information",
+		description = "Get Supplement chart download information by requesting an edition with a valid US volume. The US complete set is returned as a ZIP file while all other volumes consist of individual PDF files."
+	)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
-	public Response getSupplementRelease(
-			@ApiParam(name = "edition", value = "Requested product edition. If omitted, the default current edition is returned.", allowableValues = "current, next", defaultValue = "current", allowMultiple = false, required = false) @QueryParam("edition") String ed,
-			@ApiParam(name = "volume", value = "Requested volume of Supplement chart set. If omitted, the complete US set is returned.", allowableValues = "NORTHWEST, SOUTHWEST, NORTH CENTRAL, SOUTH CENTRAL, EAST CENTRAL, SOUTHEAST, NORTHEAST, PACIFIC, ALASKA", allowMultiple = false, required = false) @QueryParam("volume") String vol) {
+		@ApiResponse(responseCode = "200", description = RESPONSE_200, content = @Content(schema = @Schema(implementation = ProductSet.class))),
+		@ApiResponse(responseCode = "400", description = ERROR_400),
+		@ApiResponse(responseCode = "404", description = ERROR_404),
+		@ApiResponse(responseCode = "500", description = ERROR_500)
+	})
+	public ResponseEntity<ProductSet> getSupplementRelease(
+			@Parameter(description = "Requested product edition", schema = @Schema(allowableValues = {"current", "next"}, defaultValue = "current"))
+			@RequestParam(value = "edition", required = false, defaultValue = "current") String ed,
+			@Parameter(description = "Requested volume of Supplement chart set", schema = @Schema(allowableValues = {"NORTHWEST", "SOUTHWEST", "NORTH CENTRAL", "SOUTH CENTRAL", "EAST CENTRAL", "SOUTHEAST", "NORTHEAST", "PACIFIC", "ALASKA"}))
+			@RequestParam(value = "volume", required = false) String vol) {
 		ChartCycleElementsJson cycle;
 
-		logger.info("Received call to retrieve current Supplement release for edition '"
-				+ ed + "' volume '"+ vol+"'.");
+		logger.info("Received call to retrieve current Supplement release for edition '{}' volume '{}'.", ed, vol);
 
 		if (vol == null || vol.isEmpty()) {
 			this.setVolume(US);
@@ -110,48 +97,41 @@ public class SupplementCharts extends BaseService {
 		cycle = initParameters();
 
 		if (!verifyEdition()) {
-			logger.error("Expected edition current, next, or changeset and received '"
-					+ ed + "'" + ERRMSGSUFFIX);
-    		return Response.status(400).entity(getErrorResponse(400,
-					"Edition must be current, next, or changeset.")).build();
+			logger.error("Expected edition current, next, or changeset and received '{}'{}", ed, ERRMSGSUFFIX);
+			return ResponseEntity.status(400).body(getErrorResponse(400,
+					"Edition must be current, next, or changeset."));
 		}
 
-		if ( !isUnitedStates()) {
+		if (!isUnitedStates()) {
 			logger.info("Retrieving individual Supplement charts rather than full US set. User asked for a volume or US changes.");
 			setFormat(PDF);
 			ProductSet ps = getChartProductSet(cycle);
-	    	return Response.status(ps.getStatus().getCode()).entity(ps).build();
-
+			return ResponseEntity.status(ps.getStatus().getCode()).body(ps);
 		}
-		// By default, we return the zippped US product set
-		ProductSet ps =  buildResponse(cycle);
-    	return Response.status(ps.getStatus().getCode()).entity(ps).build();
 
+		ProductSet ps = buildResponse(cycle);
+		return ResponseEntity.status(ps.getStatus().getCode()).body(ps);
 	}
 
-	/**
-	 * Get Supplement chart edition information
-	 * @param ed - edition
-	 * @param vol - volume
-	 * @return
-	 */
-
-	@GET
-	@Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML })
-	@Path("/info")
-	@ApiOperation(value = "Get Supplement chart edition information by requesting an edition and volume.", response = ProductSet.class)
+	@GetMapping(value = "/info", produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+	@Operation(
+		summary = "Get Supplement chart edition information",
+		description = "Get Supplement chart edition information by requesting an edition and volume"
+	)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
-	public Response getSupplementEdition(
-			@ApiParam(name = "edition", value = "Requested product edition. If omitted, the default current edition is returned.", allowableValues = "current, next", defaultValue = "current", allowMultiple = false, required = false) @QueryParam("edition") String ed,
-			@ApiParam(name = "volume", value = "Requested volume of Supplement chart set. If omitted, the edition information for the complete US set is returned.", allowableValues = "NORTHWEST, SOUTHWEST, NORTH CENTRAL, SOUTH CENTRAL, EAST CENTRAL, SOUTHEAST, NORTHEAST, PACIFIC, ALASKA", allowMultiple = false, required = false) @QueryParam("volume") String vol) {
+		@ApiResponse(responseCode = "200", description = RESPONSE_200, content = @Content(schema = @Schema(implementation = ProductSet.class))),
+		@ApiResponse(responseCode = "400", description = ERROR_400),
+		@ApiResponse(responseCode = "404", description = ERROR_404),
+		@ApiResponse(responseCode = "500", description = ERROR_500)
+	})
+	public ResponseEntity<ProductSet> getSupplementEdition(
+			@Parameter(description = "Requested product edition", schema = @Schema(allowableValues = {"current", "next"}, defaultValue = "current"))
+			@RequestParam(value = "edition", required = false, defaultValue = "current") String ed,
+			@Parameter(description = "Requested volume of Supplement chart set", schema = @Schema(allowableValues = {"NORTHWEST", "SOUTHWEST", "NORTH CENTRAL", "SOUTH CENTRAL", "EAST CENTRAL", "SOUTHEAST", "NORTHEAST", "PACIFIC", "ALASKA"}))
+			@RequestParam(value = "volume", required = false) String vol) {
 		ChartCycleElementsJson cycle;
 
-		logger.info("Received call to retrieve current SUPPLEMENT product release for edition '"
-				+ ed + "'.");
+		logger.info("Received call to retrieve current SUPPLEMENT product release for edition '{}'.", ed);
 
 		if (vol == null || vol.isEmpty()) {
 			this.setVolume(US);
@@ -170,22 +150,19 @@ public class SupplementCharts extends BaseService {
 		cycle = initParameters();
 
 		if (!verifyEdition()) {
-			logger.error("Expected edition 'current' or 'next' and received '"
-					+ ed
-					+ "' instead. Error response being generated and returned.");
-			
-	   		return Response.status(400).entity(getErrorResponse(400,
-					"Edition must be current, next, or changeset.")).build();
+			logger.error("Expected edition 'current' or 'next' and received '{}' instead. Error response being generated and returned.", ed);
+			return ResponseEntity.status(400).body(getErrorResponse(400,
+					"Edition must be current, next, or changeset."));
 		}
-		if ( !isUnitedStates()) {
+
+		if (!isUnitedStates()) {
 			logger.info("Retrieving individual Supplement charts rather than full US set. User asked for a volume or US changes.");
 			ProductSet ps = getEditionResponse(cycle);
-	    	return Response.status(ps.getStatus().getCode()).entity(ps).build();
-
+			return ResponseEntity.status(ps.getStatus().getCode()).body(ps);
 		}
-		ProductSet ps = getUSEditionResponse(cycle);
-    	return Response.status(ps.getStatus().getCode()).entity(ps).build();
 
+		ProductSet ps = getUSEditionResponse(cycle);
+		return ResponseEntity.status(ps.getStatus().getCode()).body(ps);
 	}
 
 	@Override

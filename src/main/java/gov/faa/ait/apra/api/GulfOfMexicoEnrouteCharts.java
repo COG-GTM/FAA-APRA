@@ -23,15 +23,14 @@ import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_404;
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_500;
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.RESPONSE_200;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import gov.faa.ait.apra.bootstrap.Config;
 import gov.faa.ait.apra.bootstrap.ErrorCodes;
@@ -40,22 +39,20 @@ import gov.faa.ait.apra.jaxb.ProductCodeList;
 import gov.faa.ait.apra.jaxb.ProductSet;
 import gov.faa.ait.apra.jaxb.ProductSet.Edition;
 import gov.faa.ait.apra.jaxb.ProductSet.Status;
-
 import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
 import gov.faa.ait.apra.cycle.VFRChartCycleClient;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
 
-/**
- * This class provides the chart download url or edition information for the Gulf of Mexico IFR enroute charts
- * @author FAA
- *
- */
-@Path("/enroute/gom")
-@Api(value="Gulf of Mexico IFR Enroute Chart")
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@RestController
+@RequestMapping("/enroute/gom")
+@Tag(name = "Gulf of Mexico IFR Enroute Chart", description = "Gulf of Mexico IFR Enroute chart download and edition information")
 public class GulfOfMexicoEnrouteCharts extends BaseService {
 	private String geoname;
 	private URL westUrl = null;
@@ -68,100 +65,89 @@ public class GulfOfMexicoEnrouteCharts extends BaseService {
 	
 	public GulfOfMexicoEnrouteCharts() {}
 	
-    @GET
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
-    @Path("/chart")
-    @ApiOperation(value="Get Gulf of Mexico IFR enroute chart edition date, edition number, and product download URL", 
-    		notes="The Gulf of Mexico IFR enroute chart is distributed as a zip file that contains multiple PDF charts.",
-    		response=ProductSet.class)
+	@GetMapping(value = "/chart", produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+	@Operation(
+		summary = "Get Gulf of Mexico IFR enroute chart download link",
+		description = "Get Gulf of Mexico IFR enroute chart edition date, edition number, and product download URL. The chart is distributed as a zip file."
+	)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
+		@ApiResponse(responseCode = "200", description = RESPONSE_200, content = @Content(schema = @Schema(implementation = ProductSet.class))),
+		@ApiResponse(responseCode = "400", description = ERROR_400),
+		@ApiResponse(responseCode = "404", description = ERROR_404),
+		@ApiResponse(responseCode = "500", description = ERROR_500)
+	})
+	public ResponseEntity<ProductSet> getGOMRelease(
+			@Parameter(description = "Requested product edition", schema = @Schema(allowableValues = {"current", "next"}, defaultValue = "current"))
+			@RequestParam(value = "edition", required = false, defaultValue = "current") String ed,
+			@Parameter(description = "Format of the requested chart", schema = @Schema(allowableValues = {"tiff", "pdf"}, defaultValue = "pdf"))
+			@RequestParam(value = "format", required = false, defaultValue = "pdf") String fmt,
+			@Parameter(description = "Requested Gulf of Mexico geographic area", schema = @Schema(allowableValues = {"west", "central"}))
+			@RequestParam(value = "geoname", required = false) String geo) {
 
-    /**
-     * Get the Gulf of Mexico chart release
-     * @param ed the edition of the chart release that is requested
-     * @param fmt the format of the chart release that is requested
-     * @param geo the geographic name of the chart release either west or central
-     * @return the XML or JSON representation of the chart download information
-     */
-    public Response getGOMRelease (
-    		@ApiParam(name="edition", value="Requested product edition. If omitted, current edition is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed,
-			@ApiParam (name="format", value="Format of the requested chart. TIFF is georeferenced and PDF is not georeferenced. If omitted, the default format of PDF is returned.", allowableValues="tiff, pdf", defaultValue="pdf", allowMultiple=false, required=false) @QueryParam("format") String fmt,
-    		@ApiParam(name="geoname", value="Requested Gulf of Mexico geographic area. If omitted, both west and central links are returned.", allowableValues="west, central", allowMultiple=false, required=false) @QueryParam("geoname") String geo) {	
-    	
-    	ChartCycleElementsJson cycle;
-    	
-    	logger.info("Received call to retrieve current Gulf of Mexico IFR enroute product release "+ed+" "+fmt+" "+geo);
-    	setFormat(fmt != null ? fmt.toUpperCase(Locale.ENGLISH) : PDF);
-    	setGeoname(geo != null ? geo : ALL);
+		ChartCycleElementsJson cycle;
 
-       	cycle = initParameters(ed);
-    	
-       	if (!verifyFormat()) {
-       		logger.error("Expected a format of PDF or TIFF, received format "+getFormat()+" instead.");
-    		return Response.status(400).entity(getIllegalArgumentError()).build();    		
-       	}
-       	
-        if (!verifyGeoname()) {
-    		logger.error("Expected geographic name of 'west' or 'central' and received '"+geoname+ERRMSG);
-    		return Response.status(400).entity(getErrorResponse(400, 
-    				"Geographic area name must be either west, central, or omitted. If both charts are required, leave the geoname null")).build();
-        }
-        
-    	if (!verifyEdition()) {
-    		logger.error("Expected edition 'current' or 'next' and received '"+ed+ERRMSG);
-    		return Response.status(400).entity(getIllegalArgumentError()).build();    		
-    	}
+		logger.info("Received call to retrieve current Gulf of Mexico IFR enroute product release {} {} {}", ed, fmt, geo);
+		setFormat(fmt != null ? fmt.toUpperCase(Locale.ENGLISH) : PDF);
+		setGeoname(geo != null ? geo : ALL);
 
-    	ProductSet ps = getRelease(cycle);  	
-    	return Response.status(ps.getStatus().getCode()).entity(ps).build();
-    }
+		cycle = initParameters(ed);
 
-    /**
-     * This is the edition info URL. Calls to this method return data about the edition date and edition number. 
-     * @param ed the edition of the chart that is requested
-     * @param geo the geographic name of central or west for this chart
-     * @return
-	*/
-    @GET
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
-    @Path("/info")
-    @ApiOperation(value="Get Gulf of Mexico IFR enroute chart edition date and edition number", 
-    	notes="If a geographic area is not supplied, both central and west product edition information is returned.", 
-    	response=ProductSet.class)
+		if (!verifyFormat()) {
+			logger.error("Expected a format of PDF or TIFF, received format {} instead.", getFormat());
+			return ResponseEntity.status(400).body(getIllegalArgumentError());
+		}
+
+		if (!verifyGeoname()) {
+			logger.error("Expected geographic name of 'west' or 'central' and received '{}'{}", geoname, ERRMSG);
+			return ResponseEntity.status(400).body(getErrorResponse(400,
+					"Geographic area name must be either west, central, or omitted. If both charts are required, leave the geoname null"));
+		}
+
+		if (!verifyEdition()) {
+			logger.error("Expected edition 'current' or 'next' and received '{}'{}", ed, ERRMSG);
+			return ResponseEntity.status(400).body(getIllegalArgumentError());
+		}
+
+		ProductSet ps = getRelease(cycle);
+		return ResponseEntity.status(ps.getStatus().getCode()).body(ps);
+	}
+
+	@GetMapping(value = "/info", produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+	@Operation(
+		summary = "Get Gulf of Mexico IFR enroute chart edition information",
+		description = "Get Gulf of Mexico IFR enroute chart edition date and edition number"
+	)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
+		@ApiResponse(responseCode = "200", description = RESPONSE_200, content = @Content(schema = @Schema(implementation = ProductSet.class))),
+		@ApiResponse(responseCode = "400", description = ERROR_400),
+		@ApiResponse(responseCode = "404", description = ERROR_404),
+		@ApiResponse(responseCode = "500", description = ERROR_500)
+	})
+	public ResponseEntity<ProductSet> getGOMEdition(
+			@Parameter(description = "Requested product edition", schema = @Schema(allowableValues = {"current", "next"}, defaultValue = "current"))
+			@RequestParam(value = "edition", required = false, defaultValue = "current") String ed,
+			@Parameter(description = "Requested Gulf of Mexico geographic area", schema = @Schema(allowableValues = {"west", "central"}))
+			@RequestParam(value = "geoname", required = false) String geo) {
 
-    public Response getGOMEdition (
-    		@ApiParam(name="edition", value="Requested product edition. If omitted, current edition is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed,
-    		@ApiParam(name="geoname", value="Requested Gulf of Mexico geographic area. If omitted, both west and central are returned.", allowableValues="west, central", allowMultiple=false, required=false) @QueryParam("geoname") String geo) {
-    	
-    	ChartCycleElementsJson cycle;
-    	setGeoname(geo != null ? geo : ALL);
-    	setFormat(PDF);
-    	
-    	cycle = initParameters(ed);
-        if (!verifyGeoname()) {
-    		logger.error("Expected geographic name of 'west' or 'central' and received '"+geoname+ERRMSG);
-    		return Response.status(400).entity(getErrorResponse(400, 
-    				"Geographic area name must be either west, central, or omitted. If both charts are required, leave the geoname null")).build();
-        }
-        
-    	if (!verifyEdition()) {
-    		logger.error("Expected edition 'next' and received '"+ed+ERRMSG);
-    		return Response.status(400).entity(getIllegalArgumentError()).build();    		
-    	}
-    		
-    	ProductSet ps = getEdition(cycle);  	
-    	return Response.status(ps.getStatus().getCode()).entity(ps).build();
-    	
-    } 
+		ChartCycleElementsJson cycle;
+		setGeoname(geo != null ? geo : ALL);
+		setFormat(PDF);
+
+		cycle = initParameters(ed);
+		if (!verifyGeoname()) {
+			logger.error("Expected geographic name of 'west' or 'central' and received '{}'{}", geoname, ERRMSG);
+			return ResponseEntity.status(400).body(getErrorResponse(400,
+					"Geographic area name must be either west, central, or omitted. If both charts are required, leave the geoname null"));
+		}
+
+		if (!verifyEdition()) {
+			logger.error("Expected edition 'next' and received '{}'{}", ed, ERRMSG);
+			return ResponseEntity.status(400).body(getIllegalArgumentError());
+		}
+
+		ProductSet ps = getEdition(cycle);
+		return ResponseEntity.status(ps.getStatus().getCode()).body(ps);
+	}
     
     /**
      * Get the product release for the Gulf of Mexico charts.

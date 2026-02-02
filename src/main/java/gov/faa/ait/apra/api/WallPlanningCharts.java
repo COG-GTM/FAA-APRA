@@ -21,11 +21,6 @@ import gov.faa.ait.apra.jaxb.ProductSet;
 import gov.faa.ait.apra.jaxb.ProductSet.Edition;
 import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
 import gov.faa.ait.apra.cycle.WallPlanningChartCycleClient;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
 
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_400;
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_404;
@@ -35,25 +30,26 @@ import static gov.faa.ait.apra.bootstrap.ErrorCodes.RESPONSE_200;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-/**
- * The Wall Planning Chart web service provides current and previous
- * downloadebel urls with zip and pdf extensions.
- * 
- * @author FAA
- *
- */
-@Api(value = "US VFR Wall Planning Chart")
-@Path("/vfr/wallplanning")
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@RestController
+@RequestMapping("/vfr/wallplanning")
+@Tag(name = "US VFR Wall Planning Chart", description = "US VFR Wall Planning chart download and edition information")
 public class WallPlanningCharts extends BaseService {
 	private ProductSet response = null;
 	private URL downloadURL = null;
@@ -62,90 +58,73 @@ public class WallPlanningCharts extends BaseService {
 	private static final Logger logger = LoggerFactory
 			.getLogger(WallPlanningCharts.class);
 
-	/**
-	 * This is the WallPlan chart download URL. Two parameters provided to
-	 * retrieve the URL for either the current or the next edition. Current and
-	 * tiff are default parameters if in url parameters are listed.
-	 * 
-	 * @param ed
-	 * @param fmt
-	 * @return
-	 */
-	@GET
-	@Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML })
-	@Path("/chart")
-
-    @ApiOperation(value="Get WallPlan Chart release information with download link by edition and format", nickname="getVFRWallPlanningRelease", response=ProductSet.class)
+	@GetMapping(value = "/chart", produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+	@Operation(
+		summary = "Get WallPlan Chart release information with download link",
+		description = "Get WallPlan Chart release information with download link by edition and format"
+	)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
-	
-	public Response getProductRelease(
-			@ApiParam(name="edition", value="Requested product edition. If omitted, the default current edition is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed, 
-			@ApiParam (name="format", value="Format of the requested chart. TIFF format contains georeferenced charts contained within a zip archive and PDF is non-georeferenced charts. If omitted, the default PDF format is returned.", allowableValues="tiff, pdf", defaultValue="pdf", allowMultiple=false, required=false) @QueryParam("format") String fmt) {
+		@ApiResponse(responseCode = "200", description = RESPONSE_200, content = @Content(schema = @Schema(implementation = ProductSet.class))),
+		@ApiResponse(responseCode = "400", description = ERROR_400),
+		@ApiResponse(responseCode = "404", description = ERROR_404),
+		@ApiResponse(responseCode = "500", description = ERROR_500)
+	})
+	public ResponseEntity<ProductSet> getProductRelease(
+			@Parameter(description = "Requested product edition", schema = @Schema(allowableValues = {"current", "next"}, defaultValue = "current"))
+			@RequestParam(value = "edition", required = false, defaultValue = "current") String ed,
+			@Parameter(description = "Format of the requested chart", schema = @Schema(allowableValues = {"tiff", "pdf"}, defaultValue = "pdf"))
+			@RequestParam(value = "format", required = false, defaultValue = "pdf") String fmt) {
 
-
-		logger.info("Received call to retrieve current WallPlan product release for edition '"
-				+ ed + " format'" + fmt + "'.");
+		logger.info("Received call to retrieve current WallPlan product release for edition '{}' format '{}'.", ed, fmt);
 		ObjectFactory of = new ObjectFactory();
 
 		response = of.createProductSet();
 
-    	setEdition(ed != null ? ed : CURRENT);
-    	setFormat(fmt != null ? fmt : PDF);
-    	setGeoname("US");
-    	
+		setEdition(ed != null ? ed : CURRENT);
+		setFormat(fmt != null ? fmt : PDF);
+		setGeoname("US");
+
 		if (!validateRequest(ed, fmt)) {
-	    	return Response.status(response.getStatus().getCode()).entity(response).build();
+			return ResponseEntity.status(response.getStatus().getCode()).body(response);
 		}
 
 		ProductSet ps = getRelease(cycle);
-    	return Response.status(ps.getStatus().getCode()).entity(ps).build();
+		return ResponseEntity.status(ps.getStatus().getCode()).body(ps);
 	}
 
-	/**
-	 * This is the WallPlan information download URL. Two parameters provided to
-	 * retrieve the URL for either the current or the next edition. Current and
-	 * tiff are default parameters if in url parameters are listed.
-	 * 
-	 * @param ed
-	 * @param fmt
-	 * @return
-	 */
-	@GET
-	@Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML })
-	@Path("/info")
-	@ApiOperation(value = "Get WallPlan edition date and edition number by edition type and format", 
-			nickname="getVFRWallPlanningEdition", response = ProductSet.class)
+	@GetMapping(value = "/info", produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+	@Operation(
+		summary = "Get WallPlan edition date and edition number",
+		description = "Get WallPlan edition date and edition number by edition type and format"
+	)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
+		@ApiResponse(responseCode = "200", description = RESPONSE_200, content = @Content(schema = @Schema(implementation = ProductSet.class))),
+		@ApiResponse(responseCode = "400", description = ERROR_400),
+		@ApiResponse(responseCode = "404", description = ERROR_404),
+		@ApiResponse(responseCode = "500", description = ERROR_500)
+	})
+	public ResponseEntity<ProductSet> getProductEdition(
+			@Parameter(description = "Requested product edition", schema = @Schema(allowableValues = {"current", "next"}, defaultValue = "current"))
+			@RequestParam(value = "edition", required = false, defaultValue = "current") String ed,
+			@Parameter(description = "Format of the requested chart", schema = @Schema(allowableValues = {"tiff", "pdf"}, defaultValue = "pdf"))
+			@RequestParam(value = "format", required = false, defaultValue = "pdf") String fmt) {
 
-	public Response getProductEdition(
-			@ApiParam(name="edition", value="Requested product edition. If omitted, the default current edition information is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed,
-			@ApiParam (name="format", value="Format of the requested chart. TIFF format contains georeferenced charts in a zip archive file and PDF is non-georeferenced charts. If omitted, the default PDF format is used.", allowableValues="tiff, pdf", defaultValue="pdf", allowMultiple=false, required=false)  @QueryParam("format") String fmt) {
-
-		logger.info("Received call to retrieve current WallPlan product release for edition '"
-				+ ed + " format'" + fmt + "'.");
+		logger.info("Received call to retrieve current WallPlan product release for edition '{}' format '{}'.", ed, fmt);
 
 		ObjectFactory of = new ObjectFactory();
 
 		response = of.createProductSet();
-		
-    	setEdition(ed != null ? ed : CURRENT);
-    	setFormat(fmt != null ? fmt : PDF);
-    	setGeoname("US");
+
+		setEdition(ed != null ? ed : CURRENT);
+		setFormat(fmt != null ? fmt : PDF);
+		setGeoname("US");
 
 		if (!validateRequest(ed, fmt)) {
-	    	return Response.status(response.getStatus().getCode()).entity(response).build();
+			return ResponseEntity.status(response.getStatus().getCode()).body(response);
 		}
 
 		ProductSet ps = getEdition(cycle);
-    	return Response.status(ps.getStatus().getCode()).entity(ps).build();
+		return ResponseEntity.status(ps.getStatus().getCode()).body(ps);
 	}
 
 	/**

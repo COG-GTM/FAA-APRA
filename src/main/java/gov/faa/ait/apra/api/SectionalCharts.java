@@ -22,15 +22,14 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import gov.faa.ait.apra.bootstrap.Config;
 import gov.faa.ait.apra.jaxb.ProductCodeList;
@@ -38,113 +37,76 @@ import gov.faa.ait.apra.jaxb.ProductSet;
 import gov.faa.ait.apra.jaxb.ProductSet.Edition.Product;
 import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
 import gov.faa.ait.apra.util.TableChartClient;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.ExternalDocs;
-/**
- * This class is used to implement VFR Sectional service.
- * It extends the TableDataService class, implementing the edition and product methods.
- * @author FAA
- *
- */
-@Api(value="Sectional Charts")
-@Path("/vfr/sectional")
+import io.swagger.v3.oas.annotations.ExternalDocumentation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@RestController
+@RequestMapping("/vfr/sectional")
+@Tag(name = "Sectional Charts", description = "VFR Sectional chart download and edition information")
 public class SectionalCharts extends AbstractTableDataService {
 
 	private static final String CHART_TYPE_SECTIONAL = "SECTIONAL";
 
 	private static final Logger logger = LoggerFactory.getLogger(SectionalCharts.class);
 	
-
-	/**
-	 * Default constructor
-	 */
 	public SectionalCharts() {
 		setClient(new TableChartClient());
 	}
 	
-	/**
-	 * This constructor allows a specific chart client to be used.  Mainly for test purposes.
-	 * @param client
-	 */
 	public SectionalCharts(TableChartClient client) {
 		setClient(client);
 	}
 	
-	/**
-	 * API method to get product download links + edition information
-	 * @param cityRegion geoname to use
-	 * @param edition current (default) or next
-	 * @param format pdf (default) or tiff
-	 * @return
-	 */
-	@GET
-	@Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML })
-	@Path("/chart")
-	@ExternalDocs(value="FAA Sectional Charts", url = "http://www.faa.gov/air_traffic/flight_info/aeronav/digital_products/vfr/")
-    @ApiOperation(value="Get Sectional Chart download link by edition, format, and geoname", 
-    		notes="TIFF formatted files are geo-referenced while PDF format is not geo-referenced. Geoname is a city "
-    				+ "for which the chart is requested. Valid cities can be found on the FAA public web site "
-    				+ "at FAA Home > Air Traffic > Flight Information > Aeronautical Information Services > Digital Products > VFR Charts > Sectional Chart tab",
-    				
-    		response=ProductSet.class)
-	
+	@GetMapping(value = "/chart", produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+	@Operation(
+		summary = "Get Sectional Chart download link",
+		description = "Get Sectional Chart download link by edition, format, and geoname. TIFF formatted files are geo-referenced while PDF format is not geo-referenced.",
+		externalDocs = @ExternalDocumentation(description = "FAA Sectional Charts", url = "http://www.faa.gov/air_traffic/flight_info/aeronav/digital_products/vfr/")
+	)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
-	public Response getSectionalChart(@ApiParam (name="geoname", value="Geoname which is a city for which the chart is requested. Valid cities can be found on the FAA public web site.", 
-				allowableValues="Albuquerque, Anchorage, Atlanta, Bethel, Billings, Brownsville, Cape Lisburne, Charlotte, Cheyenne, Chicago, Cincinnati, Cold Bay, "
-				+"Dallas-Ft Worth, Dawson, Denver, Detroit, Dutch Harbor, El Paso, Fairbanks, Great Falls, Green Bay, Halifax, Hawaiian Islands, Houston, "
-				+"Jacksonville, Juneau, Kansas City, Ketchikan, Klamath Falls, Kodiak, Lake Huron, Las Vegas, Los Angeles, McGrath, Memphis, Miami, Montreal, "
-				+"New Orleans, New York, Nome, Omaha, Phoenix, Point Barrow, Salt Lake City, San Antonio, San Francisco, Seattle, Seward, St Louis, Twin Cities, "
-				+"Washington, Western Aleutian Islands, Whitehorse, Wichita", required=true) @QueryParam("geoname") String cityRegion,
-			@ApiParam(name="edition", value="Requested product edition. If omitted, the default current edition is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false)  @QueryParam("edition") String edition, 
-			@ApiParam (name="format", value="Format of the requested chart. TIFF is georeferenced and PDF is not georeferenced. If omitted, the default format of PDF is returned.", allowableValues="tiff, pdf", defaultValue="pdf", allowMultiple=false, required=false) @QueryParam("format") String format) {
+		@ApiResponse(responseCode = "200", description = RESPONSE_200, content = @Content(schema = @Schema(implementation = ProductSet.class))),
+		@ApiResponse(responseCode = "400", description = ERROR_400),
+		@ApiResponse(responseCode = "404", description = ERROR_404),
+		@ApiResponse(responseCode = "500", description = ERROR_500)
+	})
+	public ResponseEntity<ProductSet> getSectionalChart(
+			@Parameter(description = "Geoname which is a city for which the chart is requested", required = true)
+			@RequestParam("geoname") String cityRegion,
+			@Parameter(description = "Requested product edition", schema = @Schema(allowableValues = {"current", "next"}, defaultValue = "current"))
+			@RequestParam(value = "edition", required = false, defaultValue = "current") String edition, 
+			@Parameter(description = "Format of the requested chart. TIFF is georeferenced and PDF is not georeferenced", schema = @Schema(allowableValues = {"tiff", "pdf"}, defaultValue = "pdf"))
+			@RequestParam(value = "format", required = false, defaultValue = "pdf") String format) {
 
 		this.setCity(cityRegion);
 		ProductSet ps = super.buildChart(format, edition, CHART_TYPE_SECTIONAL);
-    	return Response.status(ps.getStatus().getCode()).entity(ps).build();
-
+		return ResponseEntity.status(ps.getStatus().getCode()).body(ps);
 	}
 	
-	/**
-	 * API method to get edition information, such as chart date, edition number
-	 * @param cityRegion geoname to use
-	 * @param edition next or current
-	 * 
-	 * @return
-	 */
-	@GET
-	@Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML })
-	@Path("/info")
-    @ApiOperation(value="Get Sectional Chart edition date and edition number by edition type and geoname", 
-    		notes="Geoname is a city "
-    				+ "for which the chart is requested. Valid cities can be found on the FAA public web site "
-    				+ "at FAA Home > Air Traffic > Flight Information > Aeronautical Information Services > Digital Products > VFR Charts > Sectional Chart tab",     
-    	response=ProductSet.class)
+	@GetMapping(value = "/info", produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+	@Operation(
+		summary = "Get Sectional Chart edition information",
+		description = "Get Sectional Chart edition date and edition number by edition type and geoname"
+	)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
-
-	
-	public Response getSectionalInfo(@ApiParam (name="geoname", value="Geoname which is a city for which the chart is requested. Valid cities can be found on the FAA public web site.", 
-			allowableValues="Albuquerque, Anchorage, Atlanta, Bethel, Billings, Brownsville, Cape Lisburne, Charlotte, Cheyenne, Chicago, Cincinnati, Cold Bay, "
-			+"Dallas-Ft Worth, Dawson, Denver, Detroit, Dutch Harbor, El Paso, Fairbanks, Great Falls, Green Bay, Halifax, Hawaiian Islands, Houston, "
-			+"Jacksonville, Juneau, Kansas City, Ketchikan, Klamath Falls, Kodiak, Lake Huron, Las Vegas, Los Angeles, McGrath, Memphis, Miami, Montreal, "
-			+"New Orleans, New York, Nome, Omaha, Phoenix, Point Barrow, Salt Lake City, San Antonio, San Francisco, Seattle, Seward, St Louis, Twin Cities, "
-			+"Washington, Western Aleutian Islands, Whitehorse, Wichita", required=true) @QueryParam("geoname") String cityRegion,
-			@ApiParam(name="edition", value="Requested product edition. If omitted, the default current edition information is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String edition) {
+		@ApiResponse(responseCode = "200", description = RESPONSE_200, content = @Content(schema = @Schema(implementation = ProductSet.class))),
+		@ApiResponse(responseCode = "400", description = ERROR_400),
+		@ApiResponse(responseCode = "404", description = ERROR_404),
+		@ApiResponse(responseCode = "500", description = ERROR_500)
+	})
+	public ResponseEntity<ProductSet> getSectionalInfo(
+			@Parameter(description = "Geoname which is a city for which the chart is requested", required = true)
+			@RequestParam("geoname") String cityRegion,
+			@Parameter(description = "Requested product edition", schema = @Schema(allowableValues = {"current", "next"}, defaultValue = "current"))
+			@RequestParam(value = "edition", required = false, defaultValue = "current") String edition) {
 		this.setCity(cityRegion);
 		ProductSet ps = super.buildInfo(edition, CHART_TYPE_SECTIONAL);
-    	return Response.status(ps.getStatus().getCode()).entity(ps).build();
-
+		return ResponseEntity.status(ps.getStatus().getCode()).body(ps);
 	}
 	
 	protected Product createProduct(ChartCycleElementsJson element) {

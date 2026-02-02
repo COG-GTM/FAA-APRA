@@ -21,33 +21,35 @@ import static gov.faa.ait.apra.bootstrap.ErrorCodes.RESPONSE_200;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import gov.faa.ait.apra.bootstrap.Config;
 import gov.faa.ait.apra.bootstrap.ErrorCodes;
 import gov.faa.ait.apra.cycle.ChartCycleClient;
 import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
-
 import gov.faa.ait.apra.jaxb.ProductCodeList;
 import gov.faa.ait.apra.jaxb.ProductSet;
 import gov.faa.ait.apra.jaxb.ProductSet.Edition;
 import gov.faa.ait.apra.util.CycleDateUtil;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
 
-@Path("/dec")
-@Api(value="Digital Enroute Charts US (DDECUS)")
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@RestController
+@RequestMapping("/dec")
+@Tag(name = "Digital Enroute Charts US (DDECUS)", description = "Digital Enroute Charts download and edition information")
 
 /**
  * This is the service to return the URL for the Digital Enroute Charts (DDECUS). The chart set is part of the IFR and DERS chart group
@@ -60,67 +62,60 @@ public class DigitalEnrouteCharts extends BaseService {
 
 	private static final Logger logger = LoggerFactory.getLogger(DigitalEnrouteCharts.class);
 
-	/**
-	 * This is the base chart download URL. A single parameter is provided to retrieve the URL for either the current or the next edition
-	 * @param ed the edition for which you want a URL
-	 * @return
-	 */
-    @GET
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
-    @Path("/chart")
-    @ApiOperation(value="Get Digital Enroute Chart download link by edition type of current or next. If edition is left blank or null, the default edition of current is used.", 
-    	notes="The DEC US release is distributed as a zip file containing charts.",
-    	response=ProductSet.class)
+	@GetMapping(value = "/chart", produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+	@Operation(
+		summary = "Get Digital Enroute Chart download link",
+		description = "Get Digital Enroute Chart download link by edition type. The DEC US release is distributed as a zip file containing charts."
+	)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
-	// http://aeronav.faa.gov/Upload_313-d/enroute/DDECUS_32.zip 
-    
-    public Response getDECRelease (
-    		@ApiParam(name="edition", value="Requested product edition. If omitted, current edition is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed) {
-    	logger.info("Received call to retrieve current CIFP product release for edition '"+ed+"'.");
+		@ApiResponse(responseCode = "200", description = RESPONSE_200, content = @Content(schema = @Schema(implementation = ProductSet.class))),
+		@ApiResponse(responseCode = "400", description = ERROR_400),
+		@ApiResponse(responseCode = "404", description = ERROR_404),
+		@ApiResponse(responseCode = "500", description = ERROR_500)
+	})
+	public ResponseEntity<ProductSet> getDECRelease(
+			@Parameter(description = "Requested product edition", schema = @Schema(allowableValues = {"current", "next"}, defaultValue = "current"))
+			@RequestParam(value = "edition", required = false, defaultValue = "current") String ed) {
+		logger.info("Received call to retrieve current DEC product release for edition '{}'.", ed);
 
-    	ChartCycleElementsJson cycle = initParameters (ed);
+		ChartCycleElementsJson cycle = initParameters(ed);
 
-    	if (! verifyEdition() ) {
-    		logger.error("Expected edition 'current' or 'next' and received '"+ed+"' instead. Error response being generated and returned.");
-    		return Response.status(400).entity(getIllegalArgumentError()).build();    		
-    	}
+		if (!verifyEdition()) {
+			logger.error("Expected edition 'current' or 'next' and received '{}' instead. Error response being generated and returned.", ed);
+			return ResponseEntity.status(400).body(getIllegalArgumentError());
+		}
 
-    	ProductSet ps = buildResponse(cycle);
-    	return Response.status(ps.getStatus().getCode()).entity(ps).build();
-    }
-   
-    /**
-     * This is the Digital Enroute Charts (DEC) edition info URL. Calls to this method return data about the edition date and edition number. 
-     * @param ed
-     * @return
-     */
-    @GET
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
-    @Path("/info")
-    @ApiOperation(value="Get CIFP edition date and edition number by edition type of current or next. If the edition is left blank or null, the default edition of current is used.", response=ProductSet.class)
+		ProductSet ps = buildResponse(cycle);
+		return ResponseEntity.status(ps.getStatus().getCode()).body(ps);
+	}
+
+	@GetMapping(value = "/info", produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+	@Operation(
+		summary = "Get Digital Enroute Chart edition information",
+		description = "Get DEC edition date and edition number by edition type"
+	)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
-    public Response getDECEdition (@ApiParam(name="edition", value="Requested product edition. If omitted, current edition is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed) {
-    	ChartCycleElementsJson cycle = initParameters(ed);
-    	
-    	if (! verifyEdition() ) {
-    		logger.error("Expected edition 'current' or 'next' and received '"+ed+"' instead. Error response being generated and returned.");
-    		return Response.status(400).entity(getIllegalArgumentError()).build();    		
-    	}
-    	
-    	ProductSet ps = initPositiveResponse();
-    	Edition edition = initEdition(cycle);
-    	setCycleNumber(edition);
-    	ps.getEdition().add(edition);
-    	return Response.status(ps.getStatus().getCode()).entity(ps).build();		 	
-    }    
+		@ApiResponse(responseCode = "200", description = RESPONSE_200, content = @Content(schema = @Schema(implementation = ProductSet.class))),
+		@ApiResponse(responseCode = "400", description = ERROR_400),
+		@ApiResponse(responseCode = "404", description = ERROR_404),
+		@ApiResponse(responseCode = "500", description = ERROR_500)
+	})
+	public ResponseEntity<ProductSet> getDECEdition(
+			@Parameter(description = "Requested product edition", schema = @Schema(allowableValues = {"current", "next"}, defaultValue = "current"))
+			@RequestParam(value = "edition", required = false, defaultValue = "current") String ed) {
+		ChartCycleElementsJson cycle = initParameters(ed);
+
+		if (!verifyEdition()) {
+			logger.error("Expected edition 'current' or 'next' and received '{}' instead. Error response being generated and returned.", ed);
+			return ResponseEntity.status(400).body(getIllegalArgumentError());
+		}
+
+		ProductSet ps = initPositiveResponse();
+		Edition edition = initEdition(cycle);
+		setCycleNumber(edition);
+		ps.getEdition().add(edition);
+		return ResponseEntity.status(ps.getStatus().getCode()).body(ps);
+	}    
 	
 	@Override
 	protected ProductSet buildResponse(ChartCycleElementsJson cycle) {

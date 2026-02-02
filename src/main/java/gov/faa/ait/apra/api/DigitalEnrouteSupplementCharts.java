@@ -16,28 +16,30 @@ package gov.faa.ait.apra.api;
 
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.DEPRECATED;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
 import gov.faa.ait.apra.jaxb.ProductSet;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 
-@Path("/ders")
-@Api(value="Digital Enroute Supplement (DERS)")
+@RestController
+@RequestMapping("/ders")
+@Tag(name = "Digital Enroute Supplement (DERS)", description = "Digital Enroute Supplement download and edition information (DEPRECATED)")
 
 /**
  * As of June 2017, the DERS chart set has been discontinued. 
@@ -49,46 +51,40 @@ public class DigitalEnrouteSupplementCharts extends BaseService {
 
 	private static final Logger logger = LoggerFactory.getLogger(DigitalEnrouteSupplementCharts.class);
 	
-	/**
-	 * This is the base chart download URL. A single parameter is provided to retrieve the URL for the current day's edition
-	 * @return 404 not found as this has been deprecated
-	 */
-    @GET
-    @Deprecated
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
-    @Path("/chart")
-    @ApiOperation(value="Get Digital Enroute Supplement download link.", 
-    	notes="The Digital Enroute Supplement release is deprecated and publication has been discontinued as of June 2017.",
-    	response=ProductSet.class)
-	@ApiResponses(value = {@ApiResponse(code = 404, message = DEPRECATED)})
-    
-    public Response getDERSRelease (
-    		@ApiParam(name="edition", value="Requested product edition. If omitted, current edition is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed) {
-    	
-    	logger.info("Received call to retrieve current DERS product release for edition.");
-     	ProductSet ps = buildResponse(null);
-    	return Response.status(ps.getStatus().getCode()).entity(ps).build();
-    }
+	@Deprecated
+	@GetMapping(value = "/chart", produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+	@Operation(
+		summary = "Get Digital Enroute Supplement download link",
+		description = "The Digital Enroute Supplement release is deprecated and publication has been discontinued as of June 2017."
+	)
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "404", description = DEPRECATED, content = @Content(schema = @Schema(implementation = ProductSet.class)))
+	})
+	public ResponseEntity<ProductSet> getDERSRelease(
+			@Parameter(description = "Requested product edition", schema = @Schema(allowableValues = {"current", "next"}, defaultValue = "current"))
+			@RequestParam(value = "edition", required = false, defaultValue = "current") String ed) {
 
-	/**
-	 * This is the base chart download URL. A single parameter is provided to retrieve the URL for the current day's edition
-	 * @return 404 not found as this has been deprecated
-	 */
-    @GET
-    @Deprecated
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
-    @Path("/info")
-    @ApiOperation(value="Get Digital Enroute Supplement edition information.", 
-    	notes="The Digital Enroute Supplement release is deprecated and publication has been discontinued as of June 2017.",
-    	response=ProductSet.class)
-	@ApiResponses(value = {@ApiResponse(code = 404, message = DEPRECATED)})
-    
-    public Response getDERSEdition (
-    		@ApiParam(name="edition", value="Requested product edition. If omitted, current edition is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed) {
-    	
-     	ProductSet ps = buildResponse(null);
-    	return Response.status(ps.getStatus().getCode()).entity(ps).build();
-    } 
+		logger.info("Received call to retrieve current DERS product release for edition.");
+		ProductSet ps = buildResponse(null);
+		return ResponseEntity.status(ps.getStatus().getCode()).body(ps);
+	}
+
+	@Deprecated
+	@GetMapping(value = "/info", produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+	@Operation(
+		summary = "Get Digital Enroute Supplement edition information",
+		description = "The Digital Enroute Supplement release is deprecated and publication has been discontinued as of June 2017."
+	)
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "404", description = DEPRECATED, content = @Content(schema = @Schema(implementation = ProductSet.class)))
+	})
+	public ResponseEntity<ProductSet> getDERSEdition(
+			@Parameter(description = "Requested product edition", schema = @Schema(allowableValues = {"current", "next"}, defaultValue = "current"))
+			@RequestParam(value = "edition", required = false, defaultValue = "current") String ed) {
+
+		ProductSet ps = buildResponse(null);
+		return ResponseEntity.status(ps.getStatus().getCode()).body(ps);
+	}
     
     
 	@Override

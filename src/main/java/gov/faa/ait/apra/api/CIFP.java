@@ -15,113 +15,100 @@ package gov.faa.ait.apra.api;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import gov.faa.ait.apra.bootstrap.Config;
+import gov.faa.ait.apra.cycle.ChartCycleClient;
+import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
+import gov.faa.ait.apra.jaxb.ProductCodeList;
+import gov.faa.ait.apra.jaxb.ProductSet;
+import gov.faa.ait.apra.jaxb.ProductSet.Edition;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_400;
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_404;
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_500;
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.RESPONSE_200;
 
-import gov.faa.ait.apra.cycle.ChartCycleClient;
-import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.ApiResponse;
-import gov.faa.ait.apra.jaxb.ProductSet;
-import gov.faa.ait.apra.jaxb.ProductSet.Edition;
-
-import gov.faa.ait.apra.bootstrap.Config;
-import gov.faa.ait.apra.jaxb.ProductCodeList;
-
-
-@Path("/cifp")
-@Api(value="Coded Instrument Flight Procedures (CIFP)")
-/**
- * This class returns the CIFP release of information or the edition information. CIFP is a product set within the FAA superset of aeronautic chart products
- * @author FAA
- *
- */
+@RestController
+@RequestMapping("/cifp")
+@Tag(name = "Coded Instrument Flight Procedures (CIFP)", description = "CIFP chart download and edition information")
 public class CIFP extends BaseService {
 
 	private URL downloadURL = null;
 	private static final Logger logger = LoggerFactory.getLogger(CIFP.class);
 	
-	/**
-	 * This is the base chart download URL. A single parameter is provided to retrieve the URL for either the current or the next edition
-	 * @param ed the edition for which you want a URL
-	 * @return
-	 */
-    @GET
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
-    @Path("/chart")
-    @ApiOperation(value="Get CIFP chart download link by edition type of current or next. If edition is left blank or null, the default edition of current is used.", 
-    	notes="The CIFP release is distributed as a zip file containing charts and verification software.",
-    	response=ProductSet.class)
+	@GetMapping(value = "/chart", produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+	@Operation(
+		summary = "Get CIFP chart download link",
+		description = "Get CIFP chart download link by edition type of current or next. If edition is left blank or null, the default edition of current is used. The CIFP release is distributed as a zip file containing charts and verification software."
+	)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
-    
-    public Response getCIFPRelease (
-    		@ApiParam(name="edition", value="Requested product edition. If omitted, current edition is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed) {
-    	ChartCycleElementsJson cycle;
-    	
-    	logger.info("Received call to retrieve current CIFP product release for edition '"+ed+"'.");
-    	
-    	cycle = initParameters(ed);
-    	   	
-    	if (!verifyEdition()) {
-    		logger.error("Expected edition 'current' or 'next' and received '"+ed+"' instead. Error response being generated and returned.");
-    		return Response.status(400).entity(getIllegalArgumentError()).build();    		
-    	}
-    	
-    	ProductSet ps = getRelease(cycle);
-    	return Response.status(ps.getStatus().getCode()).entity(ps).build();
-	
-    }
+		@ApiResponse(responseCode = "200", description = RESPONSE_200, content = @Content(schema = @Schema(implementation = ProductSet.class))),
+		@ApiResponse(responseCode = "400", description = ERROR_400),
+		@ApiResponse(responseCode = "404", description = ERROR_404),
+		@ApiResponse(responseCode = "500", description = ERROR_500)
+	})
+	public ResponseEntity<ProductSet> getCIFPRelease(
+			@Parameter(description = "Requested product edition. If omitted, current edition is returned.", schema = @Schema(allowableValues = {"current", "next"}, defaultValue = "current"))
+			@RequestParam(value = "edition", required = false, defaultValue = "current") String ed) {
+		ChartCycleElementsJson cycle;
+		
+		logger.info("Received call to retrieve current CIFP product release for edition '{}'.", ed);
+		
+		cycle = initParameters(ed);
+		   	
+		if (!verifyEdition()) {
+			logger.error("Expected edition 'current' or 'next' and received '{}' instead. Error response being generated and returned.", ed);
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(getIllegalArgumentError());
+		}
+		
+		ProductSet ps = getRelease(cycle);
+		return ResponseEntity.status(ps.getStatus().getCode()).body(ps);
+	}
    
-    /**
-     * This is the edition info URL. Calls to this method return data about the edition date and edition number. 
-     * @param ed
-     * @return
-     */
-    @GET
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
-    @Path("/info")
-    @ApiOperation(value="Get CIFP edition date and edition number by edition type of current or next. If the edition is left blank or null, the default edition of current is used.", response=ProductSet.class)
+	@GetMapping(value = "/info", produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+	@Operation(
+		summary = "Get CIFP edition information",
+		description = "Get CIFP edition date and edition number by edition type of current or next. If the edition is left blank or null, the default edition of current is used."
+	)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
-    public Response getCIFPEdition (@ApiParam(name="edition", value="Requested product edition. If omitted, current edition is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed) {
-    	ChartCycleElementsJson cycle;
-    	
-    	cycle = initParameters(ed);
-    	
-    	if (!verifyEdition()) {
-    		logger.error("Expected edition 'next' and received '"+ed+"' instead. Error response being generated and returned.");
-    		return Response.status(400).entity(getIllegalArgumentError()).build();    		
-    	}
-    	ProductSet ps = getEdition(cycle);
-    	return Response.status(ps.getStatus().getCode()).entity(ps).build();		 	
-    }    
+		@ApiResponse(responseCode = "200", description = RESPONSE_200, content = @Content(schema = @Schema(implementation = ProductSet.class))),
+		@ApiResponse(responseCode = "400", description = ERROR_400),
+		@ApiResponse(responseCode = "404", description = ERROR_404),
+		@ApiResponse(responseCode = "500", description = ERROR_500)
+	})
+	public ResponseEntity<ProductSet> getCIFPEdition(
+			@Parameter(description = "Requested product edition. If omitted, current edition is returned.", schema = @Schema(allowableValues = {"current", "next"}, defaultValue = "current"))
+			@RequestParam(value = "edition", required = false, defaultValue = "current") String ed) {
+		ChartCycleElementsJson cycle;
+		
+		cycle = initParameters(ed);
+		
+		if (!verifyEdition()) {
+			logger.error("Expected edition 'next' and received '{}' instead. Error response being generated and returned.", ed);
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(getIllegalArgumentError());
+		}
+		ProductSet ps = getEdition(cycle);
+		return ResponseEntity.status(ps.getStatus().getCode()).body(ps);
+	}    
     
     private ChartCycleElementsJson initParameters (String ed) {
     	ChartCycleElementsJson cycle;
