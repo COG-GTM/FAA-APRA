@@ -14,48 +14,43 @@
 package gov.faa.ait.apra.api;
 
 import gov.faa.ait.apra.bootstrap.Config;
-
 import gov.faa.ait.apra.jaxb.ProductCodeList;
 import gov.faa.ait.apra.jaxb.ProductSet;
-
 import gov.faa.ait.apra.jaxb.ProductSet.Edition.Product;
+
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_400;
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_404;
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_500;
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.RESPONSE_200;
-import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
 
+import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
 import gov.faa.ait.apra.util.TableChartClient;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-
 import java.util.HashMap;
 import java.util.Locale;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-/**
- * 
- * @author FAA
- *
- */
-
-@Api(value = "VFR Helicopter Route Chart")
-@Path("/vfr/helicopter")
+@RestController
+@RequestMapping("/vfr/helicopter")
+@Tag(name = "VFR Helicopter Route Chart", description = "VFR Helicopter Route Chart download and edition information")
 public class HelicopterCharts extends AbstractTableDataService {
 
 	private static final String CHART_TYPE_HELICOPTER_VFR = "HELICOPTER_VFR";
@@ -89,135 +84,98 @@ public class HelicopterCharts extends AbstractTableDataService {
 		setClient(client);
 	}
 
-	/**
-	 * This is the Helicopter Route Char download URL. Parameters edition and
-	 * geoname will provided to retrieve the URL for either the current or the
-	 * next edition.
-	 * 
-	 * @param ed the edition either current or next
-	 * @param fmt the format of the response either a geo-tiff url or a pdf url
-	 * @param cityRegion the city name or region for which the helicopter chart is requested
-	 * @return
-	 */
-	@GET
-	@Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
-	@Path("/chart")
-	@ApiOperation(value = "Get VFR Helicopter Route Chart download link by edition and geoname", nickname="getVFRHelicopterRelease", 
-			notes = "Geoname is a city "
-			+ "for which the chart is requested. Valid cities can be found on the FAA public web site "
-			+ "under FAA Home > Air Traffic > Flight Information > Aeronautical Information Services "
-			+ "> Digital Products > VFR Charts > Helicopter tab", response = ProductSet.class)
+	@GetMapping(value = "/chart", produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+	@Operation(
+		summary = "Get VFR Helicopter Route Chart download link",
+		description = "Get VFR Helicopter Route Chart download link by edition and geoname"
+	)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
-	public Response getHelicopterRelease(
-			@ApiParam(name = "edition", value = "Requested product edition. If omitted, the default current edition is returned.", allowableValues = "current, next", defaultValue = "current", allowMultiple = false, required = false) @QueryParam("edition") String ed,
-    		@ApiParam (name="format", value="Format of the requested chart. TIFF is georeferenced and PDF is not georeferenced. If omitted, the default format of PDF is returned.", allowableValues="tiff, pdf", defaultValue="pdf", allowMultiple=false, required=false) @QueryParam("format") String fmt, 
-			@ApiParam(name = "geoname", value = "Geoname which is a city for which the chart is requested. If omitted, charts for all cities are returned.", 
-			allowableValues="Baltimore Washington Heli, Boston Heli, Chicago Heli, Dallas Ft. Worth Heli, Detroit Heli, Houston Heli, Los Angeles Heli, New York Heli, U.S Gulf Coast",
-			allowMultiple = false, required = false) @QueryParam("geoname") String cityRegion) {
+		@ApiResponse(responseCode = "200", description = RESPONSE_200, content = @Content(schema = @Schema(implementation = ProductSet.class))),
+		@ApiResponse(responseCode = "400", description = ERROR_400),
+		@ApiResponse(responseCode = "404", description = ERROR_404),
+		@ApiResponse(responseCode = "500", description = ERROR_500)
+	})
+	public ResponseEntity<ProductSet> getHelicopterRelease(
+			@Parameter(description = "Requested product edition", schema = @Schema(allowableValues = {"current", "next"}, defaultValue = "current"))
+			@RequestParam(value = "edition", required = false, defaultValue = "current") String ed,
+			@Parameter(description = "Format of the requested chart", schema = @Schema(allowableValues = {"tiff", "pdf"}, defaultValue = "pdf"))
+			@RequestParam(value = "format", required = false, defaultValue = "pdf") String fmt,
+			@Parameter(description = "Geoname which is a city for which the chart is requested")
+			@RequestParam(value = "geoname", required = false) String cityRegion) {
 
-		logger.info("Received call to retrieve current VFR Helicopter Route Chart product release for edition '"
-				+ ed + " City '" + cityRegion + "'.");
+		logger.info("Received call to retrieve current VFR Helicopter Route Chart product release for edition '{}' City '{}'.", ed, cityRegion);
 		this.setCity(cityRegion);
     	setEdition(ed != null ? ed : CURRENT);
     	setFormat(fmt != null ? fmt : PDF);
 
 		ProductSet ps = super.buildChart(fmt, ed, CHART_TYPE_HELICOPTER_VFR);
-    	return Response.status(ps.getStatus().getCode()).entity(ps).build();
-
+		return ResponseEntity.status(ps.getStatus().getCode()).body(ps);
 	}
 
-	/**
-	 * This is the Helicopter Route Char download URL. Parameters edition and
-	 * geoname will provided to retrieve the URL for either the current or the
-	 * next edition.
-	 * 
-	 * @param ed
-	 * @param cityRegion
-	 * @return
-	 */
-	@GET
-	@Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
-	@Path("/info")
-	@ApiOperation(value = "Get VFR Helicopter Route Chart edition date and edition number by edition type of current or next and geoname", 
-			nickname="getVFRHelicopterEdition", response = ProductSet.class)
+	@GetMapping(value = "/info", produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+	@Operation(
+		summary = "Get VFR Helicopter Route Chart edition information",
+		description = "Get VFR Helicopter Route Chart edition date and edition number by edition type and geoname"
+	)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
-	public Response getHelicopterEdition(
-			@ApiParam(name = "edition", value = "Requested product edition. If omitted, the default current edition is returned.", allowableValues = "current, next", defaultValue = "current", allowMultiple = false, required = false) @QueryParam("edition") String ed,
-			@ApiParam(name = "geoname", value = "Geoname which is a city for which the chart is requested. If omitted, charts for all cities are returned.", 
-			allowableValues="Baltimore Washington Heli, Boston Heli, Chicago Heli, Dallas Ft. Worth Heli, Detroit Heli, Houston Heli, Los Angeles Heli, New York Heli, U.S Gulf Coast",
-			allowMultiple = false, required = false) @QueryParam("geoname") String cityRegion) {
+		@ApiResponse(responseCode = "200", description = RESPONSE_200, content = @Content(schema = @Schema(implementation = ProductSet.class))),
+		@ApiResponse(responseCode = "400", description = ERROR_400),
+		@ApiResponse(responseCode = "404", description = ERROR_404),
+		@ApiResponse(responseCode = "500", description = ERROR_500)
+	})
+	public ResponseEntity<ProductSet> getHelicopterEdition(
+			@Parameter(description = "Requested product edition", schema = @Schema(allowableValues = {"current", "next"}, defaultValue = "current"))
+			@RequestParam(value = "edition", required = false, defaultValue = "current") String ed,
+			@Parameter(description = "Geoname which is a city for which the chart is requested")
+			@RequestParam(value = "geoname", required = false) String cityRegion) {
 
-		logger.info("Received call to retrieve current VVFR Helicopter Route Chart product edition for edition '"
-				+ ed + "'.");
+		logger.info("Received call to retrieve current VFR Helicopter Route Chart product edition for edition '{}'.", ed);
 
 		this.setCity(cityRegion);
 		ProductSet ps = super.buildInfo(ed, CHART_TYPE_HELICOPTER_VFR);
-    	return Response.status(ps.getStatus().getCode()).entity(ps).build();
+		return ResponseEntity.status(ps.getStatus().getCode()).body(ps);
 	}
 
-	/**
-	 * This is the GulfCoast Route Char download URL. Parameters edition and
-	 * format will provided to retrieve the URL for either the current or the
-	 * next edition.
-	 * 
-	 * @param ed the edition of the chart either current or next
-	 * @param fmt the format of the chart requested either geo-tiff or pdf
-	 * @return
-	 */
-	@GET
-	@Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML })
-	@Path("/gulf/chart")
-	@ApiOperation(value = "Get GulfCoast Route Chart download link by edition", 
-			nickname="getVFRGulfCoastRelease", notes = "The geoname is absent from this "
-					+ "operation and defaults to U.S Gulf Coast", response = ProductSet.class)
+	@GetMapping(value = "/gulf/chart", produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+	@Operation(
+		summary = "Get GulfCoast Route Chart download link",
+		description = "Get GulfCoast Route Chart download link by edition. The geoname defaults to U.S Gulf Coast"
+	)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
-	public Response getGulfCoastRelease(
-			@ApiParam(name = "edition", value = "Requested product edition. If omitted, the default current edition is returned.", allowableValues = "current, next", defaultValue = "current", allowMultiple = false, required = false) @QueryParam("edition") String ed,
-    		@ApiParam (name="format", value="Format of the requested chart. TIFF is georeferenced and PDF is not georeferenced. If omitted, the default format of PDF is returned.", allowableValues="tiff, pdf", defaultValue="pdf", allowMultiple=false, required=false) @QueryParam("format") String fmt) { 
+		@ApiResponse(responseCode = "200", description = RESPONSE_200, content = @Content(schema = @Schema(implementation = ProductSet.class))),
+		@ApiResponse(responseCode = "400", description = ERROR_400),
+		@ApiResponse(responseCode = "404", description = ERROR_404),
+		@ApiResponse(responseCode = "500", description = ERROR_500)
+	})
+	public ResponseEntity<ProductSet> getGulfCoastRelease(
+			@Parameter(description = "Requested product edition", schema = @Schema(allowableValues = {"current", "next"}, defaultValue = "current"))
+			@RequestParam(value = "edition", required = false, defaultValue = "current") String ed,
+			@Parameter(description = "Format of the requested chart", schema = @Schema(allowableValues = {"tiff", "pdf"}, defaultValue = "pdf"))
+			@RequestParam(value = "format", required = false, defaultValue = "pdf") String fmt) {
 
-		logger.info("Received call to retrieve current VFR GulfCoast Route Chart product release for edition '"
-				+ ed + "'.");
+		logger.info("Received call to retrieve current VFR GulfCoast Route Chart product release for edition '{}'.", ed);
     	setEdition(ed != null ? ed : CURRENT);
     	setFormat(fmt != null ? fmt : PDF);
     	
 		return getHelicopterRelease(ed, fmt, usGulfCoast);
 	}
 
-	/**
-	 * This is the GulfCoast Route Char download URL. Parameter edition 
-	 * will provided to retrieve the URL for either the current or the
-	 * next edition.
-	 * 
-	 * @param ed the edition of the chart either current or next
-	 * @return
-	 */
-	@GET
-	@Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML })
-	@Path("/gulf/info")
-	@ApiOperation(value = "Get VFR GulfCoast Route Chart edition date and edition number by edition type of 'current' or 'next' ", 
-			nickname="getVFRGulfCoastEdition", response = ProductSet.class)
+	@GetMapping(value = "/gulf/info", produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+	@Operation(
+		summary = "Get VFR GulfCoast Route Chart edition information",
+		description = "Get VFR GulfCoast Route Chart edition date and edition number by edition type"
+	)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
-	public Response getGulfCoastEdition(
-			@ApiParam(name = "edition", value = "Requested product edition. If omitted, the default current edition is returned.", allowableValues = "current, next", defaultValue = "current", allowMultiple = false, required = false) @QueryParam("edition") String ed) {
+		@ApiResponse(responseCode = "200", description = RESPONSE_200, content = @Content(schema = @Schema(implementation = ProductSet.class))),
+		@ApiResponse(responseCode = "400", description = ERROR_400),
+		@ApiResponse(responseCode = "404", description = ERROR_404),
+		@ApiResponse(responseCode = "500", description = ERROR_500)
+	})
+	public ResponseEntity<ProductSet> getGulfCoastEdition(
+			@Parameter(description = "Requested product edition", schema = @Schema(allowableValues = {"current", "next"}, defaultValue = "current"))
+			@RequestParam(value = "edition", required = false, defaultValue = "current") String ed) {
 
-		logger.info("Received call to retrieve current VVFR GulfCoast Route Chart product edition for edition '"
-				+ ed + "'.");
+		logger.info("Received call to retrieve current VFR GulfCoast Route Chart product edition for edition '{}'.", ed);
 		return getHelicopterEdition(ed, usGulfCoast);
 	}
 

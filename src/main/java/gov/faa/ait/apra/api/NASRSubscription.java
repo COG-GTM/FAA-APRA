@@ -22,15 +22,14 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import gov.faa.ait.apra.bootstrap.Config;
 import gov.faa.ait.apra.bootstrap.ErrorCodes;
@@ -41,14 +40,18 @@ import gov.faa.ait.apra.jaxb.ProductSet.Edition;
 import gov.faa.ait.apra.cycle.ChartCycleClient;
 import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
 import gov.faa.ait.apra.util.CycleDateUtil;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
 
-@Path ("/nfdc/nasr")
-@Api(value="NASR 28 Day Subscription")
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@RestController
+@RequestMapping("/nfdc/nasr")
+@Tag(name = "NASR 28 Day Subscription", description = "NASR subscription download and edition information")
 /** 
  * This class is used to retrieve the NASR 56 day subscription file
  *
@@ -62,79 +65,66 @@ public class NASRSubscription extends BaseService {
 
 	public NASRSubscription() { } 
 	
-    @GET
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
-    @Path("/chart")
-    @ApiOperation(value="Get the National Flight Data Center NASR 28 day subscription file", 
-    		response=ProductSet.class)
+	@GetMapping(value = "/chart", produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+	@Operation(
+		summary = "Get the NASR 28 day subscription file",
+		description = "Get the National Flight Data Center NASR 28 day subscription file download link"
+	)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
-    
-    /**
-     * This method gets the NASR subscription release information which includes both the edition information and the download url to retrieve the product
-     * @param ed the edition of the release that is requested
-     * @param fmt the format of the release that is requested
-     * @param geo the geographic name of the chart that is requested
-     * @return The Oceanic Chart release in a serialized JSON or XML format
-     */
-	public Response getNASRSubscription (
-    	@ApiParam(name="edition", value="Requested product edition. If omitted, the default current edition is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false)
-    	@QueryParam("edition") String ed) {
-	    logger.info("Received call to retrieve current NFDC NASR subscription release for "+ed);
-	    
-    	setEdition(ed != null ? ed : CURRENT);
-    	setFormat("zip");
-    	
-    	if (!verifyEdition()) {
-    		logger.error("Expected edition current or next and received "+ed+ERROR);
-    		return Response.status(400).entity(getIllegalArgumentError()).build();    		
-    	}
+		@ApiResponse(responseCode = "200", description = RESPONSE_200, content = @Content(schema = @Schema(implementation = ProductSet.class))),
+		@ApiResponse(responseCode = "400", description = ERROR_400),
+		@ApiResponse(responseCode = "404", description = ERROR_404),
+		@ApiResponse(responseCode = "500", description = ERROR_500)
+	})
+	public ResponseEntity<ProductSet> getNASRSubscription(
+			@Parameter(description = "Requested product edition", schema = @Schema(allowableValues = {"current", "next"}, defaultValue = "current"))
+			@RequestParam(value = "edition", required = false, defaultValue = "current") String ed) {
+		logger.info("Received call to retrieve current NFDC NASR subscription release for {}", ed);
 
-    	ChartCycleElementsJson cycle = initParameters();
-    	
-    	ProductSet ps = buildResponse(cycle);
-    	return Response.status(ps.getStatus().getCode()).entity(ps).build();
+		setEdition(ed != null ? ed : CURRENT);
+		setFormat("zip");
 
-    }
- 
-    @GET
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
-    @Path("/info")
-    @ApiOperation(value="Get the National Flight Data Center NASR 28 day subscription file edition information", 
-    		response=ProductSet.class)
+		if (!verifyEdition()) {
+			logger.error("Expected edition current or next and received {}{}", ed, ERROR);
+			return ResponseEntity.status(400).body(getIllegalArgumentError());
+		}
+
+		ChartCycleElementsJson cycle = initParameters();
+
+		ProductSet ps = buildResponse(cycle);
+		return ResponseEntity.status(ps.getStatus().getCode()).body(ps);
+	}
+
+	@GetMapping(value = "/info", produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+	@Operation(
+		summary = "Get the NASR 28 day subscription file edition information",
+		description = "Get the National Flight Data Center NASR 28 day subscription file edition information"
+	)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
-    /**
-     * This method gets the NASR subscription edition information
-     * @param ed the edition of the release that is requested
-     * @return The NASR subscription edition information in a serialized JSON or XML format
-     */
-	public Response getNASREdition (
-    	@ApiParam(name="edition", value="Requested product edition. If omitted, the default current edition is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false)
-    	@QueryParam("edition") String ed) {
-	    logger.info("Received call to retrieve current NASR subscription Chart release for "+ed);
-	    
-    	setEdition(ed != null ? ed : CURRENT);
-    	setFormat("zip");
-    	
-    	if (!verifyEdition()) {
-    		logger.error("Expected edition current or next and received "+ed+ERROR);
-    		return Response.status(400).entity(getIllegalArgumentError()).build();    		
-    	}
+		@ApiResponse(responseCode = "200", description = RESPONSE_200, content = @Content(schema = @Schema(implementation = ProductSet.class))),
+		@ApiResponse(responseCode = "400", description = ERROR_400),
+		@ApiResponse(responseCode = "404", description = ERROR_404),
+		@ApiResponse(responseCode = "500", description = ERROR_500)
+	})
+	public ResponseEntity<ProductSet> getNASREdition(
+			@Parameter(description = "Requested product edition", schema = @Schema(allowableValues = {"current", "next"}, defaultValue = "current"))
+			@RequestParam(value = "edition", required = false, defaultValue = "current") String ed) {
+		logger.info("Received call to retrieve current NASR subscription Chart release for {}", ed);
 
-    	ChartCycleElementsJson cycle = initParameters();
-    	ProductSet response = initPositiveResponse();
-    	response.getEdition().add(initEdition(cycle));
-    	
-    	return Response.status(response.getStatus().getCode()).entity(response).build();
+		setEdition(ed != null ? ed : CURRENT);
+		setFormat("zip");
 
-    }
+		if (!verifyEdition()) {
+			logger.error("Expected edition current or next and received {}{}", ed, ERROR);
+			return ResponseEntity.status(400).body(getIllegalArgumentError());
+		}
+
+		ChartCycleElementsJson cycle = initParameters();
+		ProductSet response = initPositiveResponse();
+		response.getEdition().add(initEdition(cycle));
+
+		return ResponseEntity.status(response.getStatus().getCode()).body(response);
+	}
 	
     // https://nfdc.faa.gov/webContent/28DaySub/28DaySubscription_Effective_2017-08-17.zip
     //

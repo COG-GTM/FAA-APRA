@@ -23,14 +23,13 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import gov.faa.ait.apra.bootstrap.Config;
 import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
@@ -41,78 +40,62 @@ import gov.faa.ait.apra.jaxb.ObjectFactory;
 import gov.faa.ait.apra.jaxb.ProductCodeList;
 import gov.faa.ait.apra.jaxb.ProductSet;
 import gov.faa.ait.apra.jaxb.ProductSet.Edition;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
 
-@Path("/ddof")
-@Api(value="Daily Digital Obstacle File (DDOF)")
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
-/**
- * This service provides the Daily Digital Obstacle File (DDOF) download link and edition information. There is only one release at any given time and it is the
- * daily DOF data file. 
- * @author FAA
- *
- */
+@RestController
+@RequestMapping("/ddof")
+@Tag(name = "Daily Digital Obstacle File (DDOF)", description = "Daily Digital Obstacle File download and edition information")
+
 public class DailyDigitalObstacleFile extends BaseService {
 	private static final Logger logger = LoggerFactory.getLogger(DailyDigitalObstacleFile.class);
-	
-	/**
-	 * This is the base chart download URL. A single parameter is provided to retrieve the URL for the current day's edition
-	 * @return
-	 */
-    @GET
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
-    @Path("/chart")
-    @ApiOperation(value="Get Daily Digital Obstacle File download link.", 
-    	notes="The Daily Digital Obstacle File release is distributed as a zip file containing the latest obstacle information from the FAA database.",
-    	response=ProductSet.class)
-	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
-    
-    public Response getDDOFRelease () {
-    	
-    	logger.info("Received call to retrieve current DDOF product release for edition.");
-    	setFormat(ZIP);
-    	ProductSet ps = getRelease();
-    	return Response.status(ps.getStatus().getCode()).entity(ps).build();
-	
-    }
 
-	/**
-	 * This is the base chart download URL. A single parameter is provided to retrieve the URL for the current day's edition
-	 * @return
-	 */
-    @GET
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
-    @Path("/info")
-    @ApiOperation(value="Get Daily Digital Obstacle File edition information.", 
-    	notes="The Daily Digital Obstacle File is released by the FAA on a daily basis.",
-    	response=ProductSet.class)
+	@GetMapping(value = "/chart", produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+	@Operation(
+		summary = "Get Daily Digital Obstacle File download link",
+		description = "The Daily Digital Obstacle File release is distributed as a zip file containing the latest obstacle information from the FAA database."
+	)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
-    
-    public Response getDDOFEdition () {
-    	
-    	logger.info("Received call to retrieve current DDOF edition information.");
-    	setFormat("ZIP");
-    	ProductSet response = initPositiveResponse();
-    	ProductSet.Edition ed = initEdition(null);
-    	response.getEdition().add(ed);
-    	
-       	ed = initEdition(null);
-    	response.getEdition().add(ed);
-    	
-    	return Response.status(response.getStatus().getCode()).entity(response).build();
-	
-    }    
+		@ApiResponse(responseCode = "200", description = RESPONSE_200, content = @Content(schema = @Schema(implementation = ProductSet.class))),
+		@ApiResponse(responseCode = "400", description = ERROR_400),
+		@ApiResponse(responseCode = "404", description = ERROR_404),
+		@ApiResponse(responseCode = "500", description = ERROR_500)
+	})
+	public ResponseEntity<ProductSet> getDDOFRelease() {
+		logger.info("Received call to retrieve current DDOF product release for edition.");
+		setFormat(ZIP);
+		ProductSet ps = getRelease();
+		return ResponseEntity.status(ps.getStatus().getCode()).body(ps);
+	}
+
+	@GetMapping(value = "/info", produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+	@Operation(
+		summary = "Get Daily Digital Obstacle File edition information",
+		description = "The Daily Digital Obstacle File is released by the FAA on a daily basis."
+	)
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = RESPONSE_200, content = @Content(schema = @Schema(implementation = ProductSet.class))),
+		@ApiResponse(responseCode = "400", description = ERROR_400),
+		@ApiResponse(responseCode = "404", description = ERROR_404),
+		@ApiResponse(responseCode = "500", description = ERROR_500)
+	})
+	public ResponseEntity<ProductSet> getDDOFEdition() {
+		logger.info("Received call to retrieve current DDOF edition information.");
+		setFormat("ZIP");
+		ProductSet response = initPositiveResponse();
+		ProductSet.Edition ed = initEdition(null);
+		response.getEdition().add(ed);
+
+		ed = initEdition(null);
+		response.getEdition().add(ed);
+
+		return ResponseEntity.status(response.getStatus().getCode()).body(response);
+	}    
     
 	private ProductSet getRelease() {
 		return buildResponse(null);

@@ -23,11 +23,6 @@ import gov.faa.ait.apra.jaxb.ProductSet.Edition;
 import gov.faa.ait.apra.jaxb.ProductSet.Status;
 import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
 import gov.faa.ait.apra.cycle.VFRChartCycleClient;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
 
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_400;
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_404;
@@ -38,27 +33,27 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
-import org.apache.commons.lang3.text.WordUtils;
+import org.apache.commons.text.WordUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-/**
- * This class provides the VFR charts and specifically charts for the Grand Canyon
- * area. 
- * 
- * @author FAA
- *
- */
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
-@Api(value = "Grand Canyon VFR Chart")
-@Path("/vfr/grandcanyon")
+@RestController
+@RequestMapping("/vfr/grandcanyon")
+@Tag(name = "Grand Canyon VFR Chart", description = "Grand Canyon VFR chart download and edition information")
 public class VFRCharts extends BaseService {
 	private URL downloadURL = null;
 	private ProductSet response = null;
@@ -67,66 +62,51 @@ public class VFRCharts extends BaseService {
 	private static final Logger logger = LoggerFactory
 			.getLogger(VFRCharts.class);
 
-	/**
-	 * This is the VFR chart download URL. A single parameter is provided to
-	 * retrieve the URL for either the current or the next edition
-	 * 
-	 * @param ed the edition of either CURRENT or NEXT
-	 * @param geo the geographic area desired
-	 * @return
-	 */
-	@GET
-	@Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML })
-	@Path("/chart")
-	@ApiOperation(value = "Get VFR Grand Canyon chart edition information and download link", nickname="getGrandCanyonProductRelease", response = ProductSet.class)
+	@GetMapping(value = "/chart", produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+	@Operation(
+		summary = "Get VFR Grand Canyon chart download link",
+		description = "Get VFR Grand Canyon chart edition information and download link"
+	)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
-	
-	public Response getGrandCanyonRelease(
-			@ApiParam(name="edition", value="Requested product edition. If omitted, the default current edition is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed) {
+		@ApiResponse(responseCode = "200", description = RESPONSE_200, content = @Content(schema = @Schema(implementation = ProductSet.class))),
+		@ApiResponse(responseCode = "400", description = ERROR_400),
+		@ApiResponse(responseCode = "404", description = ERROR_404),
+		@ApiResponse(responseCode = "500", description = ERROR_500)
+	})
+	public ResponseEntity<ProductSet> getGrandCanyonRelease(
+			@Parameter(description = "Requested product edition", schema = @Schema(allowableValues = {"current", "next"}, defaultValue = "current"))
+			@RequestParam(value = "edition", required = false, defaultValue = "current") String ed) {
 
-		logger.info("Received call to retrieve current VFR product release for edition '"
-				+ ed + "'.");
+		logger.info("Received call to retrieve current VFR product release for edition '{}'.", ed);
 		this.setGeoname("Grand_Canyon");
 		ObjectFactory of = new ObjectFactory();
 
 		response = of.createProductSet();
 
 		if (!validateRequest(ed)) {
-	    	return Response.status(response.getStatus().getCode()).entity(response).build();
+			return ResponseEntity.status(response.getStatus().getCode()).body(response);
 		}
 
 		ProductSet ps = getRelease(cycle);
-		return Response.status(ps.getStatus().getCode()).entity(ps).build();
+		return ResponseEntity.status(ps.getStatus().getCode()).body(ps);
 	}
 
-	/**
-	 * 
-	 * This method produces the edition response for the Grand Canyon charts, but
-	 * omits the download URL for the charts. This is the edition information only.
-	 * 
-	 * @param ed the edition to be returned either CURRENT or NEXT
-	 * @param geo the target geographic area for the response
-	 * @return
-	 */
-	@GET
-	@Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML })
-	@Path("/info")
-	@ApiOperation(value = "Get VFR edition date and edition number by edition type of current or next", nickname="getGrandCanyonEdition", response = ProductSet.class)
+	@GetMapping(value = "/info", produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+	@Operation(
+		summary = "Get VFR Grand Canyon chart edition information",
+		description = "Get VFR edition date and edition number by edition type"
+	)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
+		@ApiResponse(responseCode = "200", description = RESPONSE_200, content = @Content(schema = @Schema(implementation = ProductSet.class))),
+		@ApiResponse(responseCode = "400", description = ERROR_400),
+		@ApiResponse(responseCode = "404", description = ERROR_404),
+		@ApiResponse(responseCode = "500", description = ERROR_500)
+	})
+	public ResponseEntity<ProductSet> getGrandCanyonEdition(
+			@Parameter(description = "Requested product edition", schema = @Schema(allowableValues = {"current", "next"}, defaultValue = "current"))
+			@RequestParam(value = "edition", required = false, defaultValue = "current") String ed) {
 
-	public Response getGrandCanyonEdition(
-			@ApiParam(name="edition", value="Requested product edition. If omitted, the default current edition information is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed) {
-
-		logger.info("Received call to retrieve current VFR product edition for edition '"
-				+ ed + "'.");
+		logger.info("Received call to retrieve current VFR product edition for edition '{}'.", ed);
 
 		this.setGeoname("Grand_Canyon");
 		ObjectFactory of = new ObjectFactory();
@@ -134,12 +114,11 @@ public class VFRCharts extends BaseService {
 		response = of.createProductSet();
 
 		if (!validateRequest(ed)) {
-	    	return Response.status(response.getStatus().getCode()).entity(response).build();
-
+			return ResponseEntity.status(response.getStatus().getCode()).body(response);
 		}
 
 		ProductSet ps = getEdition(cycle);
-		return Response.status(ps.getStatus().getCode()).entity(ps).build();
+		return ResponseEntity.status(ps.getStatus().getCode()).body(ps);
 	}
 
 	/**

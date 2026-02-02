@@ -22,15 +22,14 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import gov.faa.ait.apra.bootstrap.Config;
 import gov.faa.ait.apra.bootstrap.ErrorCodes;
@@ -40,14 +39,18 @@ import gov.faa.ait.apra.jaxb.ProductSet;
 import gov.faa.ait.apra.jaxb.ProductSet.Edition;
 import gov.faa.ait.apra.cycle.ChartCycleClient;
 import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
 
-@Path ("/ifr/oceanic")
-@Api(value="Oceanic Route Charts")
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@RestController
+@RequestMapping("/ifr/oceanic")
+@Tag(name = "Oceanic Route Charts", description = "Oceanic Route chart download and edition information")
 /** 
  * This class is used to retrieve the Oceanic Route charts
  * @author FAA
@@ -60,88 +63,74 @@ public class OceanicRouteCharts extends BaseService {
 	private static final String WATRS = "WATRS";
 	private static final String ERROR = " Error response being generated and returned.";
 
-    @GET
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
-    @Path("/chart")
-    @ApiOperation(value="Get Oceanic Route Chart download link by edition, format, and geoname", 
-    		notes="TIFF formatted files are geo-referenced while PDF format is not geo-referenced. Geoname is a geographic area "
-    				+ "for which the chart is requested. Valid geographic names are Pacific (PORC), North Atlantic (NARC), and Wester Atlantic (WATRS) ", 
-    		response=ProductSet.class)
+	@GetMapping(value = "/chart", produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+	@Operation(
+		summary = "Get Oceanic Route Chart download link",
+		description = "Get Oceanic Route Chart download link by edition, format, and geoname. TIFF formatted files are geo-referenced while PDF format is not geo-referenced."
+	)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
-    
-    /**
-     * This method gets the Oceanic Chart release information which includes both the edition information and the download url to retrieve the product
-     * @param ed the edition of the release that is requested
-     * @param fmt the format of the release that is requested
-     * @param geo the geographic name of the chart that is requested
-     * @return The Oceanic Chart release in a serialized JSON or XML format
-     */
-	public Response getOceanicRouteChart (
-    		@ApiParam(name="edition", value="Requested product edition. If omitted, the default current edition is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed, 
-    		@ApiParam (name="format", value="Format of the requested chart. TIFF is georeferenced and PDF is not georeferenced. If omitted, the default format of PDF is returned.", allowableValues="tiff, pdf", defaultValue="pdf", allowMultiple=false, required=false) @QueryParam("format") String fmt, 
-    		@ApiParam (name="geoname", value="A geographic area for which the chart is requested", allowableValues="NARC, PORC, WATRS", defaultValue="PORC", required=true) @QueryParam ("geoname") String geo) {
+		@ApiResponse(responseCode = "200", description = RESPONSE_200, content = @Content(schema = @Schema(implementation = ProductSet.class))),
+		@ApiResponse(responseCode = "400", description = ERROR_400),
+		@ApiResponse(responseCode = "404", description = ERROR_404),
+		@ApiResponse(responseCode = "500", description = ERROR_500)
+	})
+	public ResponseEntity<ProductSet> getOceanicRouteChart(
+			@Parameter(description = "Requested product edition", schema = @Schema(allowableValues = {"current", "next"}, defaultValue = "current"))
+			@RequestParam(value = "edition", required = false, defaultValue = "current") String ed,
+			@Parameter(description = "Format of the requested chart", schema = @Schema(allowableValues = {"tiff", "pdf"}, defaultValue = "pdf"))
+			@RequestParam(value = "format", required = false, defaultValue = "pdf") String fmt,
+			@Parameter(description = "A geographic area for which the chart is requested", required = true, schema = @Schema(allowableValues = {"NARC", "PORC", "WATRS"}))
+			@RequestParam("geoname") String geo) {
 
-	    	logger.info("Received call to retrieve current Oceanic Route Chart release for '"+ed+"', '"+fmt+"', '"+geo+"'");
-			
-	    	setEdition(ed != null ? ed : CURRENT);
-	    	setGeoname(geo != null ? geo : PORC);
-	    	setFormat (fmt != null ? fmt : PDF);
-	    	
-	    	if (!verifyEdition()) {
-	    		logger.error("Expected edition 'next' and received '"+ed+ERROR);
-	    		return Response.status(400).entity(getIllegalArgumentError()).build();    		
-	    	}
-	    	
-	    	if (!verifyFormat()) {
-	    		logger.error("Expected format of 'tiff' or 'pdf'. Received format '"+fmt+ERROR);
-	    		return Response.status(400).entity(getIllegalArgumentError()).build();    		
-	    	}
-	    	
-	    	if (!verifyGeoname()) {
-	    		logger.error("Expected geographic area of NARC, PORC, or WATRS. Received geoname of '"+geo+ERROR);
-	    		return Response.status(400).entity(getErrorResponse(400, "Expected geographic area of NARC, PORC, or WATRS. Received geoname of "+geo)).build();
-	    	}
-	    	
-	    	ChartCycleElementsJson cycle = initParameters();
-	    	
-	    	ProductSet ps = buildResponse(cycle);
-	    	return Response.status(ps.getStatus().getCode()).entity(ps).build();
+		logger.info("Received call to retrieve current Oceanic Route Chart release for '{}', '{}', '{}'", ed, fmt, geo);
 
+		setEdition(ed != null ? ed : CURRENT);
+		setGeoname(geo != null ? geo : PORC);
+		setFormat(fmt != null ? fmt : PDF);
+
+		if (!verifyEdition()) {
+			logger.error("Expected edition 'next' and received '{}'{}", ed, ERROR);
+			return ResponseEntity.status(400).body(getIllegalArgumentError());
 		}
 
-    @GET
-    @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
-    @Path("/info")
-    @ApiOperation(value="Get Oceanic Route Chart edition information by edition type", 
-    		notes="All oceanic charts are released on a regular 56 day cycle. "
-    				+ "The format and geographic name are not necessary to obtain edition information.", 
-    		response=ProductSet.class)
+		if (!verifyFormat()) {
+			logger.error("Expected format of 'tiff' or 'pdf'. Received format '{}'{}", fmt, ERROR);
+			return ResponseEntity.status(400).body(getIllegalArgumentError());
+		}
+
+		if (!verifyGeoname()) {
+			logger.error("Expected geographic area of NARC, PORC, or WATRS. Received geoname of '{}'{}", geo, ERROR);
+			return ResponseEntity.status(400).body(getErrorResponse(400, "Expected geographic area of NARC, PORC, or WATRS. Received geoname of " + geo));
+		}
+
+		ChartCycleElementsJson cycle = initParameters();
+
+		ProductSet ps = buildResponse(cycle);
+		return ResponseEntity.status(ps.getStatus().getCode()).body(ps);
+	}
+
+	@GetMapping(value = "/info", produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+	@Operation(
+		summary = "Get Oceanic Route Chart edition information",
+		description = "Get Oceanic Route Chart edition information by edition type. All oceanic charts are released on a regular 56 day cycle."
+	)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
-    
-    /**
-     * This method gets the Oceanic Chart edition information
-     * @param ed the edition of the release that is requested
-     * @return The Oceanic Chart edition in a serialized JSON or XML format
-     */
-	public Response getOceanicRouteEdition (
-    		@ApiParam(name="edition", value="Requested product edition. If omitted, the default current edition information is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed) {
+		@ApiResponse(responseCode = "200", description = RESPONSE_200, content = @Content(schema = @Schema(implementation = ProductSet.class))),
+		@ApiResponse(responseCode = "400", description = ERROR_400),
+		@ApiResponse(responseCode = "404", description = ERROR_404),
+		@ApiResponse(responseCode = "500", description = ERROR_500)
+	})
+	public ResponseEntity<ProductSet> getOceanicRouteEdition(
+			@Parameter(description = "Requested product edition", schema = @Schema(allowableValues = {"current", "next"}, defaultValue = "current"))
+			@RequestParam(value = "edition", required = false, defaultValue = "current") String ed) {
 
-    	setEdition(ed != null ? ed : CURRENT);    	
-    	setGeoname("ALL");
-    	setFormat("PDF");
-    	ChartCycleElementsJson cycle = initParameters();
-    	ProductSet ps = getEditionResponse(cycle);
-    	return Response.status(ps.getStatus().getCode()).entity(ps).build();
-
-    }
+		setEdition(ed != null ? ed : CURRENT);
+		setGeoname("ALL");
+		setFormat("PDF");
+		ChartCycleElementsJson cycle = initParameters();
+		ProductSet ps = getEditionResponse(cycle);
+		return ResponseEntity.status(ps.getStatus().getCode()).body(ps);
+	}
     
     
     // http://aeronav.faa.gov/enroute/05-26-2016/narc_tif.zip
