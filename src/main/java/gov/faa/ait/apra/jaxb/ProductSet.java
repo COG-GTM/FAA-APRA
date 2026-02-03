@@ -57,14 +57,14 @@ public class ProductSet {
     @XmlAccessorType(XmlAccessType.FIELD)
     @XmlType(name = "", propOrder = {"code", "message"})
     public static class Status {
-        protected int code;
+        protected Integer code;
         protected String message;
 
-        public int getCode() {
+        public Integer getCode() {
             return code;
         }
 
-        public void setCode(int value) {
+        public void setCode(Integer value) {
             this.code = value;
         }
 
