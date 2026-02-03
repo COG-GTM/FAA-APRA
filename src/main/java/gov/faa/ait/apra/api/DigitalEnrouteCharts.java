@@ -21,12 +21,12 @@ import static gov.faa.ait.apra.bootstrap.ErrorCodes.RESPONSE_200;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,14 +40,14 @@ import gov.faa.ait.apra.jaxb.ProductCodeList;
 import gov.faa.ait.apra.jaxb.ProductSet;
 import gov.faa.ait.apra.jaxb.ProductSet.Edition;
 import gov.faa.ait.apra.util.CycleDateUtil;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 @Path("/dec")
-@Api(value="Digital Enroute Charts US (DDECUS)")
+@Tag(name="Digital Enroute Charts US (DDECUS)")
 
 /**
  * This is the service to return the URL for the Digital Enroute Charts (DDECUS). The chart set is part of the IFR and DERS chart group
@@ -68,18 +68,18 @@ public class DigitalEnrouteCharts extends BaseService {
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
     @Path("/chart")
-    @ApiOperation(value="Get Digital Enroute Chart download link by edition type of current or next. If edition is left blank or null, the default edition of current is used.", 
+    @Operation(summary="Get Digital Enroute Chart download link by edition type of current or next. If edition is left blank or null, the default edition of current is used.", 
     	notes="The DEC US release is distributed as a zip file containing charts.",
     	response=ProductSet.class)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
+			@ApiResponse(responseCode = "200", description = RESPONSE_200),
+			@ApiResponse(responseCode = "400", description = ERROR_400),
+			@ApiResponse(responseCode = "404", description = ERROR_404),
+			@ApiResponse(responseCode = "500", description = ERROR_500)})
 	// http://aeronav.faa.gov/Upload_313-d/enroute/DDECUS_32.zip 
     
     public Response getDECRelease (
-    		@ApiParam(name="edition", value="Requested product edition. If omitted, current edition is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed) {
+    		@Parameter(name="edition", description="Requested product edition. If omitted, current edition is returned.") @QueryParam("edition") String ed) {
     	logger.info("Received call to retrieve current CIFP product release for edition '"+ed+"'.");
 
     	ChartCycleElementsJson cycle = initParameters (ed);
@@ -101,13 +101,13 @@ public class DigitalEnrouteCharts extends BaseService {
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
     @Path("/info")
-    @ApiOperation(value="Get CIFP edition date and edition number by edition type of current or next. If the edition is left blank or null, the default edition of current is used.", response=ProductSet.class)
+    @Operation(summary="Get CIFP edition date and edition number by edition type of current or next. If the edition is left blank or null, the default edition of current is used.")
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
-    public Response getDECEdition (@ApiParam(name="edition", value="Requested product edition. If omitted, current edition is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed) {
+			@ApiResponse(responseCode = "200", description = RESPONSE_200),
+			@ApiResponse(responseCode = "400", description = ERROR_400),
+			@ApiResponse(responseCode = "404", description = ERROR_404),
+			@ApiResponse(responseCode = "500", description = ERROR_500)})
+    public Response getDECEdition (@Parameter(name="edition", description="Requested product edition. If omitted, current edition is returned.") @QueryParam("edition") String ed) {
     	ChartCycleElementsJson cycle = initParameters(ed);
     	
     	if (! verifyEdition() ) {

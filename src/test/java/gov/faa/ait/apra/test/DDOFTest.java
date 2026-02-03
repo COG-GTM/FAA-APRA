@@ -13,11 +13,11 @@
  */
 package gov.faa.ait.apra.test;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import gov.faa.ait.apra.api.DailyDigitalObstacleFile;
 

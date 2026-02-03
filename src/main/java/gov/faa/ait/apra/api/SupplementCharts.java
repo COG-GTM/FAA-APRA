@@ -27,11 +27,11 @@ import gov.faa.ait.apra.cycle.ChartCycleClient;
 import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
 
 import gov.faa.ait.apra.util.SupplementMetadataClient;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_400;
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_404;
@@ -41,12 +41,12 @@ import static gov.faa.ait.apra.bootstrap.ErrorCodes.RESPONSE_200;
 import java.text.SimpleDateFormat;
 
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,10 +82,10 @@ public class SupplementCharts extends BaseService {
 			+ "Requests for charts by volume other than US complete set returns a list of download URLs which can be quite extensive."
 			, response = ProductSet.class)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
+			@ApiResponse(responseCode = "200", description = RESPONSE_200),
+			@ApiResponse(responseCode = "400", description = ERROR_400),
+			@ApiResponse(responseCode = "404", description = ERROR_404),
+			@ApiResponse(responseCode = "500", description = ERROR_500)})
 	public Response getSupplementRelease(
 			@ApiParam(name = "edition", value = "Requested product edition. If omitted, the default current edition is returned.", allowableValues = "current, next", defaultValue = "current", allowMultiple = false, required = false) @QueryParam("edition") String ed,
 			@ApiParam(name = "volume", value = "Requested volume of Supplement chart set. If omitted, the complete US set is returned.", allowableValues = "NORTHWEST, SOUTHWEST, NORTH CENTRAL, SOUTH CENTRAL, EAST CENTRAL, SOUTHEAST, NORTHEAST, PACIFIC, ALASKA", allowMultiple = false, required = false) @QueryParam("volume") String vol) {
@@ -141,10 +141,10 @@ public class SupplementCharts extends BaseService {
 	@Path("/info")
 	@ApiOperation(value = "Get Supplement chart edition information by requesting an edition and volume.", response = ProductSet.class)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
+			@ApiResponse(responseCode = "200", description = RESPONSE_200),
+			@ApiResponse(responseCode = "400", description = ERROR_400),
+			@ApiResponse(responseCode = "404", description = ERROR_404),
+			@ApiResponse(responseCode = "500", description = ERROR_500)})
 	public Response getSupplementEdition(
 			@ApiParam(name = "edition", value = "Requested product edition. If omitted, the default current edition is returned.", allowableValues = "current, next", defaultValue = "current", allowMultiple = false, required = false) @QueryParam("edition") String ed,
 			@ApiParam(name = "volume", value = "Requested volume of Supplement chart set. If omitted, the edition information for the complete US set is returned.", allowableValues = "NORTHWEST, SOUTHWEST, NORTH CENTRAL, SOUTH CENTRAL, EAST CENTRAL, SOUTHEAST, NORTHEAST, PACIFIC, ALASKA", allowMultiple = false, required = false) @QueryParam("volume") String vol) {

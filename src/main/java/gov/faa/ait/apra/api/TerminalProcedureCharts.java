@@ -20,16 +20,24 @@ import static gov.faa.ait.apra.bootstrap.ErrorCodes.RESPONSE_200;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
-import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,14 +58,14 @@ import gov.faa.ait.apra.cycle.ChartCycleClient;
 import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
 
 import gov.faa.ait.apra.util.TPPMetadataClient;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 @Path("/dtpp")
-@Api(value="US Terminal Procedures Publication (TPP)")
+@Tag(name="US Terminal Procedures Publication (TPP)")
 /**
  * This class services requests for the digital terminal procedures publication. Currently, the allowed publication sets are US complete set and state complete set. If a changeset parameter is specified,
  * the service responds with only charts that have changed since the previous release of dTPP
@@ -71,17 +79,17 @@ public class TerminalProcedureCharts extends BaseService {
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
     @Path("/chart")
-    @ApiOperation(value="Get Terminal Procedure Publication chart download information by requesting an edition with geographic area of United States or a valid US State Name.", 
+    @Operation(summary="Get Terminal Procedure Publication chart download information by requesting an edition with geographic area of United States or a valid US State Name.", 
     	notes="The complete United States Terminal Procedure Publication (TPP) release is distributed as a set of zip files containing charts and verification software. "
     			+ "Requests for charts by state returns a list of download URLs which can be quite extensive. "
     			+" All 50 US states are valid for requesting chart publication download URLs. The special 'changeset' edition operates against "
     			+ "the current release and returns the charts that were changed since the previous release. ",
     	response=ProductSet.class)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
+			@ApiResponse(responseCode = "200", description = RESPONSE_200),
+			@ApiResponse(responseCode = "400", description = ERROR_400),
+			@ApiResponse(responseCode = "404", description = ERROR_404),
+			@ApiResponse(responseCode = "500", description = ERROR_500)})
  
 	/**
 	 * This is the base chart download URL. Parameters are provided for edition and geoname. The geoname can be US, US state, or publication volume
@@ -91,8 +99,8 @@ public class TerminalProcedureCharts extends BaseService {
 	 * @return the product set
 	 */
     public Response getTPPRelease (
-    		@ApiParam(name="edition", value="Requested product edition. If omitted, the default current edition is returned.", allowableValues="current, next, changeset", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed,
-    		@ApiParam(name="geoname", value="Requested geographic region of Terminal Procedures Publication chart set. Specify either US or a valid full state name such as Alaska. If omitted, the default US complete set is returned.", defaultValue="US", allowMultiple=false, required=false) @QueryParam("geoname") String geo) {
+    		@Parameter(name="edition", description="Requested product edition. If omitted, the default current edition is returned.") @QueryParam("edition") String ed,
+    		@Parameter(name="geoname", description="Requested geographic region of Terminal Procedures Publication chart set. Specify either US or a valid full state name such as Alaska. If omitted, the default US complete set is returned.") @QueryParam("geoname") String geo) {
     	ChartCycleElementsJson cycle;
     	
     	logger.info("Received call to retrieve current TPP product release for edition '"+ed+"'.");
@@ -136,14 +144,14 @@ public class TerminalProcedureCharts extends BaseService {
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
     @Path("/info")
-    @ApiOperation(value="Get Terminal Procedure Publication chart edition information by requesting an edition with geographic area of United States or one of the 50 US states", 
+    @Operation(summary="Get Terminal Procedure Publication chart edition information by requesting an edition with geographic area of United States or one of the 50 US states", 
     	notes="The US Terminal Procedure Publication is released on a 28 day airspace cycle. Edition information is identical regardless of the geographic area or format of the desired charts.",
     	response=ProductSet.class)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
+			@ApiResponse(responseCode = "200", description = RESPONSE_200),
+			@ApiResponse(responseCode = "400", description = ERROR_400),
+			@ApiResponse(responseCode = "404", description = ERROR_404),
+			@ApiResponse(responseCode = "500", description = ERROR_500)})
     
 	/**
 	 * This is the base chart download URL. Parameters are provided for edition and geoname. The geoname can be US, US state, or publication volume
@@ -153,8 +161,8 @@ public class TerminalProcedureCharts extends BaseService {
 	 * @return
 	 */    
     public Response getTPPEdition (
-    		@ApiParam(name="edition", value="Requested product edition. If omitted, the default current edition information is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed,
-    		@ApiParam(name="geoname", value="Requested geographic region of Terminal Procedures Publication chart set. Specify US or a valid full US state name such as Alaska. If omitted, edition information for the complete US set is returned.", defaultValue="US", allowMultiple=false, required=false) @QueryParam("geoname") String geo) {
+    		@Parameter(name="edition", description="Requested product edition. If omitted, the default current edition information is returned.") @QueryParam("edition") String ed,
+    		@Parameter(name="geoname", description="Requested geographic region of Terminal Procedures Publication chart set. Specify US or a valid full US state name such as Alaska. If omitted, edition information for the complete US set is returned.") @QueryParam("geoname") String geo) {
     	ChartCycleElementsJson cycle;
     	
     	logger.info("Received call to retrieve current TPP product release for edition '"+ed+"'.");
@@ -221,56 +229,55 @@ public class TerminalProcedureCharts extends BaseService {
     	ObjectFactory of = new ObjectFactory();
     	TPPMetadataClient tppClient = new TPPMetadataClient (cycle, isChangeFlag()); 
     	TPPMetadata [] elements = tppClient.getChartMetadataByState(capitalizeGeoname()).getElements();
-    	HashSet <String> processedFiles = new HashSet <> ();
-    	int processTotal = 0;
     	
     	if (elements == null || elements.length == 0) 
     		return getErrorResponse(404, ErrorCodes.ERROR_404);
     	
     	logger.info(elements.length+" total charts found for "+getEdition()+" "+capitalizeGeoname()+" with change flag = "+isChangeFlag());
     	
+    	List<TPPMetadata> uniqueElements = Arrays.stream(elements)
+    		.collect(Collectors.toMap(
+    			TPPMetadata::getChart_name,
+    			e -> e,
+    			(existing, replacement) -> existing))
+    		.values()
+    		.stream()
+    		.collect(Collectors.toList());
+    	
+    	logger.info(uniqueElements.size()+" unique charts after deduplication for "+getEdition()+" "+capitalizeGeoname());
+    	
     	String edition = tppClient.getEdition();
     	ProductSet ps = initPositiveResponse();
     	
-    	for (int i = 0; i < elements.length; i++) {
-    		if (processedFiles.contains(elements[i].getChart_name())) {
-    			//skip the chart if we've already processed it
-    			continue;
-    		}
-    		else {
-    			// add the chart to our processed list and we build the response
-    			processedFiles.add(elements[i].getChart_name());
-    			processTotal++;
-    		}
-    		
+    	for (TPPMetadata element : uniqueElements) {
     		StringBuilder path = new StringBuilder(Config.getTPPChartPath());
     		Edition ed = initEdition(cycle);
     		ed.setFormat(FormatCodeList.PDF);
-    		ed.setGeoname(elements[i].getState_fullname());
-    		ed.setVolume(elements[i].getVolume());
+    		ed.setGeoname(element.getState_fullname());
+    		ed.setVolume(element.getVolume());
 
         	Product product = of.createProductSetEditionProduct();      	
         	product.setProductName(ProductCodeList.TPP);
-        	product.setChartName(elements[i].getChart_name());   
+        	product.setChartName(element.getChart_name());   
         	
-        	if (! isNullValue(elements[i].getAirport_icao_identifier()))
-        		product.setIcao(elements[i].getAirport_icao_identifier());
+        	if (! isNullValue(element.getAirport_icao_identifier()))
+        		product.setIcao(element.getAirport_icao_identifier());
         	
-        	if (! isNullValue(elements[i].getAirport_identifier()))
-        		product.setAirportId(elements[i].getAirport_identifier());
+        	if (! isNullValue(element.getAirport_identifier()))
+        		product.setAirportId(element.getAirport_identifier());
         	
-        	if (! isNullValue(elements[i].getCity_name()))
-        		product.setCityName(elements[i].getCity_name());
+        	if (! isNullValue(element.getCity_name()))
+        		product.setCityName(element.getCity_name());
         	
-        	if (! isNullValue(elements[i].getAirport_name())) 
-        		product.setAirportName(elements[i].getAirport_name());
+        	if (! isNullValue(element.getAirport_name())) 
+        		product.setAirportName(element.getAirport_name());
         	
     		path.append("/").append(edition);
-    		path.append("/").append(elements[i].getPdf_name());
+    		path.append("/").append(element.getPdf_name());
     		
     		product.setUrl(Config.getAeronavHost()+path.toString());
     		
-        	setChangeType(product, elements[i].getUseraction());
+        	setChangeType(product, element.getUseraction());
     		
     		// The HEAD check for TPP files can introduce a significant performance penalty. This is controlled by a flag in the Configuration. 
     		// Recommendation is to enable the flag in DEV only and leave disabled in TEST and PROD unless someone wants to check and verify in TEST
@@ -285,8 +292,7 @@ public class TerminalProcedureCharts extends BaseService {
         	ps.getEdition().add(ed);
     	}
     	
-    	processedFiles.clear();
-    	logger.info("Processed a total of "+processTotal+" charts for "+this.getGeoname());
+    	logger.info("Processed a total of "+uniqueElements.size()+" charts for "+this.getGeoname());
     	
        	return ps;
     }   

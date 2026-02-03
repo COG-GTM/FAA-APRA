@@ -16,19 +16,19 @@
           </snapshots>
           <id>central</id>
           <name>libs-release</name>
-          <url>http://artifactory.faa.gov:8081/artifactory/libs-release</url>
+          <url>https://artifactory.faa.gov:8081/artifactory/libs-release</url>
         </repository>
         <repository>
           <snapshots />
           <id>snapshots</id>
           <name>libs-snapshot</name>
-          <url>http://artifactory.faa.gov:8081/artifactory/libs-snapshot</url>
+          <url>https://artifactory.faa.gov:8081/artifactory/libs-snapshot</url>
         </repository>
         <repository>
           <snapshots/>
           <id>faa-apra</id>
           <name>faa-apra</name>
-          <url>http://artifactory.faa.gov:8081/artifactory/faa-apra</url>
+          <url>https://artifactory.faa.gov:8081/artifactory/faa-apra</url>
         </repository>
       </repositories>
 
@@ -39,11 +39,11 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.5.1</version>
+                <version>3.11.0</version>
                 <inherited>true</inherited>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <source>11</source>
+                    <target>11</target>
                 </configuration>
             </plugin>
         </plugins>
@@ -59,9 +59,23 @@
                 <scope>import</scope>
             </dependency>
             <dependency>
+                <groupId>com.fasterxml.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>${jackson.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-bom</artifactId>
+                <version>${log4j.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
             	<groupId>org.glassfish.jersey.containers</groupId>
             	<artifactId>jersey-container-servlet</artifactId>
-            	<version>2.25.1</version>
+            	<version>${jersey.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -72,44 +86,51 @@
             <artifactId>jersey-media-moxy</artifactId>
         </dependency>
         <dependency>
-        	<groupId>log4j</groupId>
-        	<artifactId>log4j</artifactId>
-        	<version>1.2.12</version>
-        </dependency>
-        <dependency>
         	<groupId>org.apache.logging.log4j</groupId>
         	<artifactId>log4j-core</artifactId>
-        	<version>2.17.1</version>
         </dependency>
         <dependency>
         	<groupId>org.apache.logging.log4j</groupId>
         	<artifactId>log4j-slf4j-impl</artifactId>
-        	<version>2.4.1</version>
         </dependency>
         <dependency>
-        	<groupId>junit</groupId>
-        	<artifactId>junit</artifactId>
-        	<version>4.12</version>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit-jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>5.5.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <version>5.5.0</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
            <groupId>com.fasterxml.jackson.core</groupId>
            <artifactId>jackson-databind</artifactId>
-           <version>2.15.2</version>
          </dependency>
         <dependency>
         	<groupId>com.fasterxml.jackson.core</groupId>
         	<artifactId>jackson-core</artifactId>
-        	<version>2.15.2</version>
         </dependency>
         <dependency>
-        	<groupId>io.swagger</groupId>
-        	<artifactId>swagger-jersey2-jaxrs</artifactId>
-        	<version>1.5.0</version>
+        	<groupId>com.fasterxml.jackson.core</groupId>
+        	<artifactId>jackson-annotations</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-jaxrs2-jakarta</artifactId>
+            <version>2.2.15</version>
         </dependency>
         <dependency>
         	<groupId>org.apache.logging.log4j</groupId>
         	<artifactId>log4j-web</artifactId>
-        	<version>2.4.1</version>
         </dependency>
         <dependency>
         	<groupId>gov.faa.ait</groupId>
@@ -123,16 +144,22 @@
         <dependency>
         	<groupId>org.glassfish.jersey.core</groupId>
         	<artifactId>jersey-client</artifactId>
-        	<version>2.25.1</version>
         </dependency>
         <dependency>
-        	<groupId>javax.ws.rs</groupId>
-        	<artifactId>javax.ws.rs-api</artifactId>
-        	<version>2.0.1</version>
+            <groupId>org.glassfish.jersey.inject</groupId>
+            <artifactId>jersey-hk2</artifactId>
+        </dependency>
+        <dependency>
+        	<groupId>jakarta.ws.rs</groupId>
+        	<artifactId>jakarta.ws.rs-api</artifactId>
+        	<version>3.1.0</version>
         </dependency>
     </dependencies>
     <properties>
-        <jersey.version>2.25.1</jersey.version>
+        <jersey.version>3.1.3</jersey.version>
+        <jackson.version>2.15.2</jackson.version>
+        <log4j.version>2.17.1</log4j.version>
+        <junit-jupiter.version>5.10.0</junit-jupiter.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <revision>0</revision>
     </properties>
