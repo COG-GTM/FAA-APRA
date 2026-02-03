@@ -13,18 +13,17 @@
  */
 package gov.faa.ait.apra.test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.stream.Stream;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +33,6 @@ import gov.faa.ait.apra.jaxb.ProductSet;
 import gov.faa.ait.apra.cycle.ChartCycleClient;
 import gov.faa.ait.apra.cycle.ChartCycleData;
 
-@RunWith(Parameterized.class)
 public class CIFPTest {
 	private Date releaseDate = null;
 	
@@ -42,51 +40,47 @@ public class CIFPTest {
 	private ChartCycleClient client;
 	private CIFP cifp;
 	
-	public CIFPTest (Date date) {
-		GregorianCalendar cal = new GregorianCalendar();
-		cal.clear();
-		cal.set(2015,  5, 1);
-		this.releaseDate = cal.getTime();
-	}
-	
-	@Before
+	@BeforeEach
 	public void initialize() {
 		client = new ChartCycleClient();
 		cifp = new CIFP();
+		GregorianCalendar cal = new GregorianCalendar();
+		cal.clear();
+		cal.set(2015, 5, 1);
+		this.releaseDate = cal.getTime();
 	}
 	
-	@Parameterized.Parameters
-	public static Collection<Date> cycleNumbers () {
-		Date [] params = new Date [10];	
+	public static Stream<Date> cycleNumbers() {
+		Date[] params = new Date[10];
 
-			GregorianCalendar cal = new GregorianCalendar();
-			cal.clear();
-			cal.set(2015, 0, 01);
-			
-			params[0] = cal.getTime();
-			for (int i = 1; i < 6; i++) {		
-				cal.add(Calendar.DATE, 56);
-				params[i] = cal.getTime();
-			}
-			
-			cal.set(2016,  0, 7);
-			params[6] = cal.getTime();
-			cal.set(2016, 1, 4);
-			params[7] = cal.getTime();
-			cal.set (2016, 2, 3);
-			params[8] = cal.getTime();
-			cal.set(2016,  2, 31);
-			params[9] = cal.getTime();
+		GregorianCalendar cal = new GregorianCalendar();
+		cal.clear();
+		cal.set(2015, 0, 01);
+		
+		params[0] = cal.getTime();
+		for (int i = 1; i < 6; i++) {		
+			cal.add(Calendar.DATE, 56);
+			params[i] = cal.getTime();
+		}
+		
+		cal.set(2016, 0, 7);
+		params[6] = cal.getTime();
+		cal.set(2016, 1, 4);
+		params[7] = cal.getTime();
+		cal.set(2016, 2, 3);
+		params[8] = cal.getTime();
+		cal.set(2016, 2, 31);
+		params[9] = cal.getTime();
 
-
-		return Arrays.asList(params);
+		return Stream.of(params);
 	}
 	
-	@Test
-	public void testDownloadOperations() {
-		ChartCycleData cycle = client.getChartCycle(releaseDate, true);
+	@ParameterizedTest
+	@MethodSource("cycleNumbers")
+	public void testDownloadOperations(Date date) {
+		ChartCycleData cycle = client.getChartCycle(date, true);
 		if (logger.isDebugEnabled()) {
-			logger.debug("Reloaded cycle "+cycle.getName());
+			logger.debug("Reloaded cycle " + cycle.getName());
 		}
 		
 		cifp.setFormat(BaseService.ZIP);
@@ -107,16 +101,16 @@ public class CIFPTest {
 	public void testEditionOperations() {
 		ChartCycleData cycle = client.getChartCycle(releaseDate, true);
 		if (logger.isDebugEnabled()) {
-			logger.debug("Reloaded cycle "+cycle.getName());
+			logger.debug("Reloaded cycle " + cycle.getName());
 		}
 		
 		cifp.setFormat(BaseService.ZIP);
 		cifp.setEdition(BaseService.CURRENT);		
 		ProductSet current = cifp.getEdition(client.getCurrent28DayCycle());
-		assertEquals(new Integer(current.getStatus().getCode()), Integer.valueOf(200));	
+		assertEquals(Integer.valueOf(200), Integer.valueOf(current.getStatus().getCode()));	
 		
 		ProductSet next = cifp.getEdition(client.getNext28DayCycle());
-		assertEquals(new Integer(next.getStatus().getCode()), Integer.valueOf(200));
+		assertEquals(Integer.valueOf(200), Integer.valueOf(next.getStatus().getCode()));
 	}	
 	
 }

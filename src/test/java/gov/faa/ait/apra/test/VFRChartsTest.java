@@ -13,74 +13,24 @@
  */
 package gov.faa.ait.apra.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-import gov.faa.ait.apra.api.VFRCharts;
-import gov.faa.ait.apra.jaxb.ProductSet;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Date;
-import java.util.GregorianCalendar;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@RunWith(Parameterized.class)
+import gov.faa.ait.apra.api.VFRCharts;
+import gov.faa.ait.apra.jaxb.ProductSet;
+
 public class VFRChartsTest {
-	@SuppressWarnings("unused")
-	private Date releaseDate = null;
-	private  static final Logger logger = LoggerFactory.getLogger(VFRChartsTest.class);
+	private static final Logger logger = LoggerFactory.getLogger(VFRChartsTest.class);
 	private VFRCharts vfr;
 
-	public VFRChartsTest (Date date) {
-		GregorianCalendar cal = new GregorianCalendar();
-		cal.clear();
-		cal.set(2015,  5, 1);
-		releaseDate = cal.getTime();
-	}
-/**
- * initialize
- */
-	@Before
+	@BeforeEach
 	public void initialize() {
 		vfr = new VFRCharts();
-	}
-/**
- * cycleNumbers
- * @return
- */
-	@Parameterized.Parameters
-	public static Collection<Date> cycleNumbers() {
-		Date[] params = new Date[10];
-
-		GregorianCalendar cal = new GregorianCalendar();
-		cal.clear();
-		cal.set(2015, 12, 11);
-
-		params[0] = cal.getTime();
-
-		for (int i = 1; i < 6; i++) {
-			cal.add(Calendar.DATE, 56);
-			params[i] = cal.getTime();
-		}
-
-		cal.set(2016, 0, 7);
-		params[6] = cal.getTime();
-		cal.set(2016, 1, 4);
-		params[7] = cal.getTime();
-		cal.set(2016, 2, 3);
-		params[8] = cal.getTime();
-		cal.set(2016, 2, 31);
-		params[9] = cal.getTime();
-
-		return Arrays.asList(params);
 	}
 
 	/**
@@ -114,15 +64,8 @@ public class VFRChartsTest {
 		
 		int code = next.getStatus().getCode().intValue();
 		
-		switch (code) {
-			case 200: assertEquals(Integer.valueOf(200), Integer.valueOf(next.getStatus().getCode()));
-				break;
-			case 404: assertEquals(Integer.valueOf(404), Integer.valueOf(next.getStatus().getCode()));
-				break;
-			
-			default:
-				fail();
-		}
+		assertTrue(code == 200 || code == 404, 
+			"Expected 200 or 404 response code, got: " + code);
 		
 	}
 

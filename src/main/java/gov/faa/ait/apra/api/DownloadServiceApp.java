@@ -18,9 +18,13 @@ import java.util.Set;
 
 import javax.ws.rs.core.Application;
 
+import org.glassfish.jersey.server.filter.EncodingFilter;
+import org.glassfish.jersey.message.GZipEncoder;
+import org.glassfish.jersey.message.DeflateEncoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import gov.faa.ait.apra.cycle.ChartCycleClient;
 import io.swagger.jaxrs.config.BeanConfig;
 
 /**
@@ -42,6 +46,9 @@ public class DownloadServiceApp extends Application {
 		beanConfig.setLicense("US Public Domain");
 		beanConfig.setLicenseUrl("http://www.usa.gov/publicdomain/label/1.0/");
 		beanConfig.setScan(true);
+		
+		ChartCycleClient.warmCache();
+		logger.info("APRA application initialized with cache warming complete");
 	}
 
 	@Override
@@ -56,6 +63,11 @@ public class DownloadServiceApp extends Application {
 		
 		//Manually adding MOXyJSONFeature
         s.add(org.glassfish.jersey.moxy.json.MoxyJsonFeature.class);
+        
+        // Enable response compression (gzip and deflate)
+        s.add(EncodingFilter.class);
+        s.add(GZipEncoder.class);
+        s.add(DeflateEncoder.class);
         
 		return s;
 	}

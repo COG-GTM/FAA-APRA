@@ -13,95 +13,36 @@
  */
 package gov.faa.ait.apra.test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collection;
 import java.util.Date;
-import java.util.GregorianCalendar;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 import gov.faa.ait.apra.api.IFREnrouteCharts;
 import gov.faa.ait.apra.jaxb.ProductSet;
 import gov.faa.ait.apra.cycle.ChartCycleClient;
 import gov.faa.ait.apra.cycle.ChartCycleData;
 
-/**
- * HelicopterChartsTest
- * @author Gangadhar CTR Gouri
- *
- */
-		
-@RunWith(Parameterized.class)
 public class IFREnrouteChartsTest {
-	private Date releaseDate = null;
-	private static boolean setupComplete = false;
-
 	private static final Logger logger = LoggerFactory
-			.getLogger(HelicopterChartsTest.class);
+			.getLogger(IFREnrouteChartsTest.class);
 	private IFREnrouteCharts chats;
 
-	public IFREnrouteChartsTest (Date date) {
-		IFREnrouteChartsTest.setup();
-		GregorianCalendar cal = new GregorianCalendar();
-		cal.clear();
-		cal.set(2015,  5, 1);
-		this.releaseDate = cal.getTime();
-	}	
-	
-	private static void setup () {
-		if (IFREnrouteChartsTest.setupComplete) {
-			return;
-		}
+	@BeforeAll
+	public static void setup() {
 		ChartCycleClient client = new ChartCycleClient();
-		ChartCycleData cycle = client.getChartCycle(new Date (System.currentTimeMillis()), true);
-		logger.info("Updated chart cycle in prep for IFR Enroute tests "+cycle.getName());
-		IFREnrouteChartsTest.setupComplete = true;
+		ChartCycleData cycle = client.getChartCycle(new Date(System.currentTimeMillis()), true);
+		logger.info("Updated chart cycle in prep for IFR Enroute tests " + cycle.getName());
 	}
 	
-	/**
-	 * initialize
-	 */
-	@Before
+	@BeforeEach
 	public void initialize() {
 		chats = new IFREnrouteCharts();
-	}
-/**
- * cycleNumbers
- * @return
- */
-	@Parameterized.Parameters
-	public static Collection<Date> cycleNumbers() {
-		Date[] params = new Date[10];
-
-		GregorianCalendar cal = new GregorianCalendar();
-		cal.clear();
-		cal.set(2015, 12, 11);
-
-		params[0] = cal.getTime();
-		for (int i = 1; i < 6; i++) {
-			cal.add(Calendar.DATE, 56);
-			params[i] = cal.getTime();
-		}
-
-		cal.set(2016, 0, 7);
-		params[6] = cal.getTime();
-		cal.set(2016, 1, 4);
-		params[7] = cal.getTime();
-		cal.set(2016, 2, 3);
-		params[8] = cal.getTime();
-		cal.set(2016, 2, 31);
-		params[9] = cal.getTime();
-
-		return Arrays.asList(params);
 	}
 
 	/**

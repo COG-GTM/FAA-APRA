@@ -27,10 +27,10 @@ import javax.ws.rs.core.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.base.Charsets;
 
 import gov.faa.ait.apra.bootstrap.Config;
@@ -50,6 +50,11 @@ public class ChartCycleClient extends DenodoClient {
 	private static Date lastCycleUpdate;
 	private static final Logger logger = 
 		LoggerFactory.getLogger(ChartCycleClient.class);
+	
+	private static final Cache<String, ChartCycleElementsJson> cycleCache = Caffeine.newBuilder()
+		.maximumSize(100)
+		.expireAfterWrite(Config.getCycleAgeLimit(), TimeUnit.HOURS)
+		.build();
 
 	/**
 	 * Construct the default chart cycle client to obtain the 28 day or 56 day chart 
@@ -166,33 +171,63 @@ public class ChartCycleClient extends DenodoClient {
 	
 	/**
 	 * Given a specific period and type, attempt to retrieve the cycle information from
-	 * memory rather than making a call to the server. This is a convenience method to 
-	 * cut down on round trip traffic to the denodo servers.
+	 * the Caffeine cache rather than making a call to the server. This is a convenience 
+	 * method to cut down on round trip traffic to the denodo servers.
 	 * 
 	 * @param periodCode either current or next depending on the desired cycle
 	 * @param typeCode 28 DAY or 56 DAY cycle
-	 * @return
+	 * @return the chart cycle element or null if not found
 	 */
 	public ChartCycleElementsJson getCycle (String periodCode, String typeCode) {
-		boolean found; 
+		String cacheKey = periodCode.toUpperCase() + "_" + typeCode.toUpperCase();
+		
+		ChartCycleElementsJson cached = cycleCache.getIfPresent(cacheKey);
+		if (cached != null) {
+			logger.debug("Cache hit for cycle: {}", cacheKey);
+			return cached;
+		}
 		
 		if (isUpdateRequired()) {
 			getChartCycle(true);
 		}
 		
-		if(ChartCycleClient.chartCycle !=null) {
-			ChartCycleElementsJson [] elements = ChartCycleClient.chartCycle.getElements();
+		if (ChartCycleClient.chartCycle != null) {
+			ChartCycleElementsJson[] elements = ChartCycleClient.chartCycle.getElements();
 			for (int i = 0; i < elements.length; i++) {
 				ChartCycleElementsJson element = elements[i];
 				
-				found = element.getChart_cycle_period_code().equalsIgnoreCase(periodCode)
+				boolean found = element.getChart_cycle_period_code().equalsIgnoreCase(periodCode)
 						& element.getChart_cycle_type_code().equalsIgnoreCase(typeCode);
 				if (found) {
+					cycleCache.put(cacheKey, element);
+					logger.debug("Cached cycle: {}", cacheKey);
 					return element;
 				}
 			}
 		}
 		return null;
+	}
+	
+	/**
+	 * Warm the cache by pre-loading common chart cycle combinations.
+	 * This should be called on application startup.
+	 */
+	public static void warmCache() {
+		logger.info("Warming chart cycle cache...");
+		ChartCycleClient client = new ChartCycleClient();
+		client.getCurrent28DayCycle();
+		client.getNext28DayCycle();
+		client.getCurrent56DayCycle();
+		client.getNext56DayCycle();
+		logger.info("Chart cycle cache warmed successfully");
+	}
+	
+	/**
+	 * Invalidate all cached cycle data.
+	 */
+	public static void invalidateCache() {
+		cycleCache.invalidateAll();
+		logger.info("Chart cycle cache invalidated");
 	}
 	
 	/**

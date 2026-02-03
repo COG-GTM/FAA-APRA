@@ -13,80 +13,25 @@
  */
 package gov.faa.ait.apra.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Date;
-import java.util.GregorianCalendar;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import gov.faa.ait.apra.api.WallPlanningCharts;
 import gov.faa.ait.apra.jaxb.ProductSet;
 
-/**
- * WallPlanningChartsTest
- * @author FAA
- *
- */
-		
-@RunWith(Parameterized.class)
 public class WallPlanningChartsTest {
-	private Date releaseDate = null;
-
 	private static final Logger logger = LoggerFactory
 			.getLogger(WallPlanningChartsTest.class);
 	private WallPlanningCharts wallPlan;
 
-	public WallPlanningChartsTest (Date date) {
-		GregorianCalendar cal = new GregorianCalendar();
-		cal.clear();
-		cal.set(2015,  5, 1);
-		this.releaseDate = cal.getTime();
-	}
-	/**
-	 * initialize
-	 */
-	@Before
+	@BeforeEach
 	public void initialize() {
 		wallPlan = new WallPlanningCharts();
-	}
-/**
- * cycleNumbers
- * @return
- */
-	@Parameterized.Parameters
-	public static Collection<Date> cycleNumbers() {
-		Date[] params = new Date[10];
-
-		GregorianCalendar cal = new GregorianCalendar();
-		cal.clear();
-		cal.set(2015, 12, 11);
-
-		params[0] = cal.getTime();
-		for (int i = 1; i < 6; i++) {
-			cal.add(Calendar.DATE, 56);
-			params[i] = cal.getTime();
-		}
-
-		cal.set(2016, 0, 7);
-		params[6] = cal.getTime();
-		cal.set(2016, 1, 4);
-		params[7] = cal.getTime();
-		cal.set(2016, 2, 3);
-		params[8] = cal.getTime();
-		cal.set(2016, 2, 31);
-		params[9] = cal.getTime();
-
-		return Arrays.asList(params);
 	}
 
 	/**
@@ -117,15 +62,9 @@ public class WallPlanningChartsTest {
 
 		ProductSet next = (ProductSet) wallPlan.getProductEdition("Next", "pdf").getEntity();
 			
-		switch (next.getStatus().getCode()) {
-			case 200: assertEquals(Integer.valueOf(200), Integer.valueOf(next.getStatus().getCode()));
-				break;
-			case 404: assertEquals(Integer.valueOf(404), Integer.valueOf(next.getStatus().getCode()));
-				break;
-			
-			default:
-				fail();
-		}
+		int code = next.getStatus().getCode();
+		assertTrue(code == 200 || code == 404, 
+			"Expected 200 or 404 response code, got: " + code);
 		
 	}
 }
