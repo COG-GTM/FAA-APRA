@@ -81,13 +81,15 @@ public class ProductSet {
      * Edition nested class for chart edition information
      */
     @XmlAccessorType(XmlAccessType.FIELD)
-    @XmlType(name = "", propOrder = {"editionDate", "editionNumber", "editionName", "format", "geoname", "product"})
+    @XmlType(name = "", propOrder = {"editionDate", "editionNumber", "editionName", "format", "geoname", "volume", "altitude", "product"})
     public static class Edition {
         protected String editionDate;
         protected Integer editionNumber;
         protected EditionCodeList editionName;
         protected FormatCodeList format;
         protected String geoname;
+        protected String volume;
+        protected AltitudeCategoryCodeList altitude;
         protected Product product;
 
         public String getEditionDate() {
@@ -130,6 +132,22 @@ public class ProductSet {
             this.geoname = value;
         }
 
+        public String getVolume() {
+            return volume;
+        }
+
+        public void setVolume(String value) {
+            this.volume = value;
+        }
+
+        public AltitudeCategoryCodeList getAltitude() {
+            return altitude;
+        }
+
+        public void setAltitude(AltitudeCategoryCodeList value) {
+            this.altitude = value;
+        }
+
         public Product getProduct() {
             return product;
         }
@@ -142,12 +160,16 @@ public class ProductSet {
          * Product nested class for chart product information
          */
         @XmlAccessorType(XmlAccessType.FIELD)
-        @XmlType(name = "", propOrder = {"productName", "chartName", "url", "change"})
+        @XmlType(name = "", propOrder = {"productName", "chartName", "url", "change", "icao", "airportId", "cityName", "airportName"})
         public static class Product {
             protected ProductCodeList productName;
             protected String chartName;
             protected String url;
             protected ChangeCodeList change;
+            protected String icao;
+            protected String airportId;
+            protected String cityName;
+            protected String airportName;
 
             public ProductCodeList getProductName() {
                 return productName;
@@ -179,6 +201,38 @@ public class ProductSet {
 
             public void setChange(ChangeCodeList value) {
                 this.change = value;
+            }
+
+            public String getIcao() {
+                return icao;
+            }
+
+            public void setIcao(String value) {
+                this.icao = value;
+            }
+
+            public String getAirportId() {
+                return airportId;
+            }
+
+            public void setAirportId(String value) {
+                this.airportId = value;
+            }
+
+            public String getCityName() {
+                return cityName;
+            }
+
+            public void setCityName(String value) {
+                this.cityName = value;
+            }
+
+            public String getAirportName() {
+                return airportName;
+            }
+
+            public void setAirportName(String value) {
+                this.airportName = value;
             }
         }
     }

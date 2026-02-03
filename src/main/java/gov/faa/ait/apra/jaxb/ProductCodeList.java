@@ -71,7 +71,28 @@ public enum ProductCodeList {
     VFR("VFR"),
     
     @XmlEnumValue("NASR")
-    NASR("NASR");
+    NASR("NASR"),
+    
+    @XmlEnumValue("VFR_HELICOPTER")
+    VFR_HELICOPTER("VFR_HELICOPTER"),
+    
+    @XmlEnumValue("WALLPLANNING")
+    WALLPLANNING("WALLPLANNING"),
+    
+    @XmlEnumValue("IFR_OCEANIC")
+    IFR_OCEANIC("IFR_OCEANIC"),
+    
+    @XmlEnumValue("ENROUTE")
+    ENROUTE("ENROUTE"),
+    
+    @XmlEnumValue("IFR_PLANNING")
+    IFR_PLANNING("IFR_PLANNING"),
+    
+    @XmlEnumValue("VFR_PLANNING")
+    VFR_PLANNING("VFR_PLANNING"),
+    
+    @XmlEnumValue("DERS")
+    DERS("DERS");
 
     private final String value;
 

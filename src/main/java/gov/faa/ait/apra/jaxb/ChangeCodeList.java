@@ -35,7 +35,10 @@ public enum ChangeCodeList {
     NEW("NEW"),
     
     @XmlEnumValue("DELETED")
-    DELETED("DELETED");
+    DELETED("DELETED"),
+    
+    @XmlEnumValue("ADDED")
+    ADDED("ADDED");
 
     private final String value;
 
