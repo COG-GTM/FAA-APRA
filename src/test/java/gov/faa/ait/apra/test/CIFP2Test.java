@@ -13,13 +13,13 @@
  */
 package gov.faa.ait.apra.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import javax.ws.rs.core.Response;
 
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +31,8 @@ public class CIFP2Test {
 	private CIFP cifp;
 	private static final Logger logger = LoggerFactory.getLogger(CIFP2Test.class);
 	
-	public CIFP2Test () {
+	@BeforeEach
+	public void setUp() {
 		ChartCycleClient client = new ChartCycleClient();
 		client.forceUpdate();
 	}
@@ -52,12 +53,8 @@ public class CIFP2Test {
 		Response ps = cifp.getCIFPRelease("next");	
 		int code = ps.getStatus();
 		
-		// Have to allow for either a positive response or a not found due to the AJV release cycle. A "next" edition may
-		// only be published 20 days in advance. Therefore, there is a time period when we may ask for "next", but it really hasn't
-		// been put on the web site yet
-		if (! (code == 200 || code == 404) ) {
-			fail();
-		}
+		assertTrue(code == 200 || code == 404, 
+			"Expected 200 or 404 response code due to AJV release cycle timing");
 	}
 	
 	@Test 

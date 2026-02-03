@@ -13,7 +13,7 @@
  */
 package gov.faa.ait.apra.test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.text.SimpleDateFormat;
 
@@ -22,10 +22,10 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.stream.Stream;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,21 +33,13 @@ import gov.faa.ait.apra.api.IFREnrouteCharts;
 import gov.faa.ait.apra.jaxb.ProductSet;
 import gov.faa.ait.apra.jaxb.ProductSet.Edition;
 import gov.faa.ait.apra.cycle.ChartCycleClient;
-import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
 import gov.faa.ait.apra.cycle.ChartCycleData;
 
-@RunWith(Parameterized.class)
 public class IFREnrouteProductSetTest {
 	
-	private TestParameter testParameterSet;
 	private static final Logger logger = LoggerFactory.getLogger(IFREnrouteProductSetTest.class);
-
-	public IFREnrouteProductSetTest(TestParameter parameterSet) {
-		this.testParameterSet = parameterSet;
-	}
 	
-	@Parameterized.Parameters
-	public static List<TestParameter> getTestParameters() {
+	public static Stream<TestParameter> getTestParameters() {
 		ArrayList<TestParameter> parameters = new ArrayList<TestParameter>();
 		GregorianCalendar cal = new GregorianCalendar();
 		ChartCycleClient cycleClient = new ChartCycleClient();
@@ -215,23 +207,24 @@ public class IFREnrouteProductSetTest {
 						"http://aeronav.faa.gov/enroute/"+chartDateString+"/delcba1.zip",
 						"http://aeronav.faa.gov/enroute/"+chartDateString+"/delcb3.zip"
 		}));	
-		return parameters;
+		return parameters.stream();
 	}
 	
-	@Test
-	public void testIFREnrouteProduct() {
-		logger.info("Testing " + this.testParameterSet.getGeoname() + ", " + this.testParameterSet.getEdition() + ", " + this.testParameterSet.getFormat()+ ", "+ this.testParameterSet.getSeriesType());
+	@ParameterizedTest
+	@MethodSource("getTestParameters")
+	public void testIFREnrouteProduct(TestParameter testParameterSet) {
+		logger.info("Testing " + testParameterSet.getGeoname() + ", " + testParameterSet.getEdition() + ", " + testParameterSet.getFormat()+ ", "+ testParameterSet.getSeriesType());
 		ChartCycleClient client = new ChartCycleClient();
-		client.getChartCycle(this.testParameterSet.getQueryDate(), true);
+		client.getChartCycle(testParameterSet.getQueryDate(), true);
 		IFREnrouteCharts chartService = new IFREnrouteCharts(client);
-		ProductSet productSet = (ProductSet) chartService.getIFREnrouteRelease(this.testParameterSet.getEdition(), this.testParameterSet.getFormat(), this.testParameterSet.getGeoname(), this.testParameterSet.getSeriesType()).getEntity();
+		ProductSet productSet = (ProductSet) chartService.getIFREnrouteRelease(testParameterSet.getEdition(), testParameterSet.getFormat(), testParameterSet.getGeoname(), testParameterSet.getSeriesType()).getEntity();
 		int i = 0;
 		assertTrue(productSet.getEdition()!=null);
-		assertEquals(this.testParameterSet.getExpectedUrls().length, productSet.getEdition().size());
+		assertEquals(testParameterSet.getExpectedUrls().length, productSet.getEdition().size());
 		for(Edition ed : productSet.getEdition()) {
 			assertTrue(ed.getProduct()!=null);
 			Edition.Product product = ed.getProduct();
-			assertEquals(this.testParameterSet.getExpectedUrls()[i], product.getUrl());
+			assertEquals(testParameterSet.getExpectedUrls()[i], product.getUrl());
 			i++;
 		}
 	}

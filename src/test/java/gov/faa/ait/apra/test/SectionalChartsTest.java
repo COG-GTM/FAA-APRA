@@ -13,11 +13,11 @@
  */
 package gov.faa.ait.apra.test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Calendar;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import gov.faa.ait.apra.api.SectionalCharts;
 import gov.faa.ait.apra.bootstrap.ErrorCodes;
