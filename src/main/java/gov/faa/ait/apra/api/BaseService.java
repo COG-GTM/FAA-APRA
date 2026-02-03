@@ -21,10 +21,14 @@ import java.net.Proxy;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.text.WordUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 
 import gov.faa.ait.apra.bootstrap.Config;
 import gov.faa.ait.apra.bootstrap.ErrorCodes;
@@ -60,6 +64,11 @@ public abstract class BaseService {
 	private String edition = EMPTY_STRING;
 	private String geoname = EMPTY_STRING;
 	private static final Logger logger = LoggerFactory.getLogger(BaseService.class);
+	
+	private static final Cache<String, Boolean> urlValidationCache = Caffeine.newBuilder()
+		.maximumSize(1000)
+		.expireAfterWrite(1, TimeUnit.HOURS)
+		.build();
 
 	/**
 	 * Verify edition and format parameters
@@ -182,11 +191,20 @@ public abstract class BaseService {
 	protected abstract ProductSet buildResponse (ChartCycleElementsJson cycle); 
 	
 	/**
-	 * Given a URL, this method attempts to execute an HTTP HEAD check against the URL. If a 200 response is returned, the URL is valid
+	 * Given a URL, this method attempts to execute an HTTP HEAD check against the URL. If a 200 response is returned, the URL is valid.
+	 * Results are cached for 1 hour to improve performance.
 	 * @param url the url to be checked
 	 * @return true if the url response is 200 when issuing a HTTP HEAD check; false otherwise
 	 */
 	public boolean verifyURL (URL url) {
+		String urlKey = url.toExternalForm();
+		
+		Boolean cachedResult = urlValidationCache.getIfPresent(urlKey);
+		if (cachedResult != null) {
+			logger.info("URL validation cache hit for: " + urlKey);
+			return cachedResult;
+		}
+		
 		boolean ok = false; 
 		HttpURLConnection connection = null;
 		Proxy proxy = null;
@@ -199,10 +217,6 @@ public abstract class BaseService {
 				proxy = new Proxy(Proxy.Type.HTTP, proxyAddress);			
 			}
 			
-			/*
-			 * Determine if we are going to use a proxy server to check the validity
-			 * of the URL we return
-			 */
 			if (proxy != null) {
 				logger.info("Using proxy server "+proxy.toString());
 				connection = (HttpURLConnection) url.openConnection(proxy);
@@ -212,10 +226,6 @@ public abstract class BaseService {
 				connection = (HttpURLConnection) url.openConnection();
 			}
 			
-			/*
-			 * This is the actual HTTP HEAD check to determine if the URL is valid
-			 * and exists on the FAA web server
-			 */
 			connection.setRequestMethod("HEAD");
 			int responseCode = connection.getResponseCode();
 			if (responseCode == 200 || responseCode == 302) {
@@ -227,21 +237,19 @@ public abstract class BaseService {
 			}
 		}
 		catch (IllegalArgumentException eillegal) {
-			logger.error("HEAD heck failed for url: "+url.toExternalForm(), eillegal);
+			logger.error("HEAD check failed for url: "+url.toExternalForm(), eillegal);
 			ok = false;
 		}
 		catch (IOException eio) {
-			logger.error("HEAD heck failed for url: "+url.toExternalForm(), eio);
+			logger.error("HEAD check failed for url: "+url.toExternalForm(), eio);
 			ok = false;
 		}
 		
 
-		/*
-		 * Close down the connection as cleanup action
-		 */
 		if (connection != null)
 			connection.disconnect();
 
+		urlValidationCache.put(urlKey, ok);
 		return ok;
 	}
 	
