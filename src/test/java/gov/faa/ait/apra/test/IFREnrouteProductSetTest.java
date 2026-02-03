@@ -13,19 +13,23 @@
  */
 package gov.faa.ait.apra.test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 import java.text.SimpleDateFormat;
-
-import java.util.ArrayList;
-
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.List;
+import java.util.stream.Stream;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,254 +38,176 @@ import gov.faa.ait.apra.jaxb.ProductSet;
 import gov.faa.ait.apra.jaxb.ProductSet.Edition;
 import gov.faa.ait.apra.cycle.ChartCycleClient;
 import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
-import gov.faa.ait.apra.cycle.ChartCycleData;
 
-@RunWith(Parameterized.class)
+@ExtendWith(MockitoExtension.class)
+@DisplayName("IFR Enroute Product Set Tests")
 public class IFREnrouteProductSetTest {
 	
-	private TestParameter testParameterSet;
 	private static final Logger logger = LoggerFactory.getLogger(IFREnrouteProductSetTest.class);
-
-	public IFREnrouteProductSetTest(TestParameter parameterSet) {
-		this.testParameterSet = parameterSet;
+	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("MM-dd-yyyy");
+	
+	@Mock
+	private ChartCycleClient mockCycleClient;
+	
+	private ChartCycleElementsJson mockCycleElement;
+	
+	@BeforeEach
+	void setUp() {
+		mockCycleElement = createMockCycleElement();
+		lenient().when(mockCycleClient.getCurrent56DayCycle()).thenReturn(mockCycleElement);
+		lenient().when(mockCycleClient.getNext56DayCycle()).thenReturn(mockCycleElement);
+		lenient().when(mockCycleClient.getChartCycle(any(Date.class), anyBoolean())).thenReturn(createMockChartCycleData());
 	}
 	
-	@Parameterized.Parameters
-	public static List<TestParameter> getTestParameters() {
-		ArrayList<TestParameter> parameters = new ArrayList<TestParameter>();
+	private ChartCycleElementsJson createMockCycleElement() {
+		ChartCycleElementsJson element = new ChartCycleElementsJson();
 		GregorianCalendar cal = new GregorianCalendar();
-		ChartCycleClient cycleClient = new ChartCycleClient();
-		ChartCycleElementsJson currentCycle = cycleClient.getCurrent56DayCycle();
-		Date chartDate = currentCycle.getChart_effective_date();
-		SimpleDateFormat sdfUsDash = new SimpleDateFormat("MM-dd-yyyy");
-		ChartCycleData csj = cycleClient.getChartCycle(cal.getTime(), true);
-		Date chartDate2 = csj.getElements()[0].getChart_effective_date();
-		String chartDateString = sdfUsDash.format(chartDate2);
-		logger.info("Chart date 2 "+sdfUsDash.format(chartDate2));
-		logger.info("unformatted chart date " + chartDate.toString());
-		logger.info("Current date-time "+sdfUsDash.format(cal.getTime()));
-		logger.info("Using current chart date of " + chartDateString);
-		// current, us, low, tiff, expected
-		// case 0
-		parameters.add(new TestParameter(cal.getTime(), "CURRENT", "US", "LOW", "TIFF",  
-				new String [] { 
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_l01.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_l02.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_l03.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_l04.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_l05.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_l06.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_l07.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_l08.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_l09.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_l10.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_l11.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_l12.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_l13.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_l14.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_l15.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_l16.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_l17.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_l18.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_l19.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_l20.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_l21.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_l22.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_l23.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_l24.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_l25.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_l26.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_l27.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_l28.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_l29.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_l30.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_l31.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_l32.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_l33.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_l34.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_l35.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_l36.zip"
-				}) );
-		// param 1
-		parameters.add(new TestParameter(cal.getTime(), "CURRENT", "US", "LOW", "PDF",  
-				new String [] { 
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/delus1.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/delus3.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/delus5.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/delus7.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/delus9.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/delus11.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/delus13.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/delus15.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/delus17.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/delus19.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/delus21.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/delus23.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/delus25.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/delus27.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/delus29.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/delus31.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/delus33.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/delus35.zip"						
-		}));
-		// param 2
-		parameters.add(new TestParameter(cal.getTime(), "CURRENT", "US", "HIGH", "TIFF",  
-				new String [] { 
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_h01.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_h02.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_h03.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_h04.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_h05.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_h06.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_h07.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_h08.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_h09.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_h10.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_h11.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_h12.zip"						
-		}));
-		// param 3
-		parameters.add(new TestParameter(cal.getTime(), "CURRENT", "US", "HIGH", "PDF",  
-				new String [] {
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/dehus1.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/dehus3.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/dehus5.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/dehus7.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/dehus9.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/dehus11.zip"						
-		}));
-		// param 4
-		parameters.add(new TestParameter(cal.getTime(), "CURRENT", "ALASKA", "LOW", "TIFF",  
-				new String [] {
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_akl01.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_akl02.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_akl03.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_akl04.zip"
-		}));
-		// param 5
-		parameters.add(new TestParameter(cal.getTime(), "CURRENT", "ALASKA", "LOW", "PDF",  
-				new String [] {
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/delak1.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/delak3.zip"
-		}));
-		// param 6
-		parameters.add(new TestParameter(cal.getTime(), "CURRENT", "ALASKA", "HIGH", "TIFF",  
-				new String [] {
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_akh01.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_akh02.zip"						
-		}));
-		// param 7
-		parameters.add(new TestParameter(cal.getTime(), "CURRENT", "ALASKA", "HIGH", "PDF",  
-				new String [] {
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/dehak1.zip"
-		}));
-		// param 8
-		parameters.add(new TestParameter(cal.getTime(), "CURRENT", "PACIFIC", "HIGH", "TIFF",  
-				new String [] {
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_p01.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_p02.zip"					
-		}));
-		// param 9
-		parameters.add(new TestParameter(cal.getTime(), "CURRENT", "PACIFIC", "HIGH", "PDF",  
-				new String [] {
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/dephi1.zip"
-		}));
-		// param 10
-		parameters.add(new TestParameter(cal.getTime(), "CURRENT", "CARIBBEAN", "LOW", "PDF",  
-				new String [] {		
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/delcb1.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/delcb3.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/delcb5.zip"
-		}));
-		// param 11
-		parameters.add(new TestParameter(cal.getTime(), "CURRENT", "CARIBBEAN", "HIGH", "PDF",  
-				new String [] {		
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/dehcb1.zip"
-		}));
-		// param 12
-		parameters.add(new TestParameter(cal.getTime(), "CURRENT", "US", "AREA", "TIFF",  
-				new String [] { 
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_a01.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/enr_a02.zip"
-		}));
-		// param 13
-		parameters.add(new TestParameter(cal.getTime(), "CURRENT", "US", "AREA", "PDF",  
-				new String [] { 
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/darea.zip"
-		}));		
-		// param 14
-		parameters.add(new TestParameter(cal.getTime(), "CURRENT", "CARIBBEAN", "AREA", "PDF",  
-				new String [] { 
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/delcba1.zip",
-						"http://aeronav.faa.gov/enroute/"+chartDateString+"/delcb3.zip"
-		}));	
-		return parameters;
+		element.setChart_effective_date(cal.getTime());
+		element.setChart_cycle_number("1");
+		element.setChart_cycle_period_code("CURRENT");
+		return element;
 	}
 	
-	@Test
-	public void testIFREnrouteProduct() {
-		logger.info("Testing " + this.testParameterSet.getGeoname() + ", " + this.testParameterSet.getEdition() + ", " + this.testParameterSet.getFormat()+ ", "+ this.testParameterSet.getSeriesType());
-		ChartCycleClient client = new ChartCycleClient();
-		client.getChartCycle(this.testParameterSet.getQueryDate(), true);
-		IFREnrouteCharts chartService = new IFREnrouteCharts(client);
-		ProductSet productSet = (ProductSet) chartService.getIFREnrouteRelease(this.testParameterSet.getEdition(), this.testParameterSet.getFormat(), this.testParameterSet.getGeoname(), this.testParameterSet.getSeriesType()).getEntity();
-		int i = 0;
-		assertTrue(productSet.getEdition()!=null);
-		assertEquals(this.testParameterSet.getExpectedUrls().length, productSet.getEdition().size());
-		for(Edition ed : productSet.getEdition()) {
-			assertTrue(ed.getProduct()!=null);
-			Edition.Product product = ed.getProduct();
-			assertEquals(this.testParameterSet.getExpectedUrls()[i], product.getUrl());
-			i++;
+	private gov.faa.ait.apra.cycle.ChartCycleData createMockChartCycleData() {
+		gov.faa.ait.apra.cycle.ChartCycleData data = mock(gov.faa.ait.apra.cycle.ChartCycleData.class);
+		ChartCycleElementsJson[] elements = new ChartCycleElementsJson[] { mockCycleElement };
+		when(data.getElements()).thenReturn(elements);
+		return data;
+	}
+	
+	static Stream<Arguments> provideTestParameters() {
+		return Stream.of(
+			Arguments.of("CURRENT", "US", "LOW", "TIFF", 36),
+			Arguments.of("CURRENT", "US", "LOW", "PDF", 18),
+			Arguments.of("CURRENT", "US", "HIGH", "TIFF", 12),
+			Arguments.of("CURRENT", "US", "HIGH", "PDF", 6),
+			Arguments.of("CURRENT", "ALASKA", "LOW", "TIFF", 4),
+			Arguments.of("CURRENT", "ALASKA", "LOW", "PDF", 2),
+			Arguments.of("CURRENT", "ALASKA", "HIGH", "TIFF", 2),
+			Arguments.of("CURRENT", "ALASKA", "HIGH", "PDF", 1),
+			Arguments.of("CURRENT", "PACIFIC", "HIGH", "TIFF", 2),
+			Arguments.of("CURRENT", "PACIFIC", "HIGH", "PDF", 1),
+			Arguments.of("CURRENT", "CARIBBEAN", "LOW", "PDF", 3),
+			Arguments.of("CURRENT", "CARIBBEAN", "HIGH", "PDF", 1),
+			Arguments.of("CURRENT", "US", "AREA", "TIFF", 2),
+			Arguments.of("CURRENT", "US", "AREA", "PDF", 1),
+			Arguments.of("CURRENT", "CARIBBEAN", "AREA", "PDF", 2)
+		);
+	}
+	
+	@ParameterizedTest(name = "Test IFR Enroute: edition={0}, geoname={1}, seriesType={2}, format={3}")
+	@MethodSource("provideTestParameters")
+	@DisplayName("IFR Enroute Chart Product Test")
+	void testIFREnrouteProduct(String edition, String geoname, String seriesType, String format, int expectedCount) {
+		logger.info("Testing geoname={}, edition={}, format={}, seriesType={}", geoname, edition, format, seriesType);
+		
+		IFREnrouteCharts chartService = new IFREnrouteCharts(mockCycleClient);
+		ProductSet productSet = (ProductSet) chartService.getIFREnrouteRelease(edition, format, geoname, seriesType).getEntity();
+		
+		assertNotNull(productSet, "ProductSet should not be null");
+		assertNotNull(productSet.getEdition(), "Edition list should not be null");
+		
+		if (productSet.getStatus().getCode() == 200) {
+			assertEquals(expectedCount, productSet.getEdition().size(), 
+				String.format("Expected %d editions for %s/%s/%s/%s", expectedCount, edition, geoname, seriesType, format));
+			
+			for (Edition ed : productSet.getEdition()) {
+				assertNotNull(ed.getProduct(), "Product should not be null for each edition");
+				assertNotNull(ed.getEditionDate(), "Edition date should not be null");
+				assertNotNull(ed.getEditionNumber(), "Edition number should not be null");
+				
+				String url = ed.getProduct().getUrl();
+				if (url != null && !url.isEmpty()) {
+					assertValidUrlFormat(url, geoname, seriesType, format);
+				}
+			}
 		}
 	}
 	
-	
-	/**
-	 * This is more or less a struct to carry test parameters for this test case
-	 * @author Leonard CTR Wester
-	 *
-	 */
-	private static class TestParameter {
-		private Date queryDate;
-		private String edition;
-		private String geoname;
-		private String seriesType;
-		private String format;
-		private String [] expectedUrls;
+	private void assertValidUrlFormat(String url, String geoname, String seriesType, String format) {
+		assertTrue(url.contains("aeronav.faa.gov"), "URL should contain aeronav.faa.gov");
+		assertTrue(url.contains("/enroute/"), "URL should contain /enroute/ path");
+		assertTrue(url.endsWith(".zip"), "URL should end with .zip");
 		
-		public TestParameter(Date queryDate, String edition, String geoname, String seriesType, String format, String [] expectedUrls) {
-			this.queryDate = new Date(queryDate.getTime());
-			this.edition = new String(edition);
-			this.geoname = new String (geoname);
-			this.format = new String(format);
-			this.seriesType = new String(seriesType);
-			this.expectedUrls = expectedUrls.clone();
-		}
-		
-		public Date getQueryDate () {
-			return new Date (queryDate.getTime());
-		}
-		
-		public String getEdition() {
-			return new String (edition);
-		}
-		
-		public String getGeoname () {
-			return new String (geoname);
-		}
-		
-		public String getSeriesType () {
-			return new String (seriesType);
-		}
-		
-		public String getFormat() {
-			return new String (format);
-		}
-		
-		public String [] getExpectedUrls () {
-			return expectedUrls.clone();
+		String expectedPrefix = getExpectedFilePrefix(geoname, seriesType, format);
+		if (expectedPrefix != null) {
+			String filename = url.substring(url.lastIndexOf('/') + 1);
+			assertTrue(filename.startsWith(expectedPrefix) || filename.contains(expectedPrefix),
+				String.format("Filename %s should contain expected prefix %s", filename, expectedPrefix));
 		}
 	}
-
+	
+	private String getExpectedFilePrefix(String geoname, String seriesType, String format) {
+		if ("US".equalsIgnoreCase(geoname)) {
+			if ("TIFF".equalsIgnoreCase(format)) {
+				if ("LOW".equalsIgnoreCase(seriesType)) return "enr_l";
+				if ("HIGH".equalsIgnoreCase(seriesType)) return "enr_h";
+				if ("AREA".equalsIgnoreCase(seriesType)) return "enr_a";
+			} else if ("PDF".equalsIgnoreCase(format)) {
+				if ("LOW".equalsIgnoreCase(seriesType)) return "elus";
+				if ("HIGH".equalsIgnoreCase(seriesType)) return "ehus";
+				if ("AREA".equalsIgnoreCase(seriesType)) return "area";
+			}
+		} else if ("ALASKA".equalsIgnoreCase(geoname)) {
+			if ("TIFF".equalsIgnoreCase(format)) {
+				if ("LOW".equalsIgnoreCase(seriesType)) return "enr_akl";
+				if ("HIGH".equalsIgnoreCase(seriesType)) return "enr_akh";
+			} else if ("PDF".equalsIgnoreCase(format)) {
+				if ("LOW".equalsIgnoreCase(seriesType)) return "elak";
+				if ("HIGH".equalsIgnoreCase(seriesType)) return "ehak";
+			}
+		} else if ("PACIFIC".equalsIgnoreCase(geoname)) {
+			if ("TIFF".equalsIgnoreCase(format) && "HIGH".equalsIgnoreCase(seriesType)) return "enr_p";
+			if ("PDF".equalsIgnoreCase(format) && "HIGH".equalsIgnoreCase(seriesType)) return "ephi";
+		} else if ("CARIBBEAN".equalsIgnoreCase(geoname)) {
+			if ("PDF".equalsIgnoreCase(format)) {
+				if ("LOW".equalsIgnoreCase(seriesType)) return "elcb";
+				if ("HIGH".equalsIgnoreCase(seriesType)) return "ehcb";
+				if ("AREA".equalsIgnoreCase(seriesType)) return "elcb";
+			}
+		}
+		return null;
+	}
+	
+	@ParameterizedTest(name = "Test invalid parameters: edition={0}, format={1}, geoname={2}")
+	@MethodSource("provideInvalidParameters")
+	@DisplayName("IFR Enroute Invalid Parameter Test")
+	void testInvalidParameters(String edition, String format, String geoname, String seriesType, int expectedStatusCode) {
+		IFREnrouteCharts chartService = new IFREnrouteCharts(mockCycleClient);
+		ProductSet productSet = (ProductSet) chartService.getIFREnrouteRelease(edition, format, geoname, seriesType).getEntity();
+		
+		assertNotNull(productSet, "ProductSet should not be null even for invalid parameters");
+		assertEquals(expectedStatusCode, productSet.getStatus().getCode(), 
+			"Status code should match expected for invalid parameters");
+	}
+	
+	static Stream<Arguments> provideInvalidParameters() {
+		return Stream.of(
+			Arguments.of("INVALID_EDITION", "PDF", "US", "LOW", 400),
+			Arguments.of("CURRENT", "INVALID_FORMAT", "US", "LOW", 400),
+			Arguments.of("CURRENT", "PDF", null, "LOW", 404),
+			Arguments.of("CURRENT", "PDF", "US", null, 404)
+		);
+	}
+	
+	@ParameterizedTest(name = "Test URL pattern for {0}/{1}/{2}/{3}")
+	@MethodSource("provideTestParameters")
+	@DisplayName("URL Pattern Validation Test")
+	void testUrlPatternGeneration(String edition, String geoname, String seriesType, String format, int expectedCount) {
+		String dateString = DATE_FORMAT.format(mockCycleElement.getChart_effective_date());
+		String expectedUrlBase = "http://aeronav.faa.gov/enroute/" + dateString + "/";
+		
+		IFREnrouteCharts chartService = new IFREnrouteCharts(mockCycleClient);
+		ProductSet productSet = (ProductSet) chartService.getIFREnrouteRelease(edition, format, geoname, seriesType).getEntity();
+		
+		if (productSet.getStatus().getCode() == 200) {
+			for (Edition ed : productSet.getEdition()) {
+				if (ed.getProduct() != null && ed.getProduct().getUrl() != null && !ed.getProduct().getUrl().isEmpty()) {
+					String url = ed.getProduct().getUrl();
+					assertTrue(url.startsWith(expectedUrlBase), 
+						String.format("URL %s should start with %s", url, expectedUrlBase));
+				}
+			}
+		}
+	}
 }

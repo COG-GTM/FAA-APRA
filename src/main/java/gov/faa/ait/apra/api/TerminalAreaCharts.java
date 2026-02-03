@@ -40,14 +40,14 @@ import gov.faa.ait.apra.jaxb.ProductSet.Edition;
 import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
 import gov.faa.ait.apra.cycle.TACCycleClient;
 import gov.faa.ait.apra.util.TACSpecialCase;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 @Path ("/vfr/tac")
-@Api(value="Terminal Area Charts")
+@Tag(name="Terminal Area Charts")
 /** 
  * This class is used to retrieve the TAC charts
  * @author FAA 
@@ -67,17 +67,17 @@ public class TerminalAreaCharts extends BaseService {
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
     @Path("/chart")
-    @ApiOperation(value="Get Terminal Area Chart download link by edition, format, and geoname", 
+    @Operation(summary="Get Terminal Area Chart download link by edition, format, and geoname", 
     		notes="TIFF formatted files are geo-referenced while PDF format is not geo-referenced. Geoname is a city "
     				+ "for which the chart is requested. Valid cities can be found on the FAA public web site "
     				+ "at FAA Home > Air Traffic > Flight Information > Aeronautical Information "
     				+ "Services > Digital Products > VFR Charts > Terminal Area Chart tab", 
     		response=ProductSet.class)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
+			@ApiResponse(responseCode = "200", description = RESPONSE_200),
+			@ApiResponse(responseCode = "400", description = ERROR_400),
+			@ApiResponse(responseCode = "404", description = ERROR_404),
+			@ApiResponse(responseCode = "500", description = ERROR_500)})
     
     /**
      * This method gets the TAC release information which includes both the edition information and the download url to retrieve the product
@@ -87,9 +87,9 @@ public class TerminalAreaCharts extends BaseService {
      * @return The TAC release in a serialized JSON or XML format
      */
     public Response getTACRelease (
-    		@ApiParam(name="edition", value="Requested product edition. If omitted, the default current edition is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed, 
-    		@ApiParam (name="format", value="Format of the requested chart. TIFF is georeferenced and PDF is not georeferenced. If omitted, the default format of PDF is returned.", allowableValues="tiff, pdf", defaultValue="pdf", allowMultiple=false, required=false) @QueryParam("format") String fmt, 
-    		@ApiParam (name="geoname", value="A US city for which the chart is requested.", 
+    		@Parameter(name="edition", description="Requested product edition. If omitted, the default current edition is returned.", required=false) @QueryParam("edition") String ed, 
+    		@ApiParam (name="format", description="Format of the requested chart. TIFF is georeferenced and PDF is not georeferenced. If omitted, the default format of PDF is returned.", required=false) @QueryParam("format") String fmt, 
+    		@ApiParam (name="geoname", description="A US city for which the chart is requested.", 
     			allowableValues="Anchorage-Fairbanks, Atlanta, Baltimore-Washington, Boston, Charlotte, Chicago, Cincinnati, Cleveland, Dallas-Ft Worth, Denver-Colorado Springs, "
     				+"Detroit, Houston, Kansas City, Las Vegas, Los Angeles, Memphis, Miami, Minneapolis-St Paul, New Orleans, New York, Philadelphia, Phoenix, "
     				+"Pittsburgh, Puerto Rico-VI, St Louis, Salt Lake City, San Diego, San Francisco, Seattle, Tampa-Orlando",    		
@@ -124,16 +124,16 @@ public class TerminalAreaCharts extends BaseService {
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
     @Path("/info")
-    @ApiOperation(value="Get Terminal Area Chart edition date and edition number by edition type and geoname", 
+    @Operation(summary="Get Terminal Area Chart edition date and edition number by edition type and geoname", 
     		notes="Geoname is a city for which the chart is requested. Valid cities can be found on the FAA public web site "
     				+ "at FAA Home > Air Traffic > Flight Information > Aeronautical Information "
     				+ "Services > Digital Products > VFR Charts > Terminal Area Chart tab",  
     				response=ProductSet.class)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
+			@ApiResponse(responseCode = "200", description = RESPONSE_200),
+			@ApiResponse(responseCode = "400", description = ERROR_400),
+			@ApiResponse(responseCode = "404", description = ERROR_404),
+			@ApiResponse(responseCode = "500", description = ERROR_500)})
 
     /**
      * This method gets the TAC edition information which includes only the edition information for the chart product
@@ -142,8 +142,8 @@ public class TerminalAreaCharts extends BaseService {
      * @return the edition information in a serialized JSON or XML format
      */    
     public Response getTACEdition (
-    		@ApiParam(name="edition", value="Requested product edition. If omitted, the default current edition information is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed, 
-    		@ApiParam (name="geoname", value="A US city for which the chart is requested.", 
+    		@Parameter(name="edition", description="Requested product edition. If omitted, the default current edition information is returned.", required=false) @QueryParam("edition") String ed, 
+    		@ApiParam (name="geoname", description="A US city for which the chart is requested.", 
 			allowableValues="Anchorage-Fairbanks, Atlanta, Baltimore-Washington, Boston, Charlotte, Chicago, Cincinnati, Cleveland, Dallas-Ft Worth, Denver-Colorado Springs, "
 				+"Detroit, Houston, Kansas City, Las Vegas, Los Angeles, Memphis, Miami, Minneapolis-St Paul, New Orleans, New York, Philadelphia, Phoenix, "
 				+"Pittsburgh, Puerto Rico-VI, St Louis, Salt Lake City, San Diego, San Francisco, Seattle, Tampa-Orlando",    		

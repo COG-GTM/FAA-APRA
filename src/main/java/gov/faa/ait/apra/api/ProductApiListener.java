@@ -13,6 +13,8 @@
  */
 package gov.faa.ait.apra.api;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.glassfish.jersey.server.monitoring.ApplicationEvent;
 import org.glassfish.jersey.server.monitoring.ApplicationEventListener;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
@@ -28,7 +30,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ProductApiListener implements ApplicationEventListener {
 	private static final Logger logger = LoggerFactory.getLogger(ProductApiListener.class);
-	private volatile int requestCount = 0;
+	private final AtomicInteger requestCount = new AtomicInteger(0);
 	@Override
 	public void onEvent (ApplicationEvent appEvent) {
 		switch (appEvent.getType()) {
@@ -42,8 +44,7 @@ public class ProductApiListener implements ApplicationEventListener {
 	
 	@Override
 	public RequestEventListener onRequest (RequestEvent requestEvent) {
-		requestCount++;
-		return new ProductApiEventListener(requestCount);
+		return new ProductApiEventListener(requestCount.incrementAndGet());
 	}
 	
 	/**

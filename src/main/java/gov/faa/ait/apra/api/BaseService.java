@@ -18,9 +18,18 @@ import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.Proxy;
+import java.net.URI;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import javax.ws.rs.core.UriBuilder;
 
 import org.apache.commons.lang3.text.WordUtils;
 import org.slf4j.Logger;
@@ -60,6 +69,9 @@ public abstract class BaseService {
 	private String edition = EMPTY_STRING;
 	private String geoname = EMPTY_STRING;
 	private static final Logger logger = LoggerFactory.getLogger(BaseService.class);
+	
+	private static final ExecutorService URL_VERIFICATION_EXECUTOR = 
+		Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
 	/**
 	 * Verify edition and format parameters
@@ -337,6 +349,77 @@ public abstract class BaseService {
 			logger.warn("The download URL is not valid", emalformed);
 			p.setUrl("");
 		}
+	}
+	
+	/**
+	 * Asynchronously verify a URL using CompletableFuture for non-blocking operation.
+	 * @param url the URL to verify
+	 * @return CompletableFuture that completes with true if URL is valid, false otherwise
+	 */
+	public CompletableFuture<Boolean> verifyURLAsync(URL url) {
+		return CompletableFuture.supplyAsync(() -> verifyURL(url), URL_VERIFICATION_EXECUTOR);
+	}
+	
+	/**
+	 * Verify multiple URLs asynchronously and return results for all.
+	 * @param urls list of URLs to verify
+	 * @return CompletableFuture containing list of boolean results in same order as input
+	 */
+	public CompletableFuture<List<Boolean>> verifyURLsAsync(List<URL> urls) {
+		List<CompletableFuture<Boolean>> futures = urls.stream()
+			.map(this::verifyURLAsync)
+			.collect(Collectors.toList());
+		
+		return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+			.thenApply(v -> futures.stream()
+				.map(CompletableFuture::join)
+				.collect(Collectors.toList()));
+	}
+	
+	/**
+	 * Verify a URL asynchronously with a timeout.
+	 * @param url the URL to verify
+	 * @param timeoutSeconds timeout in seconds
+	 * @return true if URL is valid within timeout, false otherwise
+	 */
+	public boolean verifyURLWithTimeout(URL url, long timeoutSeconds) {
+		try {
+			return verifyURLAsync(url).get(timeoutSeconds, TimeUnit.SECONDS);
+		} catch (Exception e) {
+			logger.warn("URL verification timed out or failed for: " + url.toExternalForm(), e);
+			return false;
+		}
+	}
+	
+	/**
+	 * Build a URL using JAX-RS UriBuilder for type-safe URL construction.
+	 * @param baseUri the base URI (e.g., "http://aeronav.faa.gov")
+	 * @param pathSegments path segments to append
+	 * @return the constructed URI
+	 */
+	protected URI buildUri(String baseUri, String... pathSegments) {
+		UriBuilder builder = UriBuilder.fromUri(baseUri);
+		for (String segment : pathSegments) {
+			if (segment != null && !segment.isEmpty()) {
+				builder.path(segment);
+			}
+		}
+		return builder.build();
+	}
+	
+	/**
+	 * Build a URL with query parameters using JAX-RS UriBuilder.
+	 * @param baseUri the base URI
+	 * @param path the path to append
+	 * @param queryParams alternating key-value pairs for query parameters
+	 * @return the constructed URI
+	 */
+	protected URI buildUriWithParams(String baseUri, String path, String... queryParams) {
+		UriBuilder builder = UriBuilder.fromUri(baseUri).path(path);
+		for (int i = 0; i < queryParams.length - 1; i += 2) {
+			builder.queryParam(queryParams[i], queryParams[i + 1]);
+		}
+		return builder.build();
 	}
 
 }
