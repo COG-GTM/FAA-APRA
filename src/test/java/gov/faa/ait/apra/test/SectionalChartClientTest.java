@@ -13,7 +13,7 @@
  */
 package gov.faa.ait.apra.test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -21,10 +21,10 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +34,7 @@ import gov.faa.ait.apra.util.ChartInfoTable;
 import gov.faa.ait.apra.util.ChartInfoTableKey;
 import gov.faa.ait.apra.util.TableChartClient;
 
-@RunWith(Parameterized.class)
+
 public class SectionalChartClientTest {
 
 	//private static final Logger logger = LoggerFactory.getLogger(SectionalChartClientTest.class);
