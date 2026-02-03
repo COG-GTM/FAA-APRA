@@ -1,0 +1,29 @@
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: apra-rate-limiting
+  namespace: apra
+config:
+  minute: 100
+  hour: 1000
+  day: 10000
+  policy: local
+  fault_tolerant: true
+  hide_client_headers: false
+  redis_ssl: false
+  redis_ssl_verify: false
+plugin: rate-limiting
+---
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: apra-rate-limiting-premium
+  namespace: apra
+config:
+  minute: 500
+  hour: 5000
+  day: 50000
+  policy: local
+  fault_tolerant: true
+  hide_client_headers: false
+plugin: rate-limiting

@@ -1,0 +1,201 @@
+# FAA Aeronautical Product Release API - Spring Boot Configuration
+# Modernized configuration replacing web.xml
+
+spring:
+  application:
+    name: apra
+  
+  # Jackson JSON/XML Configuration
+  jackson:
+    serialization:
+      indent-output: true
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+    default-property-inclusion: non_null
+    date-format: "yyyy-MM-dd"
+  
+  # Cache Configuration (Caffeine for local, Redis for distributed)
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=24h
+    cache-names:
+      - chartCycles
+      - vfrChartCycles
+      - tacCycles
+      - helicopterCycles
+      - wallPlanningCycles
+      - urlVerification
+  
+  # Redis Configuration (for distributed caching in production)
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+
+# Server Configuration
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /apra
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/xml
+  error:
+    include-message: always
+    include-binding-errors: always
+
+# Actuator Endpoints for Health & Metrics
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,caches
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when_authorized
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    export:
+      prometheus:
+        enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+
+# OpenAPI/Swagger Configuration
+springdoc:
+  api-docs:
+    path: /api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    operations-sorter: alpha
+    tags-sorter: alpha
+  show-actuator: false
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    gov.faa.ait.apra: INFO
+    org.springframework.web: INFO
+    org.springframework.cache: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{requestId}] %-5level %logger{36} - %msg%n"
+  file:
+    name: ${LOG_PATH:/var/log/apra}/apra.log
+
+# FAA APRA Custom Configuration
+apra:
+  # External service hosts
+  aeronav:
+    host: ${AERONAV_HOST:http://aeronav.faa.gov}
+  ddof:
+    host: ${DDOF_HOST:http://tod.faa.gov}
+  nfdc:
+    host: ${NFDC_HOST:http://nfdc.faa.gov}
+  denodo:
+    host: ${DENODO_HOST:https://soadev.smext.faa.gov}
+    cycle-resource: /denodo/apra/server/ifpa/edai/views/chart_cycle
+    vfr-cycle-resource: /denodo/apra/server/ifpa/edai/views/vfr_chart_cycle
+    view-path: /denodo/apra/server/ifpa/edai/views
+  
+  # Proxy configuration (optional)
+  proxy:
+    host: ${FAA_DMZ_PROXY_HOST:}
+    port: ${FAA_DMZ_PROXY_PORT:8080}
+  
+  # Cache age limit in hours
+  cycle-age-limit: ${CYCLE_AGE_LIMIT:1}
+  
+  # URL verification flags
+  check-flags:
+    tpp: ${TPP_CHECK_FLAG:false}
+    supplement: ${SUP_CHECK_FLAG:false}
+    sectional: ${SEC_CHECK_FLAG:false}
+    nasr: ${NASR_CHECK_FLAG:true}
+  
+  # Chart paths
+  paths:
+    cifp: /Upload_313-d/cifp
+    dec: /enroute
+    ders: /enroute
+    gom: /enroute/GoM
+    tac: /content/aeronav/tac_files
+    tac-pdf: /content/aeronav/tac_files/PDFs
+    tpp-us: /upload_313-d/terminal
+    tpp-chart: /d-tpp
+    sup-pdf: /afd
+    sup-us: /upload_313-d/supplements
+    ddof: /tod
+    nasr: /webContent/28DaySub
+    sectional: /content/aeronav/sectional_files
+    wallplan: /content/aeronav/grand_canyon_files
+    vfr: /content/aeronav/grand_canyon_files
+    helicopter-tiff: /content/aeronav/heli_files
+    helicopter-pdf: /content/aeronav/heli_files/PDFs
+    enroute: enroute
+  
+  # File prefixes and names
+  files:
+    cifp-prefix: cifp_
+    nasr-prefix: 28DaySubscription_Effective_
+    nasr-date-format: yyyy-MM-dd
+    tpp-us-prefix: DDTPP
+    dec-prefix: DDECUS
+    ders-prefix: DERS_
+    ddof: DAILY_DOF.ZIP
+    ddof-daily-change: DOF_DAILY_CHANGE_UPDATE.ZIP
+    gom-west-pdf: gom_west_pdf.zip
+    gom-central-pdf: gom_central_pdf.zip
+    gom-west-tiff: gom_west_tif.zip
+    gom-central-tiff: gom_central_tif.zip
+
+# Async Configuration
+async:
+  core-pool-size: 4
+  max-pool-size: 10
+  queue-capacity: 100
+  thread-name-prefix: apra-async-
+
+---
+# Production Profile
+spring:
+  config:
+    activate:
+      on-profile: production
+  cache:
+    type: redis
+
+logging:
+  level:
+    root: WARN
+    gov.faa.ait.apra: INFO
+
+---
+# Development Profile
+spring:
+  config:
+    activate:
+      on-profile: development
+  cache:
+    type: caffeine
+
+logging:
+  level:
+    root: DEBUG
+    gov.faa.ait.apra: DEBUG
+    org.springframework.web: DEBUG

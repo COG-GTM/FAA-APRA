@@ -1,0 +1,14 @@
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: apra-request-transformer
+  namespace: apra
+config:
+  add:
+    headers:
+      - "X-Forwarded-Proto:https"
+      - "X-Real-IP:$(client_ip)"
+  append:
+    headers:
+      - "X-Request-Start:$(now)"
+plugin: request-transformer

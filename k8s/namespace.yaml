@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: apra
+  labels:
+    app.kubernetes.io/name: apra
+    app.kubernetes.io/part-of: faa-aeronav
+    istio-injection: enabled

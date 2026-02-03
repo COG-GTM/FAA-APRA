@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: apra-config
+  namespace: apra
+  labels:
+    app.kubernetes.io/name: apra
+    app.kubernetes.io/component: config
+data:
+  AERONAV_HOST: "http://aeronav.faa.gov"
+  DDOF_HOST: "http://tod.faa.gov"
+  NFDC_HOST: "http://nfdc.faa.gov"
+  DENODO_HOST: "https://soadev.smext.faa.gov"
+  CYCLE_AGE_LIMIT: "1"
+  TPP_CHECK_FLAG: "false"
+  SUP_CHECK_FLAG: "false"
+  SEC_CHECK_FLAG: "false"
+  NASR_CHECK_FLAG: "true"
+  SERVER_PORT: "8080"
+  LOG_PATH: "/var/log/apra"
+  SPRING_PROFILES_ACTIVE: "production"
