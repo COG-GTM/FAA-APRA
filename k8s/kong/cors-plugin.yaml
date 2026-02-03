@@ -1,0 +1,28 @@
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: apra-cors
+  namespace: apra
+config:
+  origins:
+    - "*"
+  methods:
+    - GET
+    - HEAD
+    - OPTIONS
+  headers:
+    - Accept
+    - Accept-Version
+    - Content-Length
+    - Content-Type
+    - Date
+    - X-Auth-Token
+    - X-Request-ID
+  exposed_headers:
+    - X-Request-ID
+    - X-RateLimit-Limit-Minute
+    - X-RateLimit-Remaining-Minute
+  credentials: false
+  max_age: 3600
+  preflight_continue: false
+plugin: cors

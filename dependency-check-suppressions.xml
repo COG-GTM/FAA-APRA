@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <!-- 
+    OWASP Dependency Check Suppressions for FAA APRA
+    
+    This file contains suppressions for false positives or accepted risks
+    in the dependency check security scan.
+    
+    Each suppression should include:
+    - A clear comment explaining why it's suppressed
+    - The CVE or vulnerability identifier
+    - The affected package
+    - Review date and reviewer
+    -->
+    
+    <!-- Example suppression format:
+    <suppress>
+        <notes><![CDATA[
+        Suppressed because: [reason]
+        Reviewed by: [name]
+        Review date: [date]
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.example/.*$</packageUrl>
+        <cve>CVE-XXXX-XXXXX</cve>
+    </suppress>
+    -->
+    
+</suppressions>
