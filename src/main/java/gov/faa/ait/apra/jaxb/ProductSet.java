@@ -84,7 +84,7 @@ public class ProductSet {
     @XmlType(name = "", propOrder = {"editionDate", "editionNumber", "editionName", "format", "geoname", "volume", "altitude", "product"})
     public static class Edition {
         protected String editionDate;
-        protected Integer editionNumber;
+        protected int editionNumber;
         protected EditionCodeList editionName;
         protected FormatCodeList format;
         protected String geoname;
@@ -100,11 +100,11 @@ public class ProductSet {
             this.editionDate = value;
         }
 
-        public Integer getEditionNumber() {
+        public int getEditionNumber() {
             return editionNumber;
         }
 
-        public void setEditionNumber(Integer value) {
+        public void setEditionNumber(int value) {
             this.editionNumber = value;
         }
 
