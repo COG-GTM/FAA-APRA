@@ -20,9 +20,15 @@ import static gov.faa.ait.apra.bootstrap.ErrorCodes.RESPONSE_200;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -232,13 +238,15 @@ public class TerminalProcedureCharts extends BaseService {
     	String edition = tppClient.getEdition();
     	ProductSet ps = initPositiveResponse();
     	
+    	List<Edition> editions = new ArrayList<>();
+    	List<Product> products = new ArrayList<>();
+    	List<String> urls = new ArrayList<>();
+    	
     	for (int i = 0; i < elements.length; i++) {
     		if (processedFiles.contains(elements[i].getChart_name())) {
-    			//skip the chart if we've already processed it
     			continue;
     		}
     		else {
-    			// add the chart to our processed list and we build the response
     			processedFiles.add(elements[i].getChart_name());
     			processTotal++;
     		}
@@ -268,27 +276,83 @@ public class TerminalProcedureCharts extends BaseService {
     		path.append("/").append(edition);
     		path.append("/").append(elements[i].getPdf_name());
     		
-    		product.setUrl(Config.getAeronavHost()+path.toString());
+    		String fullUrl = Config.getAeronavHost()+path.toString();
+    		product.setUrl(fullUrl);
     		
         	setChangeType(product, elements[i].getUseraction());
     		
-    		// The HEAD check for TPP files can introduce a significant performance penalty. This is controlled by a flag in the Configuration. 
-    		// Recommendation is to enable the flag in DEV only and leave disabled in TEST and PROD unless someone wants to check and verify in TEST
-    		
-    		if (Config.getTPPCheckFlag()) {
-    			logger.warn("URL validation check is enabled for the DTPP product set. This can cause serious performance issues for the DTTP product responses."
-    					+ " Consider changing the configuration parameter gov.faa.ait.tpp.check.flag = false and re-deploy.");
-    			validateAndSetUrl(Config.getAeronavHost()+path.toString(), ps, product);
-    		}
-   		
-           	ed.setProduct(product);
-        	ps.getEdition().add(ed);
+    		editions.add(ed);
+    		products.add(product);
+    		urls.add(fullUrl);
+    	}
+    	
+    	if (Config.getTPPCheckFlag()) {
+    		logger.info("URL validation check is enabled for the DTPP product set. Using async validation for improved performance.");
+    		validateUrlsAsync(urls, products);
+    	}
+    	
+    	for (int i = 0; i < editions.size(); i++) {
+    		editions.get(i).setProduct(products.get(i));
+    		ps.getEdition().add(editions.get(i));
     	}
     	
     	processedFiles.clear();
     	logger.info("Processed a total of "+processTotal+" charts for "+this.getGeoname());
     	
        	return ps;
+    }
+    
+    private void validateUrlsAsync(List<String> urls, List<Product> products) {
+    	int threadPoolSize = Math.min(urls.size(), 20);
+    	ExecutorService executor = Executors.newFixedThreadPool(threadPoolSize);
+    	
+    	try {
+    		List<CompletableFuture<Boolean>> futures = new ArrayList<>();
+    		
+    		for (int i = 0; i < urls.size(); i++) {
+    			final int index = i;
+    			final String url = urls.get(i);
+    			
+    			CompletableFuture<Boolean> future = CompletableFuture.supplyAsync(() -> {
+    				try {
+    					URL downloadURL = new URL(url);
+    					return verifyURL(downloadURL);
+    				} catch (MalformedURLException e) {
+    					logger.warn("The download URL is not valid: " + url, e);
+    					return false;
+    				}
+    			}, executor);
+    			
+    			futures.add(future);
+    		}
+    		
+    		CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+    			.orTimeout(60, TimeUnit.SECONDS)
+    			.join();
+    		
+    		for (int i = 0; i < futures.size(); i++) {
+    			try {
+    				Boolean isValid = futures.get(i).getNow(false);
+    				if (!isValid) {
+    					logger.warn(urls.get(i) + " returned a non 200 response code when completing a HTTP HEAD check.");
+    					products.get(i).setUrl("");
+    				}
+    			} catch (Exception e) {
+    				logger.warn("URL validation failed for: " + urls.get(i), e);
+    				products.get(i).setUrl("");
+    			}
+    		}
+    	} finally {
+    		executor.shutdown();
+    		try {
+    			if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
+    				executor.shutdownNow();
+    			}
+    		} catch (InterruptedException e) {
+    			executor.shutdownNow();
+    			Thread.currentThread().interrupt();
+    		}
+    	}
     }   
     
     // This is where we get the full US product set file path that is divided into 5 separate ZIP files for download. The files are named A through E
