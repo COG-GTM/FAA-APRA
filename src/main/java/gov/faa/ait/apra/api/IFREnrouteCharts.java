@@ -26,11 +26,11 @@ import gov.faa.ait.apra.path.PathElement;
 import gov.faa.ait.apra.path.ProductPath;
 import gov.faa.ait.apra.cycle.ChartCycleClient;
 import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_400;
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_404;
@@ -58,7 +58,7 @@ import org.slf4j.LoggerFactory;
  */
 
 @Path("/enroute")
-@Api(value = "IFR Enroute Charts")
+@Tag(name = "IFR Enroute Charts")
 public class IFREnrouteCharts extends BaseService {
 	private static final String MM_DD_YYYY2 = "MM-dd-yyyy";
 	private static final String MM_DD_YYYY = "MM/dd/yyyy";
@@ -110,23 +110,23 @@ public class IFREnrouteCharts extends BaseService {
 	@GET
 	@Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML })
 	@Path("/chart")
-	@ApiOperation(value = "Get IFR Enroute Charts download link by edition, format, geoname, and seriesType", 
+	@Operation(summary = "Get IFR Enroute Charts download link by edition, format, geoname, and seriesType", 
 		notes = "TIFF formatted files are geo-referenced while PDF format is not geo-referenced. Geoname is either US, Alaska, Pacific, or Caribbean, "
 			+ "depending on the desired chart. A list of available charts by format, geoname, and series type can be found "
 			+ "on the FAA public web site at FAA Home > Air Traffic > Flight Information > Aeronautical Information Services "
 			+ " > Digital Products > IFR Charts and DERS > Low, High Areas tab. "
-			+ " The valid values for seriesType are Low, High, or Area.", response = ProductSet.class)
+			+ " The valid values for seriesType are Low, High, or Area.")
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
+			@ApiResponse(responseCode = "200", description = RESPONSE_200),
+			@ApiResponse(responseCode = "400", description = ERROR_400),
+			@ApiResponse(responseCode = "404", description = ERROR_404),
+			@ApiResponse(responseCode = "500", description = ERROR_500)})
 	public Response getIFREnrouteRelease(
-			@ApiParam(name = "edition", value = "Requested product edition. If omitted, the default current edition is returned.", allowableValues = "current, next", defaultValue = "current", allowMultiple = false, required = false) @QueryParam("edition") String ed,
-			@ApiParam(name = "format", value = "Format of the requested chart. TIFF is georeferenced and PDF is not georeferenced"
+			@Parameter(name = "edition", value = "Requested product edition. If omitted, the default current edition is returned.", allowableValues = "current, next", defaultValue = "current", allowMultiple = false, required = false) @QueryParam("edition") String ed,
+			@Parameter(name = "format", value = "Format of the requested chart. TIFF is georeferenced and PDF is not georeferenced"
 					+ "If omitted, the default format of PDF is returned.", allowableValues = "tiff, pdf", defaultValue = "pdf", allowMultiple = false, required = false) @QueryParam("format") String fmt,
-			@ApiParam(name = "geoname", value = "Geographic region for requested chart", allowableValues="US, Alaska, Pacific, Caribbean", required = true) @QueryParam("geoname") String geo,
-			@ApiParam(name = "seriesType", value = "The series type", allowableValues="low, high, area", required = true) @QueryParam("seriesType") String seriesType) {
+			@Parameter(name = "geoname", value = "Geographic region for requested chart", required = true) @QueryParam("geoname") String geo,
+			@Parameter(name = "seriesType", value = "The series type", required = true) @QueryParam("seriesType") String seriesType) {
 
 		logger.info("Received call to retrieve current IFR Enroute Charts product release for '"
 				+ ed + "', '" + fmt + "', '" + geo + "', '" + seriesType + "'");
@@ -156,14 +156,14 @@ public class IFREnrouteCharts extends BaseService {
 	@GET
 	@Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML })
 	@Path("/info")
-	@ApiOperation(value = "Get IFR Enroute Charts edition date and edition number by edition type of current or next", response = ProductSet.class)
+	@Operation(summary = "Get IFR Enroute Charts edition date and edition number by edition type of current or next")
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
+			@ApiResponse(responseCode = "200", description = RESPONSE_200),
+			@ApiResponse(responseCode = "400", description = ERROR_400),
+			@ApiResponse(responseCode = "404", description = ERROR_404),
+			@ApiResponse(responseCode = "500", description = ERROR_500)})
 	public Response getIFREnrouteEdition(
-			@ApiParam(name = "edition", value = "Requested product edition", allowableValues = "current, next", defaultValue = "current", 
+			@Parameter(name = "edition", value = "Requested product edition", allowableValues = "current, next", defaultValue = "current", 
 				allowMultiple = false, required = false) @QueryParam("edition") String ed) {
 
 		logger.info("Received call to retrieve current IFR Enroute Charts edition release for '"

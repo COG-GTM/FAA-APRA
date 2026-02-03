@@ -21,11 +21,11 @@ import gov.faa.ait.apra.jaxb.ProductSet;
 import gov.faa.ait.apra.jaxb.ProductSet.Edition;
 import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
 import gov.faa.ait.apra.cycle.WallPlanningChartCycleClient;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_400;
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_404;
@@ -52,7 +52,7 @@ import org.slf4j.LoggerFactory;
  * @author FAA
  *
  */
-@Api(value = "US VFR Wall Planning Chart")
+@Tag(name = "US VFR Wall Planning Chart")
 @Path("/vfr/wallplanning")
 public class WallPlanningCharts extends BaseService {
 	private ProductSet response = null;
@@ -75,16 +75,16 @@ public class WallPlanningCharts extends BaseService {
 	@Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML })
 	@Path("/chart")
 
-    @ApiOperation(value="Get WallPlan Chart release information with download link by edition and format", nickname="getVFRWallPlanningRelease", response=ProductSet.class)
+    @Operation(summary="Get WallPlan Chart release information with download link by edition and format", nickname="getVFRWallPlanningRelease")
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
+			@ApiResponse(responseCode = "200", description = RESPONSE_200),
+			@ApiResponse(responseCode = "400", description = ERROR_400),
+			@ApiResponse(responseCode = "404", description = ERROR_404),
+			@ApiResponse(responseCode = "500", description = ERROR_500)})
 	
 	public Response getProductRelease(
-			@ApiParam(name="edition", value="Requested product edition. If omitted, the default current edition is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed, 
-			@ApiParam (name="format", value="Format of the requested chart. TIFF format contains georeferenced charts contained within a zip archive and PDF is non-georeferenced charts. If omitted, the default PDF format is returned.", allowableValues="tiff, pdf", defaultValue="pdf", allowMultiple=false, required=false) @QueryParam("format") String fmt) {
+			@Parameter(name="edition", description="Requested product edition. If omitted, the default current edition is returned.", required=false) @QueryParam("edition") String ed, 
+			@ApiParam (name="format", description="Format of the requested chart. TIFF format contains georeferenced charts contained within a zip archive and PDF is non-georeferenced charts. If omitted, the default PDF format is returned.", required=false) @QueryParam("format") String fmt) {
 
 
 		logger.info("Received call to retrieve current WallPlan product release for edition '"
@@ -117,17 +117,17 @@ public class WallPlanningCharts extends BaseService {
 	@GET
 	@Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML })
 	@Path("/info")
-	@ApiOperation(value = "Get WallPlan edition date and edition number by edition type and format", 
-			nickname="getVFRWallPlanningEdition", response = ProductSet.class)
+	@Operation(summary = "Get WallPlan edition date and edition number by edition type and format", 
+			nickname="getVFRWallPlanningEdition")
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
+			@ApiResponse(responseCode = "200", description = RESPONSE_200),
+			@ApiResponse(responseCode = "400", description = ERROR_400),
+			@ApiResponse(responseCode = "404", description = ERROR_404),
+			@ApiResponse(responseCode = "500", description = ERROR_500)})
 
 	public Response getProductEdition(
-			@ApiParam(name="edition", value="Requested product edition. If omitted, the default current edition information is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed,
-			@ApiParam (name="format", value="Format of the requested chart. TIFF format contains georeferenced charts in a zip archive file and PDF is non-georeferenced charts. If omitted, the default PDF format is used.", allowableValues="tiff, pdf", defaultValue="pdf", allowMultiple=false, required=false)  @QueryParam("format") String fmt) {
+			@Parameter(name="edition", description="Requested product edition. If omitted, the default current edition information is returned.", required=false) @QueryParam("edition") String ed,
+			@ApiParam (name="format", description="Format of the requested chart. TIFF format contains georeferenced charts in a zip archive file and PDF is non-georeferenced charts. If omitted, the default PDF format is used.", required=false)  @QueryParam("format") String fmt) {
 
 		logger.info("Received call to retrieve current WallPlan product release for edition '"
 				+ ed + " format'" + fmt + "'.");

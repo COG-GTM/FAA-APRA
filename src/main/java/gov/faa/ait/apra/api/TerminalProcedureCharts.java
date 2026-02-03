@@ -50,14 +50,14 @@ import gov.faa.ait.apra.cycle.ChartCycleClient;
 import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
 
 import gov.faa.ait.apra.util.TPPMetadataClient;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 @Path("/dtpp")
-@Api(value="US Terminal Procedures Publication (TPP)")
+@Tag(name="US Terminal Procedures Publication (TPP)")
 /**
  * This class services requests for the digital terminal procedures publication. Currently, the allowed publication sets are US complete set and state complete set. If a changeset parameter is specified,
  * the service responds with only charts that have changed since the previous release of dTPP
@@ -71,17 +71,17 @@ public class TerminalProcedureCharts extends BaseService {
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
     @Path("/chart")
-    @ApiOperation(value="Get Terminal Procedure Publication chart download information by requesting an edition with geographic area of United States or a valid US State Name.", 
+    @Operation(summary="Get Terminal Procedure Publication chart download information by requesting an edition with geographic area of United States or a valid US State Name.", 
     	notes="The complete United States Terminal Procedure Publication (TPP) release is distributed as a set of zip files containing charts and verification software. "
     			+ "Requests for charts by state returns a list of download URLs which can be quite extensive. "
     			+" All 50 US states are valid for requesting chart publication download URLs. The special 'changeset' edition operates against "
     			+ "the current release and returns the charts that were changed since the previous release. ",
     	response=ProductSet.class)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
+			@ApiResponse(responseCode = "200", description = RESPONSE_200),
+			@ApiResponse(responseCode = "400", description = ERROR_400),
+			@ApiResponse(responseCode = "404", description = ERROR_404),
+			@ApiResponse(responseCode = "500", description = ERROR_500)})
  
 	/**
 	 * This is the base chart download URL. Parameters are provided for edition and geoname. The geoname can be US, US state, or publication volume
@@ -91,8 +91,8 @@ public class TerminalProcedureCharts extends BaseService {
 	 * @return the product set
 	 */
     public Response getTPPRelease (
-    		@ApiParam(name="edition", value="Requested product edition. If omitted, the default current edition is returned.", allowableValues="current, next, changeset", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed,
-    		@ApiParam(name="geoname", value="Requested geographic region of Terminal Procedures Publication chart set. Specify either US or a valid full state name such as Alaska. If omitted, the default US complete set is returned.", defaultValue="US", allowMultiple=false, required=false) @QueryParam("geoname") String geo) {
+    		@Parameter(name="edition", description="Requested product edition. If omitted, the default current edition is returned.", required=false) @QueryParam("edition") String ed,
+    		@Parameter(name="geoname", description="Requested geographic region of Terminal Procedures Publication chart set. Specify either US or a valid full state name such as Alaska. If omitted, the default US complete set is returned.", required=false) @QueryParam("geoname") String geo) {
     	ChartCycleElementsJson cycle;
     	
     	logger.info("Received call to retrieve current TPP product release for edition '"+ed+"'.");
@@ -136,14 +136,14 @@ public class TerminalProcedureCharts extends BaseService {
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
     @Path("/info")
-    @ApiOperation(value="Get Terminal Procedure Publication chart edition information by requesting an edition with geographic area of United States or one of the 50 US states", 
+    @Operation(summary="Get Terminal Procedure Publication chart edition information by requesting an edition with geographic area of United States or one of the 50 US states", 
     	notes="The US Terminal Procedure Publication is released on a 28 day airspace cycle. Edition information is identical regardless of the geographic area or format of the desired charts.",
     	response=ProductSet.class)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
+			@ApiResponse(responseCode = "200", description = RESPONSE_200),
+			@ApiResponse(responseCode = "400", description = ERROR_400),
+			@ApiResponse(responseCode = "404", description = ERROR_404),
+			@ApiResponse(responseCode = "500", description = ERROR_500)})
     
 	/**
 	 * This is the base chart download URL. Parameters are provided for edition and geoname. The geoname can be US, US state, or publication volume
@@ -153,8 +153,8 @@ public class TerminalProcedureCharts extends BaseService {
 	 * @return
 	 */    
     public Response getTPPEdition (
-    		@ApiParam(name="edition", value="Requested product edition. If omitted, the default current edition information is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed,
-    		@ApiParam(name="geoname", value="Requested geographic region of Terminal Procedures Publication chart set. Specify US or a valid full US state name such as Alaska. If omitted, edition information for the complete US set is returned.", defaultValue="US", allowMultiple=false, required=false) @QueryParam("geoname") String geo) {
+    		@Parameter(name="edition", description="Requested product edition. If omitted, the default current edition information is returned.", required=false) @QueryParam("edition") String ed,
+    		@Parameter(name="geoname", description="Requested geographic region of Terminal Procedures Publication chart set. Specify US or a valid full US state name such as Alaska. If omitted, edition information for the complete US set is returned.", required=false) @QueryParam("geoname") String geo) {
     	ChartCycleElementsJson cycle;
     	
     	logger.info("Received call to retrieve current TPP product release for edition '"+ed+"'.");

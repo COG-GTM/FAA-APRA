@@ -23,11 +23,11 @@ import gov.faa.ait.apra.jaxb.ProductSet.Edition;
 import gov.faa.ait.apra.jaxb.ProductSet.Status;
 import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
 import gov.faa.ait.apra.cycle.VFRChartCycleClient;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_400;
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_404;
@@ -57,7 +57,7 @@ import org.slf4j.LoggerFactory;
  *
  */
 
-@Api(value = "Grand Canyon VFR Chart")
+@Tag(name = "Grand Canyon VFR Chart")
 @Path("/vfr/grandcanyon")
 public class VFRCharts extends BaseService {
 	private URL downloadURL = null;
@@ -78,15 +78,15 @@ public class VFRCharts extends BaseService {
 	@GET
 	@Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML })
 	@Path("/chart")
-	@ApiOperation(value = "Get VFR Grand Canyon chart edition information and download link", nickname="getGrandCanyonProductRelease", response = ProductSet.class)
+	@Operation(summary = "Get VFR Grand Canyon chart edition information and download link", operationId="getGrandCanyonProductRelease")
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
+			@ApiResponse(responseCode = "200", description = RESPONSE_200),
+			@ApiResponse(responseCode = "400", description = ERROR_400),
+			@ApiResponse(responseCode = "404", description = ERROR_404),
+			@ApiResponse(responseCode = "500", description = ERROR_500)})
 	
 	public Response getGrandCanyonRelease(
-			@ApiParam(name="edition", value="Requested product edition. If omitted, the default current edition is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed) {
+			@Parameter(name="edition", description="Requested product edition. If omitted, the default current edition is returned.", required=false) @QueryParam("edition") String ed) {
 
 		logger.info("Received call to retrieve current VFR product release for edition '"
 				+ ed + "'.");
@@ -115,15 +115,15 @@ public class VFRCharts extends BaseService {
 	@GET
 	@Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML })
 	@Path("/info")
-	@ApiOperation(value = "Get VFR edition date and edition number by edition type of current or next", nickname="getGrandCanyonEdition", response = ProductSet.class)
+	@Operation(summary = "Get VFR edition date and edition number by edition type of current or next", operationId="getGrandCanyonEdition")
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
+			@ApiResponse(responseCode = "200", description = RESPONSE_200),
+			@ApiResponse(responseCode = "400", description = ERROR_400),
+			@ApiResponse(responseCode = "404", description = ERROR_404),
+			@ApiResponse(responseCode = "500", description = ERROR_500)})
 
 	public Response getGrandCanyonEdition(
-			@ApiParam(name="edition", value="Requested product edition. If omitted, the default current edition information is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed) {
+			@Parameter(name="edition", description="Requested product edition. If omitted, the default current edition information is returned.", required=false) @QueryParam("edition") String ed) {
 
 		logger.info("Received call to retrieve current VFR product edition for edition '"
 				+ ed + "'.");

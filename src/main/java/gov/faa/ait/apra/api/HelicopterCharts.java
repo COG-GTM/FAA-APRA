@@ -26,11 +26,11 @@ import static gov.faa.ait.apra.bootstrap.ErrorCodes.RESPONSE_200;
 import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
 
 import gov.faa.ait.apra.util.TableChartClient;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -54,7 +54,7 @@ import org.slf4j.LoggerFactory;
  *
  */
 
-@Api(value = "VFR Helicopter Route Chart")
+@Tag(name = "VFR Helicopter Route Chart")
 @Path("/vfr/helicopter")
 public class HelicopterCharts extends AbstractTableDataService {
 
@@ -102,20 +102,20 @@ public class HelicopterCharts extends AbstractTableDataService {
 	@GET
 	@Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
 	@Path("/chart")
-	@ApiOperation(value = "Get VFR Helicopter Route Chart download link by edition and geoname", nickname="getVFRHelicopterRelease", 
+	@Operation(summary = "Get VFR Helicopter Route Chart download link by edition and geoname", nickname="getVFRHelicopterRelease", 
 			notes = "Geoname is a city "
 			+ "for which the chart is requested. Valid cities can be found on the FAA public web site "
 			+ "under FAA Home > Air Traffic > Flight Information > Aeronautical Information Services "
-			+ "> Digital Products > VFR Charts > Helicopter tab", response = ProductSet.class)
+			+ "> Digital Products > VFR Charts > Helicopter tab")
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
+			@ApiResponse(responseCode = "200", description = RESPONSE_200),
+			@ApiResponse(responseCode = "400", description = ERROR_400),
+			@ApiResponse(responseCode = "404", description = ERROR_404),
+			@ApiResponse(responseCode = "500", description = ERROR_500)})
 	public Response getHelicopterRelease(
-			@ApiParam(name = "edition", value = "Requested product edition. If omitted, the default current edition is returned.", allowableValues = "current, next", defaultValue = "current", allowMultiple = false, required = false) @QueryParam("edition") String ed,
-    		@ApiParam (name="format", value="Format of the requested chart. TIFF is georeferenced and PDF is not georeferenced. If omitted, the default format of PDF is returned.", allowableValues="tiff, pdf", defaultValue="pdf", allowMultiple=false, required=false) @QueryParam("format") String fmt, 
-			@ApiParam(name = "geoname", value = "Geoname which is a city for which the chart is requested. If omitted, charts for all cities are returned.", 
+			@Parameter(name = "edition", value = "Requested product edition. If omitted, the default current edition is returned.", allowableValues = "current, next", defaultValue = "current", allowMultiple = false, required = false) @QueryParam("edition") String ed,
+    		@ApiParam (name="format", description="Format of the requested chart. TIFF is georeferenced and PDF is not georeferenced. If omitted, the default format of PDF is returned.", required=false) @QueryParam("format") String fmt, 
+			@Parameter(name = "geoname", value = "Geoname which is a city for which the chart is requested. If omitted, charts for all cities are returned.", 
 			allowableValues="Baltimore Washington Heli, Boston Heli, Chicago Heli, Dallas Ft. Worth Heli, Detroit Heli, Houston Heli, Los Angeles Heli, New York Heli, U.S Gulf Coast",
 			allowMultiple = false, required = false) @QueryParam("geoname") String cityRegion) {
 
@@ -142,16 +142,16 @@ public class HelicopterCharts extends AbstractTableDataService {
 	@GET
 	@Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
 	@Path("/info")
-	@ApiOperation(value = "Get VFR Helicopter Route Chart edition date and edition number by edition type of current or next and geoname", 
-			nickname="getVFRHelicopterEdition", response = ProductSet.class)
+	@Operation(summary = "Get VFR Helicopter Route Chart edition date and edition number by edition type of current or next and geoname", 
+			nickname="getVFRHelicopterEdition")
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
+			@ApiResponse(responseCode = "200", description = RESPONSE_200),
+			@ApiResponse(responseCode = "400", description = ERROR_400),
+			@ApiResponse(responseCode = "404", description = ERROR_404),
+			@ApiResponse(responseCode = "500", description = ERROR_500)})
 	public Response getHelicopterEdition(
-			@ApiParam(name = "edition", value = "Requested product edition. If omitted, the default current edition is returned.", allowableValues = "current, next", defaultValue = "current", allowMultiple = false, required = false) @QueryParam("edition") String ed,
-			@ApiParam(name = "geoname", value = "Geoname which is a city for which the chart is requested. If omitted, charts for all cities are returned.", 
+			@Parameter(name = "edition", value = "Requested product edition. If omitted, the default current edition is returned.", allowableValues = "current, next", defaultValue = "current", allowMultiple = false, required = false) @QueryParam("edition") String ed,
+			@Parameter(name = "geoname", value = "Geoname which is a city for which the chart is requested. If omitted, charts for all cities are returned.", 
 			allowableValues="Baltimore Washington Heli, Boston Heli, Chicago Heli, Dallas Ft. Worth Heli, Detroit Heli, Houston Heli, Los Angeles Heli, New York Heli, U.S Gulf Coast",
 			allowMultiple = false, required = false) @QueryParam("geoname") String cityRegion) {
 
@@ -175,17 +175,17 @@ public class HelicopterCharts extends AbstractTableDataService {
 	@GET
 	@Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML })
 	@Path("/gulf/chart")
-	@ApiOperation(value = "Get GulfCoast Route Chart download link by edition", 
+	@Operation(summary = "Get GulfCoast Route Chart download link by edition", 
 			nickname="getVFRGulfCoastRelease", notes = "The geoname is absent from this "
-					+ "operation and defaults to U.S Gulf Coast", response = ProductSet.class)
+					+ "operation and defaults to U.S Gulf Coast")
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
+			@ApiResponse(responseCode = "200", description = RESPONSE_200),
+			@ApiResponse(responseCode = "400", description = ERROR_400),
+			@ApiResponse(responseCode = "404", description = ERROR_404),
+			@ApiResponse(responseCode = "500", description = ERROR_500)})
 	public Response getGulfCoastRelease(
-			@ApiParam(name = "edition", value = "Requested product edition. If omitted, the default current edition is returned.", allowableValues = "current, next", defaultValue = "current", allowMultiple = false, required = false) @QueryParam("edition") String ed,
-    		@ApiParam (name="format", value="Format of the requested chart. TIFF is georeferenced and PDF is not georeferenced. If omitted, the default format of PDF is returned.", allowableValues="tiff, pdf", defaultValue="pdf", allowMultiple=false, required=false) @QueryParam("format") String fmt) { 
+			@Parameter(name = "edition", value = "Requested product edition. If omitted, the default current edition is returned.", allowableValues = "current, next", defaultValue = "current", allowMultiple = false, required = false) @QueryParam("edition") String ed,
+    		@ApiParam (name="format", description="Format of the requested chart. TIFF is georeferenced and PDF is not georeferenced. If omitted, the default format of PDF is returned.", required=false) @QueryParam("format") String fmt) { 
 
 		logger.info("Received call to retrieve current VFR GulfCoast Route Chart product release for edition '"
 				+ ed + "'.");
@@ -206,15 +206,15 @@ public class HelicopterCharts extends AbstractTableDataService {
 	@GET
 	@Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML })
 	@Path("/gulf/info")
-	@ApiOperation(value = "Get VFR GulfCoast Route Chart edition date and edition number by edition type of 'current' or 'next' ", 
-			nickname="getVFRGulfCoastEdition", response = ProductSet.class)
+	@Operation(summary = "Get VFR GulfCoast Route Chart edition date and edition number by edition type of 'current' or 'next' ", 
+			nickname="getVFRGulfCoastEdition")
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
+			@ApiResponse(responseCode = "200", description = RESPONSE_200),
+			@ApiResponse(responseCode = "400", description = ERROR_400),
+			@ApiResponse(responseCode = "404", description = ERROR_404),
+			@ApiResponse(responseCode = "500", description = ERROR_500)})
 	public Response getGulfCoastEdition(
-			@ApiParam(name = "edition", value = "Requested product edition. If omitted, the default current edition is returned.", allowableValues = "current, next", defaultValue = "current", allowMultiple = false, required = false) @QueryParam("edition") String ed) {
+			@Parameter(name = "edition", value = "Requested product edition. If omitted, the default current edition is returned.", allowableValues = "current, next", defaultValue = "current", allowMultiple = false, required = false) @QueryParam("edition") String ed) {
 
 		logger.info("Received call to retrieve current VVFR GulfCoast Route Chart product edition for edition '"
 				+ ed + "'.");

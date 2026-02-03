@@ -27,11 +27,11 @@ import gov.faa.ait.apra.cycle.ChartCycleClient;
 import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
 
 import gov.faa.ait.apra.util.SupplementMetadataClient;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_400;
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_404;
@@ -58,7 +58,7 @@ import org.slf4j.LoggerFactory;
  * @author FAA
  */
 @Path("/supplement")
-@Api(value = "Supplement Chart ")
+@Tag(name = "Supplement Chart ")
 public class SupplementCharts extends BaseService {
 	private static final Logger logger = LoggerFactory
 			.getLogger(SupplementCharts.class);
@@ -77,18 +77,18 @@ public class SupplementCharts extends BaseService {
 	@GET
 	@Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML })
 	@Path("/chart")
-	@ApiOperation(value = "Get Supplement chart download information by requesting an edition with a valid US volume.", 
+	@Operation(summary = "Get Supplement chart download information by requesting an edition with a valid US volume.", 
 			notes="The Supplement chart is distributed in two formats - zip and pdf. The US complete set is returned as a ZIP file while all other volumes consist of individual PDF files."			
 			+ "Requests for charts by volume other than US complete set returns a list of download URLs which can be quite extensive."
-			, response = ProductSet.class)
+			)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
+			@ApiResponse(responseCode = "200", description = RESPONSE_200),
+			@ApiResponse(responseCode = "400", description = ERROR_400),
+			@ApiResponse(responseCode = "404", description = ERROR_404),
+			@ApiResponse(responseCode = "500", description = ERROR_500)})
 	public Response getSupplementRelease(
-			@ApiParam(name = "edition", value = "Requested product edition. If omitted, the default current edition is returned.", allowableValues = "current, next", defaultValue = "current", allowMultiple = false, required = false) @QueryParam("edition") String ed,
-			@ApiParam(name = "volume", value = "Requested volume of Supplement chart set. If omitted, the complete US set is returned.", allowableValues = "NORTHWEST, SOUTHWEST, NORTH CENTRAL, SOUTH CENTRAL, EAST CENTRAL, SOUTHEAST, NORTHEAST, PACIFIC, ALASKA", allowMultiple = false, required = false) @QueryParam("volume") String vol) {
+			@Parameter(name = "edition", value = "Requested product edition. If omitted, the default current edition is returned.", allowableValues = "current, next", defaultValue = "current", allowMultiple = false, required = false) @QueryParam("edition") String ed,
+			@Parameter(name = "volume", value = "Requested volume of Supplement chart set. If omitted, the complete US set is returned.", allowableValues = "NORTHWEST, SOUTHWEST, NORTH CENTRAL, SOUTH CENTRAL, EAST CENTRAL, SOUTHEAST, NORTHEAST, PACIFIC, ALASKA", allowMultiple = false, required = false) @QueryParam("volume") String vol) {
 		ChartCycleElementsJson cycle;
 
 		logger.info("Received call to retrieve current Supplement release for edition '"
@@ -139,15 +139,15 @@ public class SupplementCharts extends BaseService {
 	@GET
 	@Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML })
 	@Path("/info")
-	@ApiOperation(value = "Get Supplement chart edition information by requesting an edition and volume.", response = ProductSet.class)
+	@Operation(summary = "Get Supplement chart edition information by requesting an edition and volume.")
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
+			@ApiResponse(responseCode = "200", description = RESPONSE_200),
+			@ApiResponse(responseCode = "400", description = ERROR_400),
+			@ApiResponse(responseCode = "404", description = ERROR_404),
+			@ApiResponse(responseCode = "500", description = ERROR_500)})
 	public Response getSupplementEdition(
-			@ApiParam(name = "edition", value = "Requested product edition. If omitted, the default current edition is returned.", allowableValues = "current, next", defaultValue = "current", allowMultiple = false, required = false) @QueryParam("edition") String ed,
-			@ApiParam(name = "volume", value = "Requested volume of Supplement chart set. If omitted, the edition information for the complete US set is returned.", allowableValues = "NORTHWEST, SOUTHWEST, NORTH CENTRAL, SOUTH CENTRAL, EAST CENTRAL, SOUTHEAST, NORTHEAST, PACIFIC, ALASKA", allowMultiple = false, required = false) @QueryParam("volume") String vol) {
+			@Parameter(name = "edition", value = "Requested product edition. If omitted, the default current edition is returned.", allowableValues = "current, next", defaultValue = "current", allowMultiple = false, required = false) @QueryParam("edition") String ed,
+			@Parameter(name = "volume", value = "Requested volume of Supplement chart set. If omitted, the edition information for the complete US set is returned.", allowableValues = "NORTHWEST, SOUTHWEST, NORTH CENTRAL, SOUTH CENTRAL, EAST CENTRAL, SOUTHEAST, NORTHEAST, PACIFIC, ALASKA", allowMultiple = false, required = false) @QueryParam("volume") String vol) {
 		ChartCycleElementsJson cycle;
 
 		logger.info("Received call to retrieve current SUPPLEMENT product release for edition '"
