@@ -18,6 +18,7 @@ import java.net.URL;
 
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -26,6 +27,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,6 +63,14 @@ public class CIFP extends BaseService {
 
 	private URL downloadURL = null;
 	private static final Logger logger = LoggerFactory.getLogger(CIFP.class);
+	
+	private static final String CACHE_KEY_CURRENT = "current_28day";
+	private static final String CACHE_KEY_NEXT = "next_28day";
+	
+	private static final Cache<String, ChartCycleElementsJson> cycleCache = Caffeine.newBuilder()
+		.expireAfterWrite(1, TimeUnit.HOURS)
+		.maximumSize(10)
+		.build();
 	
 	/**
 	 * This is the base chart download URL. A single parameter is provided to retrieve the URL for either the current or the next edition
@@ -124,18 +135,20 @@ public class CIFP extends BaseService {
     }    
     
     private ChartCycleElementsJson initParameters (String ed) {
-    	ChartCycleElementsJson cycle;
-    	
     	setEdition(ed != null ? ed : CURRENT);
     	setFormat(ZIP);
     	setGeoname(EMPTY_STRING);
     	
-    	if ("current".equalsIgnoreCase(this.getEdition())) {   		
-    		cycle = new ChartCycleClient().getCurrent28DayCycle();
-    	}
-    	else {
-    		cycle = new ChartCycleClient().getNext28DayCycle();
-    	}    	
+    	String cacheKey = "current".equalsIgnoreCase(this.getEdition()) ? CACHE_KEY_CURRENT : CACHE_KEY_NEXT;
+    	
+    	ChartCycleElementsJson cycle = cycleCache.get(cacheKey, key -> {
+    		logger.info("Cache miss for " + key + ", fetching from ChartCycleClient");
+    		if (CACHE_KEY_CURRENT.equals(key)) {
+    			return new ChartCycleClient().getCurrent28DayCycle();
+    		} else {
+    			return new ChartCycleClient().getNext28DayCycle();
+    		}
+    	});
     	
     	return cycle;
     }
