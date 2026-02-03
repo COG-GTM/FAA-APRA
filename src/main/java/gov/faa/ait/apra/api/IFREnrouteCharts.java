@@ -26,11 +26,11 @@ import gov.faa.ait.apra.path.PathElement;
 import gov.faa.ait.apra.path.ProductPath;
 import gov.faa.ait.apra.cycle.ChartCycleClient;
 import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_400;
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_404;
@@ -41,12 +41,12 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -117,16 +117,16 @@ public class IFREnrouteCharts extends BaseService {
 			+ " > Digital Products > IFR Charts and DERS > Low, High Areas tab. "
 			+ " The valid values for seriesType are Low, High, or Area.", response = ProductSet.class)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
+			@ApiResponse(responseCode = "200", description = RESPONSE_200),
+			@ApiResponse(responseCode = "400", description = ERROR_400),
+			@ApiResponse(responseCode = "404", description = ERROR_404),
+			@ApiResponse(responseCode = "500", description = ERROR_500)})
 	public Response getIFREnrouteRelease(
 			@ApiParam(name = "edition", value = "Requested product edition. If omitted, the default current edition is returned.", allowableValues = "current, next", defaultValue = "current", allowMultiple = false, required = false) @QueryParam("edition") String ed,
 			@ApiParam(name = "format", value = "Format of the requested chart. TIFF is georeferenced and PDF is not georeferenced"
 					+ "If omitted, the default format of PDF is returned.", allowableValues = "tiff, pdf", defaultValue = "pdf", allowMultiple = false, required = false) @QueryParam("format") String fmt,
-			@ApiParam(name = "geoname", value = "Geographic region for requested chart", allowableValues="US, Alaska, Pacific, Caribbean", required = true) @QueryParam("geoname") String geo,
-			@ApiParam(name = "seriesType", value = "The series type", allowableValues="low, high, area", required = true) @QueryParam("seriesType") String seriesType) {
+			@ApiParam(name = "geoname", value = "Geographic region for requested chart", required = true) @QueryParam("geoname") String geo,
+			@ApiParam(name = "seriesType", value = "The series type", required = true) @QueryParam("seriesType") String seriesType) {
 
 		logger.info("Received call to retrieve current IFR Enroute Charts product release for '"
 				+ ed + "', '" + fmt + "', '" + geo + "', '" + seriesType + "'");
@@ -158,10 +158,10 @@ public class IFREnrouteCharts extends BaseService {
 	@Path("/info")
 	@ApiOperation(value = "Get IFR Enroute Charts edition date and edition number by edition type of current or next", response = ProductSet.class)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
+			@ApiResponse(responseCode = "200", description = RESPONSE_200),
+			@ApiResponse(responseCode = "400", description = ERROR_400),
+			@ApiResponse(responseCode = "404", description = ERROR_404),
+			@ApiResponse(responseCode = "500", description = ERROR_500)})
 	public Response getIFREnrouteEdition(
 			@ApiParam(name = "edition", value = "Requested product edition", allowableValues = "current, next", defaultValue = "current", 
 				allowMultiple = false, required = false) @QueryParam("edition") String ed) {

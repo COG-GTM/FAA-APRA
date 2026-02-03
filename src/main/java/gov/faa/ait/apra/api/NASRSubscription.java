@@ -22,12 +22,12 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,14 +41,14 @@ import gov.faa.ait.apra.jaxb.ProductSet.Edition;
 import gov.faa.ait.apra.cycle.ChartCycleClient;
 import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
 import gov.faa.ait.apra.util.CycleDateUtil;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 @Path ("/nfdc/nasr")
-@Api(value="NASR 28 Day Subscription")
+@Tag(name="NASR 28 Day Subscription")
 /** 
  * This class is used to retrieve the NASR 56 day subscription file
  *
@@ -65,13 +65,13 @@ public class NASRSubscription extends BaseService {
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
     @Path("/chart")
-    @ApiOperation(value="Get the National Flight Data Center NASR 28 day subscription file", 
+    @Operation(summary="Get the National Flight Data Center NASR 28 day subscription file", 
     		response=ProductSet.class)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
+			@ApiResponse(responseCode = "200", description = RESPONSE_200),
+			@ApiResponse(responseCode = "400", description = ERROR_400),
+			@ApiResponse(responseCode = "404", description = ERROR_404),
+			@ApiResponse(responseCode = "500", description = ERROR_500)})
     
     /**
      * This method gets the NASR subscription release information which includes both the edition information and the download url to retrieve the product
@@ -81,7 +81,7 @@ public class NASRSubscription extends BaseService {
      * @return The Oceanic Chart release in a serialized JSON or XML format
      */
 	public Response getNASRSubscription (
-    	@ApiParam(name="edition", value="Requested product edition. If omitted, the default current edition is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false)
+    	@Parameter(name="edition", description="Requested product edition. If omitted, the default current edition is returned.")
     	@QueryParam("edition") String ed) {
 	    logger.info("Received call to retrieve current NFDC NASR subscription release for "+ed);
 	    
@@ -103,20 +103,20 @@ public class NASRSubscription extends BaseService {
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
     @Path("/info")
-    @ApiOperation(value="Get the National Flight Data Center NASR 28 day subscription file edition information", 
+    @Operation(summary="Get the National Flight Data Center NASR 28 day subscription file edition information", 
     		response=ProductSet.class)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
+			@ApiResponse(responseCode = "200", description = RESPONSE_200),
+			@ApiResponse(responseCode = "400", description = ERROR_400),
+			@ApiResponse(responseCode = "404", description = ERROR_404),
+			@ApiResponse(responseCode = "500", description = ERROR_500)})
     /**
      * This method gets the NASR subscription edition information
      * @param ed the edition of the release that is requested
      * @return The NASR subscription edition information in a serialized JSON or XML format
      */
 	public Response getNASREdition (
-    	@ApiParam(name="edition", value="Requested product edition. If omitted, the default current edition is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false)
+    	@Parameter(name="edition", description="Requested product edition. If omitted, the default current edition is returned.")
     	@QueryParam("edition") String ed) {
 	    logger.info("Received call to retrieve current NASR subscription Chart release for "+ed);
 	    

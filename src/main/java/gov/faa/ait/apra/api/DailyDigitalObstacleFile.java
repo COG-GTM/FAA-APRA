@@ -23,11 +23,11 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,13 +41,13 @@ import gov.faa.ait.apra.jaxb.ObjectFactory;
 import gov.faa.ait.apra.jaxb.ProductCodeList;
 import gov.faa.ait.apra.jaxb.ProductSet;
 import gov.faa.ait.apra.jaxb.ProductSet.Edition;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 @Path("/ddof")
-@Api(value="Daily Digital Obstacle File (DDOF)")
+@Tag(name="Daily Digital Obstacle File (DDOF)")
 
 /**
  * This service provides the Daily Digital Obstacle File (DDOF) download link and edition information. There is only one release at any given time and it is the
@@ -65,14 +65,14 @@ public class DailyDigitalObstacleFile extends BaseService {
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
     @Path("/chart")
-    @ApiOperation(value="Get Daily Digital Obstacle File download link.", 
+    @Operation(summary="Get Daily Digital Obstacle File download link.", 
     	notes="The Daily Digital Obstacle File release is distributed as a zip file containing the latest obstacle information from the FAA database.",
     	response=ProductSet.class)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
+			@ApiResponse(responseCode = "200", description = RESPONSE_200),
+			@ApiResponse(responseCode = "400", description = ERROR_400),
+			@ApiResponse(responseCode = "404", description = ERROR_404),
+			@ApiResponse(responseCode = "500", description = ERROR_500)})
     
     public Response getDDOFRelease () {
     	
@@ -90,14 +90,14 @@ public class DailyDigitalObstacleFile extends BaseService {
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
     @Path("/info")
-    @ApiOperation(value="Get Daily Digital Obstacle File edition information.", 
+    @Operation(summary="Get Daily Digital Obstacle File edition information.", 
     	notes="The Daily Digital Obstacle File is released by the FAA on a daily basis.",
     	response=ProductSet.class)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
+			@ApiResponse(responseCode = "200", description = RESPONSE_200),
+			@ApiResponse(responseCode = "400", description = ERROR_400),
+			@ApiResponse(responseCode = "404", description = ERROR_404),
+			@ApiResponse(responseCode = "500", description = ERROR_500)})
     
     public Response getDDOFEdition () {
     	

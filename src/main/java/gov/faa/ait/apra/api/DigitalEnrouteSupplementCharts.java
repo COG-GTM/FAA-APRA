@@ -16,12 +16,12 @@ package gov.faa.ait.apra.api;
 
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.DEPRECATED;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,15 +29,15 @@ import org.slf4j.LoggerFactory;
 import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
 import gov.faa.ait.apra.jaxb.ProductSet;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 
 @Path("/ders")
-@Api(value="Digital Enroute Supplement (DERS)")
+@Tag(name="Digital Enroute Supplement (DERS)")
 
 /**
  * As of June 2017, the DERS chart set has been discontinued. 
@@ -57,13 +57,13 @@ public class DigitalEnrouteSupplementCharts extends BaseService {
     @Deprecated
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
     @Path("/chart")
-    @ApiOperation(value="Get Digital Enroute Supplement download link.", 
+    @Operation(summary="Get Digital Enroute Supplement download link.", 
     	notes="The Digital Enroute Supplement release is deprecated and publication has been discontinued as of June 2017.",
     	response=ProductSet.class)
-	@ApiResponses(value = {@ApiResponse(code = 404, message = DEPRECATED)})
+	@ApiResponses(value = {@ApiResponse(responseCode = "404", description = DEPRECATED)})
     
     public Response getDERSRelease (
-    		@ApiParam(name="edition", value="Requested product edition. If omitted, current edition is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed) {
+    		@Parameter(name="edition", description="Requested product edition. If omitted, current edition is returned.") @QueryParam("edition") String ed) {
     	
     	logger.info("Received call to retrieve current DERS product release for edition.");
      	ProductSet ps = buildResponse(null);
@@ -78,13 +78,13 @@ public class DigitalEnrouteSupplementCharts extends BaseService {
     @Deprecated
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
     @Path("/info")
-    @ApiOperation(value="Get Digital Enroute Supplement edition information.", 
+    @Operation(summary="Get Digital Enroute Supplement edition information.", 
     	notes="The Digital Enroute Supplement release is deprecated and publication has been discontinued as of June 2017.",
     	response=ProductSet.class)
-	@ApiResponses(value = {@ApiResponse(code = 404, message = DEPRECATED)})
+	@ApiResponses(value = {@ApiResponse(responseCode = "404", description = DEPRECATED)})
     
     public Response getDERSEdition (
-    		@ApiParam(name="edition", value="Requested product edition. If omitted, current edition is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed) {
+    		@Parameter(name="edition", description="Requested product edition. If omitted, current edition is returned.") @QueryParam("edition") String ed) {
     	
      	ProductSet ps = buildResponse(null);
     	return Response.status(ps.getStatus().getCode()).entity(ps).build();

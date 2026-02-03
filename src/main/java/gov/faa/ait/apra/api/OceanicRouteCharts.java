@@ -22,12 +22,12 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,14 +40,14 @@ import gov.faa.ait.apra.jaxb.ProductSet;
 import gov.faa.ait.apra.jaxb.ProductSet.Edition;
 import gov.faa.ait.apra.cycle.ChartCycleClient;
 import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 @Path ("/ifr/oceanic")
-@Api(value="Oceanic Route Charts")
+@Tag(name="Oceanic Route Charts")
 /** 
  * This class is used to retrieve the Oceanic Route charts
  * @author FAA
@@ -63,15 +63,15 @@ public class OceanicRouteCharts extends BaseService {
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
     @Path("/chart")
-    @ApiOperation(value="Get Oceanic Route Chart download link by edition, format, and geoname", 
+    @Operation(summary="Get Oceanic Route Chart download link by edition, format, and geoname", 
     		notes="TIFF formatted files are geo-referenced while PDF format is not geo-referenced. Geoname is a geographic area "
     				+ "for which the chart is requested. Valid geographic names are Pacific (PORC), North Atlantic (NARC), and Wester Atlantic (WATRS) ", 
     		response=ProductSet.class)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
+			@ApiResponse(responseCode = "200", description = RESPONSE_200),
+			@ApiResponse(responseCode = "400", description = ERROR_400),
+			@ApiResponse(responseCode = "404", description = ERROR_404),
+			@ApiResponse(responseCode = "500", description = ERROR_500)})
     
     /**
      * This method gets the Oceanic Chart release information which includes both the edition information and the download url to retrieve the product
@@ -81,9 +81,9 @@ public class OceanicRouteCharts extends BaseService {
      * @return The Oceanic Chart release in a serialized JSON or XML format
      */
 	public Response getOceanicRouteChart (
-    		@ApiParam(name="edition", value="Requested product edition. If omitted, the default current edition is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed, 
-    		@ApiParam (name="format", value="Format of the requested chart. TIFF is georeferenced and PDF is not georeferenced. If omitted, the default format of PDF is returned.", allowableValues="tiff, pdf", defaultValue="pdf", allowMultiple=false, required=false) @QueryParam("format") String fmt, 
-    		@ApiParam (name="geoname", value="A geographic area for which the chart is requested", allowableValues="NARC, PORC, WATRS", defaultValue="PORC", required=true) @QueryParam ("geoname") String geo) {
+    		@Parameter(name="edition", description="Requested product edition. If omitted, the default current edition is returned.") @QueryParam("edition") String ed, 
+    		@ApiParam (name="format", description="Format of the requested chart. TIFF is georeferenced and PDF is not georeferenced. If omitted, the default format of PDF is returned.") @QueryParam("format") String fmt, 
+    		@ApiParam (name="geoname", description="A geographic area for which the chart is requested", required=true) @QueryParam ("geoname") String geo) {
 
 	    	logger.info("Received call to retrieve current Oceanic Route Chart release for '"+ed+"', '"+fmt+"', '"+geo+"'");
 			
@@ -116,15 +116,15 @@ public class OceanicRouteCharts extends BaseService {
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
     @Path("/info")
-    @ApiOperation(value="Get Oceanic Route Chart edition information by edition type", 
+    @Operation(summary="Get Oceanic Route Chart edition information by edition type", 
     		notes="All oceanic charts are released on a regular 56 day cycle. "
     				+ "The format and geographic name are not necessary to obtain edition information.", 
     		response=ProductSet.class)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
+			@ApiResponse(responseCode = "200", description = RESPONSE_200),
+			@ApiResponse(responseCode = "400", description = ERROR_400),
+			@ApiResponse(responseCode = "404", description = ERROR_404),
+			@ApiResponse(responseCode = "500", description = ERROR_500)})
     
     /**
      * This method gets the Oceanic Chart edition information
@@ -132,7 +132,7 @@ public class OceanicRouteCharts extends BaseService {
      * @return The Oceanic Chart edition in a serialized JSON or XML format
      */
 	public Response getOceanicRouteEdition (
-    		@ApiParam(name="edition", value="Requested product edition. If omitted, the default current edition information is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed) {
+    		@Parameter(name="edition", description="Requested product edition. If omitted, the default current edition information is returned.") @QueryParam("edition") String ed) {
 
     	setEdition(ed != null ? ed : CURRENT);    	
     	setGeoname("ALL");

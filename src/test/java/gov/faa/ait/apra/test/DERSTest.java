@@ -13,13 +13,13 @@
  */
 package gov.faa.ait.apra.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,12 +50,8 @@ public class DERSTest {
 		Response ps = ders.getDERSRelease("next");	
 		int code = ps.getStatus();
 		
-		// Have to allow for either a positive response or a not found due to the AJV release cycle. A "next" edition may
-		// only be published 20 days in advance. Therefore, there is a time period when we may ask for "next", but it really hasn't
-		// been put on the web site yet
-		if (! (code == 200 || code == 404) ) {
-			fail();
-		}
+		assertTrue(code == 200 || code == 404, 
+			"Expected status 200 or 404 for next release (may not be published yet within 20-day window), but got: " + code);
 	}
 	
 	@Test 

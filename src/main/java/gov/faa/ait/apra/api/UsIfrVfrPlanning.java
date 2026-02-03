@@ -22,12 +22,12 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,11 +38,11 @@ import gov.faa.ait.apra.jaxb.ProductSet;
 import gov.faa.ait.apra.jaxb.ProductSet.Edition.Product;
 import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
 import gov.faa.ait.apra.util.TableChartClient;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 
 /**
  * This class is used to implement US IFR Planning service.
@@ -50,7 +50,7 @@ import io.swagger.annotations.ApiResponses;
  * @author FAA
  *
  */
-@Api(value="IFR Planning Charts")
+@Tag(name="IFR Planning Charts")
 @Path("/ifr/planning")
 public class UsIfrVfrPlanning extends AbstractTableDataService {
 
@@ -85,7 +85,7 @@ public class UsIfrVfrPlanning extends AbstractTableDataService {
 	@GET
 	@Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML })
 	@Path("/chart")
-    @ApiOperation(value="Get IFR planning download link by edition and format", 
+    @Operation(summary="Get IFR planning download link by edition and format", 
     		notes="TIFF formatted files are geo-referenced while PDF format is not geo-referenced. "
     				+ " The specific chart returned by this operation is the IFR PLANNING chart found "
     				+ "on the FAA public web site at FAA Home > Air Traffic > Flight Information > Aeronautical Information Services "
@@ -93,14 +93,14 @@ public class UsIfrVfrPlanning extends AbstractTableDataService {
     		response=ProductSet.class)
 	
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
+			@ApiResponse(responseCode = "200", description = RESPONSE_200),
+			@ApiResponse(responseCode = "400", description = ERROR_400),
+			@ApiResponse(responseCode = "404", description = ERROR_404),
+			@ApiResponse(responseCode = "500", description = ERROR_500)})
 
 	public Response getIfrPlanningChart(
-			@ApiParam(name="edition", value="Requested product edition. If omitted, the default current edition is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false)  @QueryParam("edition") String edition, 
-			@ApiParam (name="format", value="Format of the requested chart. TIFF is georeferenced and PDF is not georeferenced. If omitted, the default PDF format is returned.", allowableValues="tiff, pdf", defaultValue="pdf", allowMultiple=false, required=false) @QueryParam("format") String format) {
+			@Parameter(name="edition", description="Requested product edition. If omitted, the default current edition is returned.")  @QueryParam("edition") String edition, 
+			@ApiParam (name="format", description="Format of the requested chart. TIFF is georeferenced and PDF is not georeferenced. If omitted, the default PDF format is returned.") @QueryParam("format") String format) {
 
 		ProductSet ps = super.buildChart(format, edition, CHART_TYPE_IFR_PLANNING);
     	return Response.status(ps.getStatus().getCode()).entity(ps).build();
@@ -114,17 +114,17 @@ public class UsIfrVfrPlanning extends AbstractTableDataService {
 	@GET
 	@Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML })
 	@Path("/info")
-    @ApiOperation(value="Get Planning Chart edition date and edition number by edition type", 
+    @Operation(summary="Get Planning Chart edition date and edition number by edition type", 
     	response=ProductSet.class)
 	@ApiResponses(value = {
-			@ApiResponse(code = 200, message = RESPONSE_200),
-			@ApiResponse(code = 400, message = ERROR_400),
-			@ApiResponse(code = 404, message = ERROR_404),
-			@ApiResponse(code = 500, message = ERROR_500)})
+			@ApiResponse(responseCode = "200", description = RESPONSE_200),
+			@ApiResponse(responseCode = "400", description = ERROR_400),
+			@ApiResponse(responseCode = "404", description = ERROR_404),
+			@ApiResponse(responseCode = "500", description = ERROR_500)})
 
 	
 	public Response getIfrPlanningInfo(
-			@ApiParam(name="edition", value="Requested product edition. If omitted, the default current edition information is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) 
+			@Parameter(name="edition", description="Requested product edition. If omitted, the default current edition information is returned.") 
 			@QueryParam("edition") String edition) {
 
 		ProductSet ps = super.buildInfo(edition, CHART_TYPE_IFR_PLANNING);
