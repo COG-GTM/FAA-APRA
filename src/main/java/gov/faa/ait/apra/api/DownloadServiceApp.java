@@ -21,28 +21,29 @@ import javax.ws.rs.core.Application;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.swagger.jaxrs.config.BeanConfig;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.info.License;
+import io.swagger.v3.oas.annotations.servers.Server;
 
 /**
  * This is the base application for CIFP and represents the JAX-RS application for scanning of REST services through the classes that are specified.
  * @author FAA
  *
  */
+@OpenAPIDefinition(
+	info = @Info(
+		title = "FAA Aeronautic Product Release API",
+		version = "1.1.0",
+		license = @License(
+			name = "US Public Domain",
+			url = "https://www.usa.gov/publicdomain/label/1.0/"
+		)
+	),
+	servers = @Server(url = "https://soa.smext.faa.gov/apra")
+)
 public class DownloadServiceApp extends Application {
 	private static final Logger logger = LoggerFactory.getLogger(DownloadServiceApp.class);
-
-	public DownloadServiceApp () {
-		BeanConfig beanConfig = new BeanConfig();
-		beanConfig.setTitle("FAA Aeronautic Product Release API");
-		beanConfig.setVersion("1.1.0");
-		beanConfig.setSchemes(new String [] {"https"});
-		beanConfig.setHost("soa.smext.faa.gov");
-		beanConfig.setBasePath("/apra");
-		beanConfig.setResourcePackage("io.swagger.resources");
-		beanConfig.setLicense("US Public Domain");
-		beanConfig.setLicenseUrl("http://www.usa.gov/publicdomain/label/1.0/");
-		beanConfig.setScan(true);
-	}
 
 	@Override
 	public Set<Class<?>> getClasses() {
@@ -51,11 +52,9 @@ public class DownloadServiceApp extends Application {
 		Set<Class<?>> s = new HashSet <>();
 		s.add(gov.faa.ait.apra.api.CIFP.class);
 		s.add(gov.faa.ait.apra.api.ProductApiListener.class);
-		s.add(io.swagger.jaxrs.listing.ApiListingResource.class);
-		s.add(io.swagger.jaxrs.listing.SwaggerSerializers.class);
-		
-		//Manually adding MOXyJSONFeature
-        s.add(org.glassfish.jersey.moxy.json.MoxyJsonFeature.class);
+		s.add(io.swagger.v3.jaxrs2.integration.resources.OpenApiResource.class);
+
+		s.add(org.glassfish.jersey.jackson.JacksonFeature.class);
         
 		return s;
 	}

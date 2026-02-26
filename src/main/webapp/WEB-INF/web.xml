@@ -12,11 +12,7 @@
         </init-param>
         <init-param>
             <param-name>jersey.config.server.provider.packages</param-name>
-            <param-value>io.swagger.jaxrs.listing, gov.faa.ait.apra.api</param-value>
-        </init-param>
-        <init-param>
-        	<param-name>com.sun.jersey.config.feature.Debug</param-name>
-        	<param-value>true</param-value>
+            <param-value>io.swagger.v3.jaxrs2.integration.resources, gov.faa.ait.apra.api</param-value>
         </init-param>
         <!-- 
         <init-param>
@@ -42,18 +38,10 @@
     
   <servlet>
     <servlet-name>DefaultJaxrsConfig</servlet-name>
-    <servlet-class>io.swagger.jaxrs.config.DefaultJaxrsConfig</servlet-class>
+    <servlet-class>io.swagger.v3.jaxrs2.integration.OpenApiServlet</servlet-class>
     <init-param>
-      <param-name>api.version</param-name>
-      <param-value>2.0.0</param-value>
-    </init-param>
-    <init-param>
-      <param-name>swagger.api.title</param-name>
-      <param-value>Aeronautic Product Release API</param-value>
-    </init-param>
-    <init-param>
-      <param-name>swagger.api.basepath</param-name>
-      <param-value>https://soa.smext.faa.gov/apra</param-value>
+      <param-name>openApi.configuration.prettyPrint</param-name>
+      <param-value>true</param-value>
     </init-param>
     <load-on-startup>2</load-on-startup>
   </servlet>
