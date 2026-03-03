@@ -18,12 +18,14 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import gov.faa.ait.apra.api.OceanicRouteCharts;
 import gov.faa.ait.apra.jaxb.ProductSet;
 
+@Category(IntegrationTest.class)
 public class OceanicTest {
 	private final static Logger logger = LoggerFactory.getLogger(OceanicTest.class);
 
