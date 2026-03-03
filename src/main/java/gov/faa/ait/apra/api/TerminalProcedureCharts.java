@@ -20,8 +20,8 @@ import static gov.faa.ait.apra.bootstrap.ErrorCodes.RESPONSE_200;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.HashSet;
 
 import javax.ws.rs.GET;
@@ -296,9 +296,8 @@ public class TerminalProcedureCharts extends BaseService {
     	String [] usPathSet = new String [5];
     	char [] filePart = { 'A', 'B', 'C', 'D', 'E' };
     	
-    	GregorianCalendar cal = new GregorianCalendar();
-    	cal.setTime(cycle.getChart_effective_date());
-    	String year = Integer.toString(cal.get(Calendar.YEAR));
+    	LocalDate effectiveDate = cycle.getChart_effective_date().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+    	String year = Integer.toString(effectiveDate.getYear());
     	   	
     	for (int i = 0; i < filePart.length; i++) {	
     		StringBuilder path = new StringBuilder(Config.getTPPUSPath());

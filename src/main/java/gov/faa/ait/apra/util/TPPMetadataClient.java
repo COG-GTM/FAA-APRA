@@ -16,9 +16,8 @@ package gov.faa.ait.apra.util;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
+import java.time.LocalDate;
+import java.time.ZoneId;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -60,9 +59,8 @@ public class TPPMetadataClient {
 	public TPPMetadataClient (ChartCycleElementsJson cycle) {
 		this.url = new StringBuilder(BASE_URI);
 		
-		GregorianCalendar cal = (GregorianCalendar) GregorianCalendar.getInstance();
-		cal.setTime(cycle.getChart_effective_date());
-		String year = Integer.toString(cal.get(Calendar.YEAR));
+		LocalDate effectiveDate = cycle.getChart_effective_date().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+		String year = Integer.toString(effectiveDate.getYear());
 		this.edition = year.substring(2, 4)+cycle.getChart_cycle_number();
 		this.url = this.url.append(EDITION_PARAM).append(edition);
 		

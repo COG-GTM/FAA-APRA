@@ -15,7 +15,8 @@ package gov.faa.ait.apra.api;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_400;
@@ -169,8 +170,8 @@ public class GulfOfMexicoEnrouteCharts extends BaseService {
      * @return a ProductSet object that is serialized as JSON or XML to the caller
      */
     public ProductSet getRelease (ChartCycleElementsJson cycle) {   	
-		SimpleDateFormat formatter = new SimpleDateFormat("MM-dd-yyyy");
-		String dateFolder = formatter.format(cycle.getChart_effective_date());
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy");
+		String dateFolder = formatter.format(cycle.getChart_effective_date().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
    	
     	logger.info("Building url paths for response for Gulf of Mexico IFR enroute chart type.");
     	

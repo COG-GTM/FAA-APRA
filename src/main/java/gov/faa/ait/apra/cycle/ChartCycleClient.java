@@ -16,6 +16,9 @@
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -182,15 +185,11 @@ public class ChartCycleClient extends DenodoClient {
 		
 		if(ChartCycleClient.chartCycle !=null) {
 			ChartCycleElementsJson [] elements = ChartCycleClient.chartCycle.getElements();
-			for (int i = 0; i < elements.length; i++) {
-				ChartCycleElementsJson element = elements[i];
-				
-				found = element.getChart_cycle_period_code().equalsIgnoreCase(periodCode)
-						& element.getChart_cycle_type_code().equalsIgnoreCase(typeCode);
-				if (found) {
-					return element;
-				}
-			}
+			return Arrays.stream(elements)
+				.filter(element -> element.getChart_cycle_period_code().equalsIgnoreCase(periodCode)
+						&& element.getChart_cycle_type_code().equalsIgnoreCase(typeCode))
+				.findFirst()
+				.orElse(null);
 		}
 		return null;
 	}
@@ -252,9 +251,9 @@ public class ChartCycleClient extends DenodoClient {
 	public String getWebTarget (Date targetDate) {
 		StringBuilder url = new StringBuilder();
 		url = url.append(Config.getDenodoHost()+Config.getDenodoCycleResource());
-		SimpleDateFormat formatter = new SimpleDateFormat ("MM/dd/yyyy");
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
 		
-		String dateString = formatter.format(targetDate);
+		String dateString = formatter.format(targetDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
 		
 		StringBuilder queryString = new StringBuilder();
 		queryString = queryString.append("?query_date="+dateString);

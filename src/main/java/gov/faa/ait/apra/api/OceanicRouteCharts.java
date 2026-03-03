@@ -19,7 +19,8 @@ import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_500;
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.RESPONSE_200;
 
 import java.net.URL;
-import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
 import javax.ws.rs.GET;
@@ -220,7 +221,7 @@ public class OceanicRouteCharts extends BaseService {
     }
     
     private String formatDate (Date unformattedDate, String format) {
-    	SimpleDateFormat formatter = new SimpleDateFormat(format);
-    	return formatter.format(unformattedDate);
+    	DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
+    	return formatter.format(unformattedDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
     }
 }

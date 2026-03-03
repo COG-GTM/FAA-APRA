@@ -19,7 +19,8 @@ import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_500;
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.RESPONSE_200;
 
 import java.net.URL;
-import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -133,8 +134,8 @@ public class DigitalEnrouteCharts extends BaseService {
     	product.setProductName(ProductCodeList.DEC);
     	
     	path.append(Config.getAeronavHost()).append(Config.getDECPath()).append("/");
-		SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy");
-		path.append(sdf.format(cycle.getChart_effective_date())).append("/");
+		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("MM-dd-yyyy");
+		path.append(dtf.format(cycle.getChart_effective_date().toInstant().atZone(ZoneId.systemDefault()).toLocalDate())).append("/");
 		file.append(Config.getDECFilePrefix()).append(".").append(ZIP);
     	path.append(file);
     	product.setChartName(file.toString());
