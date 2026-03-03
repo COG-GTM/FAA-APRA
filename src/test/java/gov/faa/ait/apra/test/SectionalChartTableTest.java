@@ -62,7 +62,7 @@ public class SectionalChartTableTest {
 	}
 	
 	private ChartCycleElementsJson buildElement(String city, String period, String type) throws ParseException {
-		DateTimeFormatter sdfISO = DateTimeFormatter.ofPattern("yyyy-dd-MM");
+		DateTimeFormatter sdfISO = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 		ChartCycleElementsJson element = new ChartCycleElementsJson();
 		element.setChart_city_name(city);
 		element.setChart_cycle_number("97");
