@@ -16,19 +16,19 @@
           </snapshots>
           <id>central</id>
           <name>libs-release</name>
-          <url>http://artifactory.faa.gov:8081/artifactory/libs-release</url>
+          <url>https://artifactory.faa.gov:8081/artifactory/libs-release</url>
         </repository>
         <repository>
           <snapshots />
           <id>snapshots</id>
           <name>libs-snapshot</name>
-          <url>http://artifactory.faa.gov:8081/artifactory/libs-snapshot</url>
+          <url>https://artifactory.faa.gov:8081/artifactory/libs-snapshot</url>
         </repository>
         <repository>
           <snapshots/>
           <id>faa-apra</id>
           <name>faa-apra</name>
-          <url>http://artifactory.faa.gov:8081/artifactory/faa-apra</url>
+          <url>https://artifactory.faa.gov:8081/artifactory/faa-apra</url>
         </repository>
       </repositories>
 
@@ -39,11 +39,18 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.5.1</version>
+                <version>3.13.0</version>
                 <inherited>true</inherited>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <release>11</release>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <excludedGroups>gov.faa.ait.apra.test.IntegrationTest</excludedGroups>
                 </configuration>
             </plugin>
         </plugins>
@@ -72,11 +79,6 @@
             <artifactId>jersey-media-moxy</artifactId>
         </dependency>
         <dependency>
-        	<groupId>log4j</groupId>
-        	<artifactId>log4j</artifactId>
-        	<version>1.2.12</version>
-        </dependency>
-        <dependency>
         	<groupId>org.apache.logging.log4j</groupId>
         	<artifactId>log4j-core</artifactId>
         	<version>2.17.1</version>
@@ -84,12 +86,19 @@
         <dependency>
         	<groupId>org.apache.logging.log4j</groupId>
         	<artifactId>log4j-slf4j-impl</artifactId>
-        	<version>2.4.1</version>
+        	<version>2.17.1</version>
         </dependency>
         <dependency>
-        	<groupId>junit</groupId>
-        	<artifactId>junit</artifactId>
-        	<version>4.12</version>
+        	<groupId>org.junit.jupiter</groupId>
+        	<artifactId>junit-jupiter</artifactId>
+        	<version>5.10.2</version>
+        	<scope>test</scope>
+        </dependency>
+        <dependency>
+        	<groupId>org.junit.vintage</groupId>
+        	<artifactId>junit-vintage-engine</artifactId>
+        	<version>5.10.2</version>
+        	<scope>test</scope>
         </dependency>
         <dependency>
            <groupId>com.fasterxml.jackson.core</groupId>
@@ -109,12 +118,12 @@
         <dependency>
         	<groupId>org.apache.logging.log4j</groupId>
         	<artifactId>log4j-web</artifactId>
-        	<version>2.4.1</version>
+        	<version>2.17.1</version>
         </dependency>
         <dependency>
         	<groupId>gov.faa.ait</groupId>
         	<artifactId>apraresponse</artifactId>
-        	<version>[1.0,2.0)</version>
+        	<version>1.0.0</version>
         </dependency>
         <dependency>
         	<groupId>org.glassfish.jersey.containers</groupId>

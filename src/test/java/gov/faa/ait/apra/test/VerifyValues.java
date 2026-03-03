@@ -50,6 +50,8 @@ public class VerifyValues {
 				connection = (HttpURLConnection) url.openConnection();
 			}
 			
+			connection.setConnectTimeout(5000);  // 5 seconds
+			connection.setReadTimeout(10000);    // 10 seconds
 			connection.setRequestMethod("HEAD");
 			int responseCode = connection.getResponseCode();
 			if (responseCode == 200 || responseCode == 302) {

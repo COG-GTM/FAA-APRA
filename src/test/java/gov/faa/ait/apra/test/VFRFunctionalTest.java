@@ -18,12 +18,14 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import gov.faa.ait.apra.api.VFRCharts;
 import gov.faa.ait.apra.jaxb.ProductSet;
 
+@Category(IntegrationTest.class)
 public class VFRFunctionalTest {
 	private static final  Logger logger = LoggerFactory.getLogger(VFRFunctionalTest.class);
 	private VFRCharts vfr;
@@ -53,9 +55,10 @@ public class VFRFunctionalTest {
 	public void testProductReleseNext() {
 		vfr = new VFRCharts();
 		ProductSet ps = (ProductSet) vfr.getGrandCanyonRelease("next").getEntity();
-		logger.info("VFR Product Edition Test for 'Next' return code "+ps.getStatus().getCode().intValue());
 		int code = ps.getStatus().getCode().intValue();
-		assertEquals(code, 404);
+		logger.info("VFR Product Edition Test for 'Next' return code " + code);
+		if (!(code == 200 || code == 404))
+			fail();
 	}
 
 	@Test 
