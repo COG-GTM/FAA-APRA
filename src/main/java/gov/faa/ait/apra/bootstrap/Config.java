@@ -109,8 +109,7 @@ public class Config {
 		if (logger.isDebugEnabled())
 			logger.debug("Attempting load of properties resources");
 		
-		try {
-			FileInputStream fis = new FileInputStream (new File("/opt/apra/conf/config.properties"));
+		try (FileInputStream fis = new FileInputStream(new File("/opt/apra/conf/config.properties"))) {
 			cfg.load(fis);	
 			logger.info("Configuration properties loaded successfully from /opt/apra/conf/config.properties");
 			logger.info("TPP HEAD CHECK FLAG is "+cfg.getProperty("gov.faa.ait.tpp.check.flag"));

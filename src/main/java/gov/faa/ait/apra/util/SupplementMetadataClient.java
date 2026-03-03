@@ -15,7 +15,8 @@ package gov.faa.ait.apra.util;
 
 import java.io.UnsupportedEncodingException;
 
-import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -53,8 +54,8 @@ public class SupplementMetadataClient {
 		this.url = new StringBuilder(BASE_URI);
 
 		logger.info("Chart effective date "+cycle.getChart_effective_date());
-		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-		this.url = this.url.append(CHART_DATE).append(formatter.format(cycle.getChart_effective_date()));
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+		this.url = this.url.append(CHART_DATE).append(formatter.format(cycle.getChart_effective_date().toInstant().atZone(ZoneId.systemDefault()).toLocalDate()));
 		
 		logger.info("URL for Supplement metadata query constructed as is currently "+url);
 	}

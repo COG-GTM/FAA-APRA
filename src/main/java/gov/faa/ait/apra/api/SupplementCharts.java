@@ -38,7 +38,8 @@ import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_404;
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_500;
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.RESPONSE_200;
 
-import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 
 import javax.ws.rs.GET;
@@ -196,9 +197,9 @@ public class SupplementCharts extends BaseService {
 		Edition ed = initEdition(cycle);
 		Product product = of.createProductSetEditionProduct();
 		path.append("/").append(CSALL);
-		SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd");
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
 		path.append(
-				formatter.format(cycle.getChart_effective_date())).append(".zip");
+				formatter.format(cycle.getChart_effective_date().toInstant().atZone(ZoneId.systemDefault()).toLocalDate())).append(".zip");
 		product.setProductName(ProductCodeList.SUPPLEMENT);
 		validateAndSetUrl(Config.getAeronavHost() + path.toString(), ps, product);
 		ed.setProduct(product);
@@ -247,9 +248,9 @@ public class SupplementCharts extends BaseService {
 
 			Product product = of.createProductSetEditionProduct();
 			product.setProductName(ProductCodeList.SUPPLEMENT);
-			SimpleDateFormat formatter = new SimpleDateFormat("ddMMMyyyy");
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMMyyyy");
 			path.append("/").append(
-					formatter.format(cycle.getChart_effective_date()));
+					formatter.format(cycle.getChart_effective_date().toInstant().atZone(ZoneId.systemDefault()).toLocalDate()));
 			path.append("/").append(elements[i].getPdf());
 
 			product.setUrl(Config.getAeronavHost() + path.toString());

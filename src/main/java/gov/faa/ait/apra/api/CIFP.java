@@ -16,8 +16,8 @@ package gov.faa.ait.apra.api;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import java.util.Calendar;
-import java.util.GregorianCalendar;
+import java.time.LocalDate;
+import java.time.ZoneId;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -150,9 +150,8 @@ public class CIFP extends BaseService {
     	cifpPath = cifpPath.append(Config.getCIFPPath()).append("/").append(Config.getCIFPFilePrefix());
     	// the path looks like this: /Upload_313-d/cifp/cifp_<year><cycle>.zip
     	
-    	GregorianCalendar cal = new GregorianCalendar();
-    	cal.setTime(cycle.getChart_effective_date());
-    	cifpPath = cifpPath.append(cal.get(Calendar.YEAR)).append(cycle.getChart_cycle_number()).append(".zip");
+    	LocalDate effectiveDate = cycle.getChart_effective_date().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+    	cifpPath = cifpPath.append(effectiveDate.getYear()).append(cycle.getChart_cycle_number()).append(".zip");
     	
     	try {
     		downloadURL = new URL (Config.getAeronavHost()+cifpPath.toString());

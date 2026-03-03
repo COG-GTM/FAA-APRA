@@ -13,7 +13,8 @@
  */
 package gov.faa.ait.apra.cycle;
 
-import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
@@ -215,9 +216,9 @@ public class TACCycleClient extends DenodoClient {
 		StringBuilder url = new StringBuilder();
 		
 		url = url.append(Config.getDenodoHost()+Config.getDenodoVFRCycleResource());
-		SimpleDateFormat formatter = new SimpleDateFormat ("MM/dd/yyyy");
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
 		
-		String dateString = formatter.format(targetDate);
+		String dateString = formatter.format(targetDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
 		
 		StringBuilder queryString = new StringBuilder();
 		queryString = queryString.append("?query_date="+dateString);

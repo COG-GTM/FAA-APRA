@@ -36,7 +36,8 @@ import static gov.faa.ait.apra.bootstrap.ErrorCodes.RESPONSE_200;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -192,8 +193,8 @@ public class VFRCharts extends BaseService {
 
 		Edition.Product product = new Edition.Product();
 
-		SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy");
-		ed.setEditionDate(formatter.format(cycle.getChart_effective_date()));
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
+		ed.setEditionDate(formatter.format(cycle.getChart_effective_date().toInstant().atZone(ZoneId.systemDefault()).toLocalDate()));
 		ed.setEditionNumber(Integer.valueOf(cycle.getChart_cycle_number()));
 		ed.setEditionName(EditionCodeList.valueOf(cycle
 				.getChart_cycle_period_code()));
@@ -229,8 +230,8 @@ public class VFRCharts extends BaseService {
 
 		ProductSet.Edition ed = of.createProductSetEdition();
 
-		SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy");
-		ed.setEditionDate(formatter.format(cycle.getChart_effective_date()));
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
+		ed.setEditionDate(formatter.format(cycle.getChart_effective_date().toInstant().atZone(ZoneId.systemDefault()).toLocalDate()));
 		ed.setEditionNumber(Integer.valueOf(cycle.getChart_cycle_number()));
 		ed.setEditionName(EditionCodeList.valueOf(cycle
 				.getChart_cycle_period_code()));

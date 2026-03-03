@@ -13,7 +13,8 @@
  */
 package gov.faa.ait.apra.util;
 
-import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -69,10 +70,10 @@ public class TableChartClient {
 		 */
 		String unbound = "";
 
-		SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy");
+		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("MM/dd/yyyy");
 		StringBuilder url = new StringBuilder();
 		url.append(Config.getDenodoHost()).append(Config.getDenodoVFRCycleResource()).append("?query_date=")
-										.append(sdf.format(targetDate))
+										.append(dtf.format(targetDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()))
 										.append("&%24format=json");
 		logger.info("Calling denodo for sectional at "+url.toString());
 		TableChartClient.lastUpdate = new Date(System.currentTimeMillis());

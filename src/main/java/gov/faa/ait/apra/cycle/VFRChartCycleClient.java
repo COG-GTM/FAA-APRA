@@ -13,7 +13,9 @@
  */
 package gov.faa.ait.apra.cycle;
 
-import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -134,9 +136,9 @@ public class VFRChartCycleClient {
 		}
 		
 		url = url.append(Config.getDenodoHost()+Config.getDenodoVFRCycleResource());
-		SimpleDateFormat formatter = new SimpleDateFormat ("MM/dd/yyyy");
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
 		
-		String dateString = formatter.format(targetDate);
+		String dateString = formatter.format(targetDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
 
 		StringBuilder queryString = new StringBuilder();
 		queryString = queryString.append("?query_date=" + dateString);
@@ -214,20 +216,14 @@ public class VFRChartCycleClient {
 			getChartCycle();
 		}
 
-		boolean found;
-
 		ChartCycleElementsJson[] elements = cycle.getElements();
-		for (int i = 0; i < elements.length; i++) {
-			ChartCycleElementsJson element = elements[i];
-			found = element.getChart_cycle_period_code().equalsIgnoreCase(
-					periodCode);
-			if (found) {
-				logger.info("Found VFR chart cycle in cache. Returning "+periodCode+" chart cycle.");
-				return element;
-			}
-		}
-		logger.warn("VFR chart cycle "+periodCode+" not found in cache. Returning null.");
-		return null;
+		return Arrays.stream(elements)
+			.filter(element -> element.getChart_cycle_period_code().equalsIgnoreCase(periodCode))
+			.findFirst()
+			.orElseGet(() -> {
+				logger.warn("VFR chart cycle "+periodCode+" not found in cache. Returning null.");
+				return null;
+			});
 	}
 
 	public ChartCycleElementsJson getNextCycle() {
