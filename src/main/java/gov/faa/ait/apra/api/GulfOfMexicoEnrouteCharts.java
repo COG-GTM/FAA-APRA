@@ -15,7 +15,9 @@ package gov.faa.ait.apra.api;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_400;
@@ -94,25 +96,25 @@ public class GulfOfMexicoEnrouteCharts extends BaseService {
     	
     	ChartCycleElementsJson cycle;
     	
-    	logger.info("Received call to retrieve current Gulf of Mexico IFR enroute product release "+ed+" "+fmt+" "+geo);
+   		logger.info("Received call to retrieve current Gulf of Mexico IFR enroute product release {} {} {}", ed, fmt, geo);
     	setFormat(fmt != null ? fmt.toUpperCase(Locale.ENGLISH) : PDF);
     	setGeoname(geo != null ? geo : ALL);
 
        	cycle = initParameters(ed);
     	
        	if (!verifyFormat()) {
-       		logger.error("Expected a format of PDF or TIFF, received format "+getFormat()+" instead.");
+      			logger.error("Expected a format of PDF or TIFF, received format {} instead.", getFormat());
     		return Response.status(400).entity(getIllegalArgumentError()).build();    		
        	}
        	
         if (!verifyGeoname()) {
-    		logger.error("Expected geographic name of 'west' or 'central' and received '"+geoname+ERRMSG);
+    		logger.error("Expected geographic name of 'west' or 'central' and received '{}'{}", geoname, ERRMSG);
     		return Response.status(400).entity(getErrorResponse(400, 
     				"Geographic area name must be either west, central, or omitted. If both charts are required, leave the geoname null")).build();
         }
         
     	if (!verifyEdition()) {
-    		logger.error("Expected edition 'current' or 'next' and received '"+ed+ERRMSG);
+    		logger.error("Expected edition 'current' or 'next' and received '{}'{}", ed, ERRMSG);
     		return Response.status(400).entity(getIllegalArgumentError()).build();    		
     	}
 
@@ -148,13 +150,13 @@ public class GulfOfMexicoEnrouteCharts extends BaseService {
     	
     	cycle = initParameters(ed);
         if (!verifyGeoname()) {
-    		logger.error("Expected geographic name of 'west' or 'central' and received '"+geoname+ERRMSG);
+    		logger.error("Expected geographic name of 'west' or 'central' and received '{}'{}", geoname, ERRMSG);
     		return Response.status(400).entity(getErrorResponse(400, 
     				"Geographic area name must be either west, central, or omitted. If both charts are required, leave the geoname null")).build();
         }
         
     	if (!verifyEdition()) {
-    		logger.error("Expected edition 'next' and received '"+ed+ERRMSG);
+    		logger.error("Expected edition 'next' and received '{}'{}", ed, ERRMSG);
     		return Response.status(400).entity(getIllegalArgumentError()).build();    		
     	}
     		
@@ -169,8 +171,9 @@ public class GulfOfMexicoEnrouteCharts extends BaseService {
      * @return a ProductSet object that is serialized as JSON or XML to the caller
      */
     public ProductSet getRelease (ChartCycleElementsJson cycle) {   	
-		SimpleDateFormat formatter = new SimpleDateFormat("MM-dd-yyyy");
-		String dateFolder = formatter.format(cycle.getChart_effective_date());
+		LocalDate effectiveDate = cycle.getChart_effective_date().toInstant()
+				.atZone(ZoneId.systemDefault()).toLocalDate();
+		String dateFolder = DateTimeFormatter.ofPattern("MM-dd-yyyy").format(effectiveDate);
    	
     	logger.info("Building url paths for response for Gulf of Mexico IFR enroute chart type.");
     	

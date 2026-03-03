@@ -20,8 +20,8 @@ import static gov.faa.ait.apra.bootstrap.ErrorCodes.RESPONSE_200;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.HashSet;
 
 import javax.ws.rs.GET;
@@ -95,14 +95,14 @@ public class TerminalProcedureCharts extends BaseService {
     		@ApiParam(name="geoname", value="Requested geographic region of Terminal Procedures Publication chart set. Specify either US or a valid full state name such as Alaska. If omitted, the default US complete set is returned.", defaultValue="US", allowMultiple=false, required=false) @QueryParam("geoname") String geo) {
     	ChartCycleElementsJson cycle;
     	
-    	logger.info("Received call to retrieve current TPP product release for edition '"+ed+"'.");
+    	logger.info("Received call to retrieve current TPP product release for edition '{}'.", ed);
     	
     	// Default the geoname to US, but we also accept states at this time
 		setGeoname(geo != null ? geo : US);
 		setFormat(ZIP);
 		
 		if (!verifyGeoname()) {
-    		logger.error("Expected a geographic name of a US state or just US, but received '"+geo+"' instead. Error response being generated and returned.");
+    		logger.error("Expected a geographic name of a US state or just US, but received '{}' instead. Error response being generated and returned.", geo);
     		return Response.status(400).entity(getErrorResponse (400, "Geographic name must be a full US state name or 'US'")).build();    					
 		}
 		// Check the base service class for what happens here. If someone specifies the "changeset" edition, the setEdition method 
@@ -112,7 +112,7 @@ public class TerminalProcedureCharts extends BaseService {
     	cycle = initParameters();
 		
     	if (!verifyEdition()) {
-    		logger.error("Expected edition current, next, or changeset and received '"+ed+"' instead. Error response being generated and returned.");
+    		logger.error("Expected edition current, next, or changeset and received '{}' instead. Error response being generated and returned.", ed);
     		return Response.status(400).entity(getErrorResponse (400, "Edition must be current, next, or changeset.")).build();    		
     	}
     	
@@ -157,8 +157,8 @@ public class TerminalProcedureCharts extends BaseService {
     		@ApiParam(name="geoname", value="Requested geographic region of Terminal Procedures Publication chart set. Specify US or a valid full US state name such as Alaska. If omitted, edition information for the complete US set is returned.", defaultValue="US", allowMultiple=false, required=false) @QueryParam("geoname") String geo) {
     	ChartCycleElementsJson cycle;
     	
-    	logger.info("Received call to retrieve current TPP product release for edition '"+ed+"'.");
-    	
+    	logger.info("Received call to retrieve current TPP product release for edition '{}'.", ed);
+    
 		setGeoname(geo != null ? geo : US);
 		setEdition(ed != null ? ed : CURRENT);
 		
@@ -172,12 +172,12 @@ public class TerminalProcedureCharts extends BaseService {
     	cycle = initParameters();
     	
 		if (!verifyGeoname()) {
-    		logger.error("Expected a geographic name of a US state or just US, but received '"+geo+"' instead. Error response being generated and returned.");
+    		logger.error("Expected a geographic name of a US state or just US, but received '{}' instead. Error response being generated and returned.", geo);
     		return Response.status(400).entity(getErrorResponse (400, "Geographic name must be a full US state name or 'US'")).build();    					
 		}
 		
     	if (!verifyEdition()) {
-    		logger.error("Expected edition 'current' or 'next' and received '"+ed+"' instead. Error response being generated and returned.");
+    		logger.error("Expected edition 'current' or 'next' and received '{}' instead. Error response being generated and returned.", ed);
     		return Response.status(400).entity(getErrorResponse (400, "Edition must be current, next, or changeset.")).build();    		
     	}
     	
@@ -217,7 +217,7 @@ public class TerminalProcedureCharts extends BaseService {
     // Chart paths follow this convention http://aeronav.faa.gov/d-tpp/1607/akto.pdf   
     
     private ProductSet getChartProductSet (ChartCycleElementsJson cycle) {
-    	logger.info("Getting the chart product set for "+getEdition()+" "+capitalizeGeoname()+" with change flag = "+isChangeFlag());
+    	logger.info("Getting the chart product set for {} {} with change flag = {}", getEdition(), capitalizeGeoname(), isChangeFlag());
     	ObjectFactory of = new ObjectFactory();
     	TPPMetadataClient tppClient = new TPPMetadataClient (cycle, isChangeFlag()); 
     	TPPMetadata [] elements = tppClient.getChartMetadataByState(capitalizeGeoname()).getElements();
@@ -227,7 +227,7 @@ public class TerminalProcedureCharts extends BaseService {
     	if (elements == null || elements.length == 0) 
     		return getErrorResponse(404, ErrorCodes.ERROR_404);
     	
-    	logger.info(elements.length+" total charts found for "+getEdition()+" "+capitalizeGeoname()+" with change flag = "+isChangeFlag());
+    	logger.info("{} total charts found for {} {} with change flag = {}", elements.length, getEdition(), capitalizeGeoname(), isChangeFlag());
     	
     	String edition = tppClient.getEdition();
     	ProductSet ps = initPositiveResponse();
@@ -286,7 +286,7 @@ public class TerminalProcedureCharts extends BaseService {
     	}
     	
     	processedFiles.clear();
-    	logger.info("Processed a total of "+processTotal+" charts for "+this.getGeoname());
+    	logger.info("Processed a total of {} charts for {}", processTotal, this.getGeoname());
     	
        	return ps;
     }   
@@ -296,9 +296,9 @@ public class TerminalProcedureCharts extends BaseService {
     	String [] usPathSet = new String [5];
     	char [] filePart = { 'A', 'B', 'C', 'D', 'E' };
     	
-    	GregorianCalendar cal = new GregorianCalendar();
-    	cal.setTime(cycle.getChart_effective_date());
-    	String year = Integer.toString(cal.get(Calendar.YEAR));
+    	LocalDate effectiveDate = cycle.getChart_effective_date().toInstant()
+    			.atZone(ZoneId.systemDefault()).toLocalDate();
+    	String year = String.valueOf(effectiveDate.getYear());
     	   	
     	for (int i = 0; i < filePart.length; i++) {	
     		StringBuilder path = new StringBuilder(Config.getTPPUSPath());
@@ -367,9 +367,7 @@ public class TerminalProcedureCharts extends BaseService {
     }
 
     private boolean isNullValue (String value) {
-    	
-    	return value == null || value.equals(EMPTY_STRING);
-
+    	return value == null || value.isEmpty();
     }
     
     @Override

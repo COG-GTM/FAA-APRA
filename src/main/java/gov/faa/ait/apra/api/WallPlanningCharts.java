@@ -87,8 +87,7 @@ public class WallPlanningCharts extends BaseService {
 			@ApiParam (name="format", value="Format of the requested chart. TIFF format contains georeferenced charts contained within a zip archive and PDF is non-georeferenced charts. If omitted, the default PDF format is returned.", allowableValues="tiff, pdf", defaultValue="pdf", allowMultiple=false, required=false) @QueryParam("format") String fmt) {
 
 
-		logger.info("Received call to retrieve current WallPlan product release for edition '"
-				+ ed + " format'" + fmt + "'.");
+		logger.info("Received call to retrieve current WallPlan product release for edition '{}' format '{}'", ed, fmt);
 		ObjectFactory of = new ObjectFactory();
 
 		response = of.createProductSet();
@@ -129,8 +128,7 @@ public class WallPlanningCharts extends BaseService {
 			@ApiParam(name="edition", value="Requested product edition. If omitted, the default current edition information is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed,
 			@ApiParam (name="format", value="Format of the requested chart. TIFF format contains georeferenced charts in a zip archive file and PDF is non-georeferenced charts. If omitted, the default PDF format is used.", allowableValues="tiff, pdf", defaultValue="pdf", allowMultiple=false, required=false)  @QueryParam("format") String fmt) {
 
-		logger.info("Received call to retrieve current WallPlan product release for edition '"
-				+ ed + " format'" + fmt + "'.");
+		logger.info("Received call to retrieve current WallPlan product release for edition '{}' format '{}'", ed, fmt);
 
 		ObjectFactory of = new ObjectFactory();
 
@@ -231,7 +229,7 @@ public class WallPlanningCharts extends BaseService {
 			return false;
 		}
     	if (!verifyFormat()) {
-    		logger.error("Expected format of 'tiff' or 'pdf'. Received format '"+fmt+"' instead. Error response being generated and returned");
+    		logger.error("Expected format of 'tiff' or 'pdf'. Received format '{}' instead. Error response being generated and returned", fmt);
     		response = getIllegalArgumentError();
     		return false;
     	}
@@ -247,8 +245,7 @@ public class WallPlanningCharts extends BaseService {
 		}
 
 		if (cycle == null) {
-			logger.warn("Unable to locate " + this.getEdition()
-					+ " edition chart for " + this.getFormat());
+			logger.warn("Unable to locate {} edition chart for {}", this.getEdition(), this.getFormat());
 			response = this.getErrorResponse(404, ErrorCodes.ERROR_404);
 			return false;
 		}

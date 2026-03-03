@@ -82,7 +82,7 @@ public abstract class DenodoClient {
 		
 		url = getWebTarget(targetDate);
 		
-		logger.info("Calling denodo for chart cycle at "+url);
+		logger.info("Calling denodo for chart cycle at {}", url);
 			
 		setLastUpdate();
 		
@@ -95,7 +95,7 @@ public abstract class DenodoClient {
 			long now = System.currentTimeMillis();
 			unbound = webTarget.request(MediaType.APPLICATION_XML_TYPE).get(String.class);
 			long duration = System.currentTimeMillis() - now;
-			logger.info("Call for 28/56 day chart cycle took "+duration+" ms");
+			logger.info("Call for 28/56 day chart cycle took {} ms", duration);
 			ObjectMapper mapper = new ObjectMapper();
 			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 			mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));

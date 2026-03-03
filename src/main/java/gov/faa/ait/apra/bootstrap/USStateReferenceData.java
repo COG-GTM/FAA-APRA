@@ -13,7 +13,6 @@
  */
 package gov.faa.ait.apra.bootstrap;
 
-import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Locale;
 
@@ -64,10 +63,10 @@ public class USStateReferenceData {
 			long now = System.currentTimeMillis();
 			String unbound = webTarget.request(MediaType.APPLICATION_XML_TYPE).get(String.class);
 			long duration = System.currentTimeMillis() - now;
-			logger.info("Call US state reference data took "+duration+" ms");
+			logger.info("Call US state reference data took {} ms", duration);
 			ObjectMapper mapper = new ObjectMapper();
 			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-			mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
+			mapper.setDateFormat(new java.text.SimpleDateFormat("yyyy-MM-dd"));
 			USStateReference data = mapper.readValue(unbound.getBytes(Charsets.UTF_16), USStateReference.class);
 			USState [] states = data.getElements();
 			

@@ -16,6 +16,9 @@ package gov.faa.ait.apra.util;
 import java.io.UnsupportedEncodingException;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -52,11 +55,12 @@ public class SupplementMetadataClient {
 	public SupplementMetadataClient (ChartCycleElementsJson cycle) {
 		this.url = new StringBuilder(BASE_URI);
 
-		logger.info("Chart effective date "+cycle.getChart_effective_date());
-		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-		this.url = this.url.append(CHART_DATE).append(formatter.format(cycle.getChart_effective_date()));
+		logger.info("Chart effective date {}", cycle.getChart_effective_date());
+		LocalDate effectiveDate = cycle.getChart_effective_date().toInstant()
+				.atZone(ZoneId.systemDefault()).toLocalDate();
+		this.url = this.url.append(CHART_DATE).append(DateTimeFormatter.ISO_LOCAL_DATE.format(effectiveDate));
 		
-		logger.info("URL for Supplement metadata query constructed as is currently "+url);
+		logger.info("URL for Supplement metadata query constructed as is currently {}", url);
 	}
 
 	/**
@@ -99,7 +103,7 @@ public class SupplementMetadataClient {
 		String unbound = "";
 		
 		try {
-			logger.info("Calling denodo for Supplement metadata at "+url.toString());
+			logger.info("Calling denodo for Supplement metadata at {}", url);
 			
 			Client client = ClientBuilder.newClient();	
 			WebTarget webTarget = client.target(this.url.toString());
@@ -107,14 +111,14 @@ public class SupplementMetadataClient {
 			long now = System.currentTimeMillis();
 			unbound = webTarget.request(MediaType.APPLICATION_XML_TYPE).get(String.class);
 			long duration = System.currentTimeMillis() - now;
-			logger.info("Call for Supplement Metadata took "+duration+" ms");
+			logger.info("Call for Supplement Metadata took {} ms", duration);
 			ObjectMapper mapper = new ObjectMapper();
 			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 			mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
 			return mapper.readValue(unbound.getBytes("UTF-8"), SupplementChartMetadata.class);
 		}
 		catch (Exception ex) {
-			logger.warn("Error getting chart cycle information using url "+this.url.toString(), ex);
+			logger.warn("Error getting chart cycle information using url {}", this.url, ex);
 			return null;
 		}
 	}

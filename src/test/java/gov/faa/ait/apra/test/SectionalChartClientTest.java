@@ -15,8 +15,9 @@ package gov.faa.ait.apra.test;
 
 import static org.junit.Assert.assertEquals;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -25,9 +26,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
 import gov.faa.ait.apra.cycle.ChartCycleData;
 import gov.faa.ait.apra.util.ChartInfoTable;
@@ -63,34 +61,19 @@ public class SectionalChartClientTest {
 	
 	@Parameterized.Parameters
 	public static List<Object[]> cycleNumbers () {
-		//ArrayList <Date> arrayList = new ArrayList <Date>();	
-		SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy");
-		Object [] [] params = null;
-		
-		try { 
-			params = new Object [] [] {
-				{formatter.parse("06/15/2016"), "ALBUQUERQUE", "CURRENT", "SECTIONAL", Integer.valueOf(97)},
-				{formatter.parse("06/15/2016"), "ALBUQUERQUE", "NEXT", "SECTIONAL", Integer.valueOf(98)}
-				/*
-				{formatter.parse("11/10/2016"), new Integer(6)},
-				{formatter.parse("01/01/2017"), new Integer(6)},
-				{formatter.parse("12/25/2016"), new Integer(6)},
-				{formatter.parse("01/05/2017"), new Integer(1)},
-				{formatter.parse("02/03/2017"), new Integer(1)},
-				{formatter.parse("06/14/2017"), new Integer(3)},
-				{formatter.parse("09/15/2017"), new Integer(5)},
-				{formatter.parse("11/09/2017"), new Integer(6)}
-				
-				*/
-			};
-		}
-		catch (ParseException e) {
-			params = new Object [] [] {
-				{new Date(System.currentTimeMillis()), Integer.valueOf(1) }
-			};
-		}
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
+
+		Object[][] params = new Object[][] {
+				{parseDate("06/15/2016", formatter), "ALBUQUERQUE", "CURRENT", "SECTIONAL", Integer.valueOf(97)},
+				{parseDate("06/15/2016", formatter), "ALBUQUERQUE", "NEXT", "SECTIONAL", Integer.valueOf(98)}
+		};
 
 		return Arrays.asList(params);
+	}
+
+	private static Date parseDate(String dateString, DateTimeFormatter formatter) {
+		LocalDate localDate = LocalDate.parse(dateString, formatter);
+		return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
 	}	
 	@Test
 	public void test() {

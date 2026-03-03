@@ -20,8 +20,9 @@ import static gov.faa.ait.apra.bootstrap.ErrorCodes.RESPONSE_200;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -154,13 +155,12 @@ public class DailyDigitalObstacleFile extends BaseService {
 	
 	@Override
     protected Edition initEdition (ChartCycleElementsJson cycle) {
-		Date today = new Date (System.currentTimeMillis());
+		LocalDate today = LocalDate.now(ZoneId.systemDefault());
     	ObjectFactory of = new ObjectFactory();
 
     	ProductSet.Edition ed = of.createProductSetEdition();
 	   	
-    	SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy");
-    	ed.setEditionDate(formatter.format(today));
+    	ed.setEditionDate(DateTimeFormatter.ofPattern("MM/dd/yyyy").format(today));
     	ed.setEditionNumber(1);
     	ed.setEditionName(EditionCodeList.DAILY);
     	ed.setFormat(FormatCodeList.fromValue(getFormat()));

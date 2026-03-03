@@ -19,7 +19,9 @@ import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_500;
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.RESPONSE_200;
 
 import java.net.URL;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
 import javax.ws.rs.GET;
@@ -83,13 +85,13 @@ public class NASRSubscription extends BaseService {
 	public Response getNASRSubscription (
     	@ApiParam(name="edition", value="Requested product edition. If omitted, the default current edition is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false)
     	@QueryParam("edition") String ed) {
-	    logger.info("Received call to retrieve current NFDC NASR subscription release for "+ed);
+	    logger.info("Received call to retrieve current NFDC NASR subscription release for {}", ed);
 	    
     	setEdition(ed != null ? ed : CURRENT);
     	setFormat("zip");
     	
     	if (!verifyEdition()) {
-    		logger.error("Expected edition current or next and received "+ed+ERROR);
+    		logger.error("Expected edition current or next and received {}. {}", ed, ERROR);
     		return Response.status(400).entity(getIllegalArgumentError()).build();    		
     	}
 
@@ -118,13 +120,13 @@ public class NASRSubscription extends BaseService {
 	public Response getNASREdition (
     	@ApiParam(name="edition", value="Requested product edition. If omitted, the default current edition is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false)
     	@QueryParam("edition") String ed) {
-	    logger.info("Received call to retrieve current NASR subscription Chart release for "+ed);
+	    logger.info("Received call to retrieve current NASR subscription Chart release for {}", ed);
 	    
     	setEdition(ed != null ? ed : CURRENT);
     	setFormat("zip");
     	
     	if (!verifyEdition()) {
-    		logger.error("Expected edition current or next and received "+ed+ERROR);
+    		logger.error("Expected edition current or next and received {}. {}", ed, ERROR);
     		return Response.status(400).entity(getIllegalArgumentError()).build();    		
     	}
 
@@ -160,7 +162,7 @@ public class NASRSubscription extends BaseService {
     	path = path.append(fileName);
     	
     	if (logger.isInfoEnabled())
-    		logger.info("NASR susbscriber file URL created: "+path.toString());
+   			logger.info("NASR susbscriber file URL created: {}", path);
    	
     	try {
     		URL url = new URL(path.toString());
@@ -172,7 +174,7 @@ public class NASRSubscription extends BaseService {
 
         }
     	catch (Exception exurl) {
-    		logger.error("Unable to verify the download url "+path.toString(), exurl);
+   			logger.error("Unable to verify the download url {}", path, exurl);
     		product.setUrl("");
         	response.getStatus().setCode(404);
         	response.getStatus().setMessage(ErrorCodes.ERROR_404);
@@ -202,8 +204,8 @@ public class NASRSubscription extends BaseService {
     }
 
     private String formatDate (Date unformattedDate, String format) {
-    	SimpleDateFormat formatter = new SimpleDateFormat(format);
-    	return formatter.format(unformattedDate);
+    	LocalDate date = unformattedDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+    	return DateTimeFormatter.ofPattern(format).format(date);
     }
     
 }

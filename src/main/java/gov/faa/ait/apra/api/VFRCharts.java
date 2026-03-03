@@ -36,7 +36,9 @@ import static gov.faa.ait.apra.bootstrap.ErrorCodes.RESPONSE_200;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -88,8 +90,7 @@ public class VFRCharts extends BaseService {
 	public Response getGrandCanyonRelease(
 			@ApiParam(name="edition", value="Requested product edition. If omitted, the default current edition is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed) {
 
-		logger.info("Received call to retrieve current VFR product release for edition '"
-				+ ed + "'.");
+		logger.info("Received call to retrieve current VFR product release for edition '{}'.", ed);
 		this.setGeoname("Grand_Canyon");
 		ObjectFactory of = new ObjectFactory();
 
@@ -125,8 +126,7 @@ public class VFRCharts extends BaseService {
 	public Response getGrandCanyonEdition(
 			@ApiParam(name="edition", value="Requested product edition. If omitted, the default current edition information is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed) {
 
-		logger.info("Received call to retrieve current VFR product edition for edition '"
-				+ ed + "'.");
+		logger.info("Received call to retrieve current VFR product edition for edition '{}'.", ed);
 
 		this.setGeoname("Grand_Canyon");
 		ObjectFactory of = new ObjectFactory();
@@ -192,8 +192,9 @@ public class VFRCharts extends BaseService {
 
 		Edition.Product product = new Edition.Product();
 
-		SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy");
-		ed.setEditionDate(formatter.format(cycle.getChart_effective_date()));
+		LocalDate effectiveDate = cycle.getChart_effective_date().toInstant()
+				.atZone(ZoneId.systemDefault()).toLocalDate();
+		ed.setEditionDate(DateTimeFormatter.ofPattern("MM/dd/yyyy").format(effectiveDate));
 		ed.setEditionNumber(Integer.valueOf(cycle.getChart_cycle_number()));
 		ed.setEditionName(EditionCodeList.valueOf(cycle
 				.getChart_cycle_period_code()));
@@ -229,8 +230,9 @@ public class VFRCharts extends BaseService {
 
 		ProductSet.Edition ed = of.createProductSetEdition();
 
-		SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy");
-		ed.setEditionDate(formatter.format(cycle.getChart_effective_date()));
+		LocalDate effectiveDate = cycle.getChart_effective_date().toInstant()
+				.atZone(ZoneId.systemDefault()).toLocalDate();
+		ed.setEditionDate(DateTimeFormatter.ofPattern("MM/dd/yyyy").format(effectiveDate));
 		ed.setEditionNumber(Integer.valueOf(cycle.getChart_cycle_number()));
 		ed.setEditionName(EditionCodeList.valueOf(cycle
 				.getChart_cycle_period_code()));
@@ -245,9 +247,9 @@ public class VFRCharts extends BaseService {
 
 	private boolean validateParameters(ChartCycleElementsJson cycle) {
 		if (logger.isDebugEnabled()) {
-			logger.debug("Cycle city = "+cycle.getChart_city_name()+" this.formatCity() = "+this.formatCity());
-			logger.debug("Chart cycle effective date is "+cycle.getChart_effective_date());
-			logger.debug("Validation result is "+(cycle.getChart_effective_date() != null && cycle.getChart_city_name().equalsIgnoreCase(this.formatCity())));
+			logger.debug("Cycle city = {} this.formatCity() = {}", cycle.getChart_city_name(), this.formatCity());
+			logger.debug("Chart cycle effective date is {}", cycle.getChart_effective_date());
+			logger.debug("Validation result is {}", (cycle.getChart_effective_date() != null && cycle.getChart_city_name().equalsIgnoreCase(this.formatCity())));
 		}
 		return cycle.getChart_effective_date() != null
 				&& cycle.getChart_city_name().equalsIgnoreCase(this.formatCity());
@@ -262,9 +264,7 @@ public class VFRCharts extends BaseService {
 		}
 
 		if (!verifyEdition()) {
-			logger.error("Expected edition 'current or next' not received '"
-					+ ed
-					+ "' instead. Error response being generated and returned back.");
+				logger.error("Expected edition 'current or next' not received '{}' instead. Error response being generated and returned back.", ed);
 			response = getIllegalArgumentError();
 			return false;
 		}
@@ -276,9 +276,8 @@ public class VFRCharts extends BaseService {
 		}
 
 		if (cycle == null) {
-			logger.warn("Chart cycle infomration was NULL for "+this.getEdition()+" "+this.getGeoname());
-			logger.warn("Unable to locate " + this.getEdition()
-					+ " edition chart for " + this.getGeoname());
+			logger.warn("Chart cycle infomration was NULL for {} {}", this.getEdition(), this.getGeoname());
+			logger.warn("Unable to locate {} edition chart for {}", this.getEdition(), this.getGeoname());
 			response = this.getErrorResponse(404, ErrorCodes.ERROR_404);
 			return false;
 		}
@@ -299,10 +298,10 @@ public class VFRCharts extends BaseService {
 		String retVal = scratch.replace(" ", "_");
 		retVal = WordUtils.capitalizeFully(retVal, separators);
 
-		logger.info("Converted " + this.getGeoname() + " to " + retVal);
+		logger.info("Converted {} to {}", this.getGeoname(), retVal);
 
 		if (logger.isDebugEnabled())
-			logger.debug("Converted " + this.getGeoname() + " to " + retVal);
+			logger.debug("Converted {} to {}", this.getGeoname(), retVal);
 
 		return retVal;
 	}

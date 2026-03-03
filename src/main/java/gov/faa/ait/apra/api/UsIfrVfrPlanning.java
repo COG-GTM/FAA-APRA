@@ -20,7 +20,9 @@ import static gov.faa.ait.apra.bootstrap.ErrorCodes.RESPONSE_200;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -133,7 +135,9 @@ public class UsIfrVfrPlanning extends AbstractTableDataService {
 
 	@Override
 	protected Product createProduct(ChartCycleElementsJson element) {
-		SimpleDateFormat sdfUSA = new SimpleDateFormat("MM-dd-yyyy");
+		LocalDate effectiveDate = element.getChart_effective_date().toInstant()
+				.atZone(ZoneId.systemDefault()).toLocalDate();
+		DateTimeFormatter folderFormatter = DateTimeFormatter.ofPattern("MM-dd-yyyy");
 		gov.faa.ait.apra.jaxb.ObjectFactory of = new gov.faa.ait.apra.jaxb.ObjectFactory();
 		Product prod = of.createProductSetEditionProduct();
 		prod.setProductName(ProductCodeList.IFR_PLANNING);
@@ -142,7 +146,7 @@ public class UsIfrVfrPlanning extends AbstractTableDataService {
 			.append("/")
 			.append(Config.getEnrouteFolder())
 			.append("/IFR_Planning/")
-			.append(sdfUSA.format(element.getChart_effective_date()) );
+			.append(folderFormatter.format(effectiveDate));
 		productUrl.append("/").append("US_IFR_Planning");
 		if("PDF".equalsIgnoreCase(this.getFormat())) {
 			productUrl.append("_pdf.zip");

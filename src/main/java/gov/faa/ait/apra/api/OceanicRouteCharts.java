@@ -19,8 +19,9 @@ import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_500;
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.RESPONSE_200;
 
 import java.net.URL;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -85,24 +86,24 @@ public class OceanicRouteCharts extends BaseService {
     		@ApiParam (name="format", value="Format of the requested chart. TIFF is georeferenced and PDF is not georeferenced. If omitted, the default format of PDF is returned.", allowableValues="tiff, pdf", defaultValue="pdf", allowMultiple=false, required=false) @QueryParam("format") String fmt, 
     		@ApiParam (name="geoname", value="A geographic area for which the chart is requested", allowableValues="NARC, PORC, WATRS", defaultValue="PORC", required=true) @QueryParam ("geoname") String geo) {
 
-	    	logger.info("Received call to retrieve current Oceanic Route Chart release for '"+ed+"', '"+fmt+"', '"+geo+"'");
+	    	logger.info("Received call to retrieve current Oceanic Route Chart release for '{}', '{}', '{}'", ed, fmt, geo);
 			
 	    	setEdition(ed != null ? ed : CURRENT);
 	    	setGeoname(geo != null ? geo : PORC);
 	    	setFormat (fmt != null ? fmt : PDF);
 	    	
 	    	if (!verifyEdition()) {
-	    		logger.error("Expected edition 'next' and received '"+ed+ERROR);
+	    		logger.error("Expected edition 'next' and received '{}' instead.{}", ed, ERROR);
 	    		return Response.status(400).entity(getIllegalArgumentError()).build();    		
 	    	}
 	    	
 	    	if (!verifyFormat()) {
-	    		logger.error("Expected format of 'tiff' or 'pdf'. Received format '"+fmt+ERROR);
+	    		logger.error("Expected format of 'tiff' or 'pdf'. Received format '{}' instead.{}", fmt, ERROR);
 	    		return Response.status(400).entity(getIllegalArgumentError()).build();    		
 	    	}
 	    	
 	    	if (!verifyGeoname()) {
-	    		logger.error("Expected geographic area of NARC, PORC, or WATRS. Received geoname of '"+geo+ERROR);
+	    		logger.error("Expected geographic area of NARC, PORC, or WATRS. Received geoname of '{}' instead.{}", geo, ERROR);
 	    		return Response.status(400).entity(getErrorResponse(400, "Expected geographic area of NARC, PORC, or WATRS. Received geoname of "+geo)).build();
 	    	}
 	    	
@@ -155,8 +156,10 @@ public class OceanicRouteCharts extends BaseService {
     	Edition.Product product = of.createProductSetEditionProduct();
     	product.setProductName(ProductCodeList.IFR_OCEANIC);
     	
+    	LocalDate effectiveDate = cycle.getChart_effective_date().toInstant()
+    			.atZone(ZoneId.systemDefault()).toLocalDate();
     	StringBuilder path = new StringBuilder(Config.getAeronavHost()).append("/enroute")
-    			.append("/").append(formatDate(cycle.getChart_effective_date(), "MM-dd-yyyy"));
+    			.append("/").append(DateTimeFormatter.ofPattern("MM-dd-yyyy").format(effectiveDate));
     	StringBuilder fileName = new StringBuilder(getGeoname().toLowerCase());
     	
     	if (TIFF.equalsIgnoreCase(getFormat())) {
@@ -175,7 +178,7 @@ public class OceanicRouteCharts extends BaseService {
 
         }
     	catch (Exception exurl) {
-    		logger.error("Unable to verify the download url "+path.toString(), exurl);
+    		logger.error("Unable to verify the download url {}", path, exurl);
     		product.setUrl("");
         	response.getStatus().setCode(404);
         	response.getStatus().setMessage(ErrorCodes.ERROR_404);
@@ -219,8 +222,4 @@ public class OceanicRouteCharts extends BaseService {
     	return cycle;
     }
     
-    private String formatDate (Date unformattedDate, String format) {
-    	SimpleDateFormat formatter = new SimpleDateFormat(format);
-    	return formatter.format(unformattedDate);
-    }
 }

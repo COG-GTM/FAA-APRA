@@ -96,7 +96,7 @@ public class TerminalAreaCharts extends BaseService {
     				required=true) @QueryParam ("geoname") String geo) {
     	ChartCycleElementsJson cycle;
     	
-    	logger.info("Received call to retrieve current TAC product release for '"+ed+"', '"+fmt+"', '"+geo+"'");
+    	logger.info("Received call to retrieve current TAC product release for '{}', '{}', '{}'", ed, fmt, geo);
     	
     	setEdition(ed != null ? ed : CURRENT);
     	setFormat(fmt != null ? fmt : PDF);
@@ -107,14 +107,14 @@ public class TerminalAreaCharts extends BaseService {
     	}
     	
     	if (! verifyEdition() || ! verifyFormat()) {
-    		logger.error("Received edition "+ed+" and format "+fmt+". Error response being generated and returned.");
+    		logger.error("Received edition {} and format {}. Error response being generated and returned.", ed, fmt);
     		return Response.status(400).entity(getIllegalArgumentError()).build();    		
     	}
     	   	
      	cycle = initParameters();
     	
      	if (cycle == null) {
-     		logger.warn("Unable to locate "+this.getEdition()+" edition chart for "+this.getCity());
+     		logger.warn("Unable to locate {} edition chart for {}", this.getEdition(), this.getCity());
      		return Response.status(404).entity(getErrorResponse(404, ErrorCodes.ERROR_404)).build();
      	}	
     	
@@ -159,7 +159,7 @@ public class TerminalAreaCharts extends BaseService {
     	}
     	
     	if (!verifyEdition()) {
-    		logger.error("Expected edition current or next and received '"+ed+"' instead. Error response being generated and returned.");
+    		logger.error("Expected edition current or next and received '{}' instead. Error response being generated and returned.", ed);
     		return Response.status(400).entity(getIllegalArgumentError()).build();    		
     	}
     	   	
@@ -171,8 +171,8 @@ public class TerminalAreaCharts extends BaseService {
     	}
     	
      	if (cycle == null) {
-     		logger.warn("Unable to locate "+this.getEdition()+" edition chart for "+this.getCity());
-    		return Response.status(404).entity(getErrorResponse(404, ErrorCodes.ERROR_404)).build();    		
+     		logger.warn("Unable to locate {} edition chart for {}", this.getEdition(), this.getCity());
+    		return Response.status(404).entity(getErrorResponse(404, ErrorCodes.ERROR_404)).build();    	
      	}
 
     	ProductSet ps = getEditionInfo(cycle);
@@ -302,11 +302,11 @@ public class TerminalAreaCharts extends BaseService {
     	String retVal = scratch.replace(" ",  "_");
     	retVal = WordUtils.capitalizeFully(retVal, separators);
 
-		logger.info("Converted "+this.getCity()+" to "+retVal);
+		logger.info("Converted {} to {}", this.getCity(), retVal);
 
     	
     	if (logger.isDebugEnabled()) 
-    		logger.debug("Converted "+this.getCity()+" to "+retVal);
+    		logger.debug("Converted {} to {}", this.getCity(), retVal);
     	
     	return retVal;
     }

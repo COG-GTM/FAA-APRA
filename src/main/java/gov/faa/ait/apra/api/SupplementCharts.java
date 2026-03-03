@@ -38,7 +38,10 @@ import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_404;
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_500;
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.RESPONSE_200;
 
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 
 import javax.ws.rs.GET;
@@ -196,9 +199,9 @@ public class SupplementCharts extends BaseService {
 		Edition ed = initEdition(cycle);
 		Product product = of.createProductSetEditionProduct();
 		path.append("/").append(CSALL);
-		SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd");
-		path.append(
-				formatter.format(cycle.getChart_effective_date())).append(".zip");
+		LocalDate effectiveDate = cycle.getChart_effective_date().toInstant()
+				.atZone(ZoneId.systemDefault()).toLocalDate();
+		path.append(DateTimeFormatter.BASIC_ISO_DATE.format(effectiveDate)).append(".zip");
 		product.setProductName(ProductCodeList.SUPPLEMENT);
 		validateAndSetUrl(Config.getAeronavHost() + path.toString(), ps, product);
 		ed.setProduct(product);
@@ -221,9 +224,7 @@ public class SupplementCharts extends BaseService {
 	}
 	
 	private ProductSet getChartProductSet(ChartCycleElementsJson cycle) {
-		String wcf = " with change flag = ";
-		logger.info("Getting the chart product set for " + getEdition() + " "
-				+ capitalizeGeoname() + wcf + isChangeFlag());
+		logger.info("Getting the chart product set for {} {} with change flag = {}", getEdition(), capitalizeGeoname(), isChangeFlag());
 		ObjectFactory of = new ObjectFactory();
 		SupplementMetadataClient supplementClient = new SupplementMetadataClient(
 				cycle);
@@ -233,10 +234,12 @@ public class SupplementCharts extends BaseService {
 		if (elements == null || elements.length == 0)
 			return getErrorResponse(404, ErrorCodes.ERROR_404);
 
-		logger.info(elements.length + " total charts found for " + getEdition()
-				+ " " + capitalizeGeoname() + wcf + isChangeFlag());
+		logger.info("{} total charts found for {} {} with change flag = {}", elements.length, getEdition(), capitalizeGeoname(), isChangeFlag());
 
 		ProductSet ps = initPositiveResponse();
+		LocalDate effectiveDate = cycle.getChart_effective_date().toInstant()
+				.atZone(ZoneId.systemDefault()).toLocalDate();
+		DateTimeFormatter dateFolderFormatter = DateTimeFormatter.ofPattern("ddMMMyyyy", Locale.ENGLISH);
 
 		for (int i = 0; i < elements.length; i++) {
 			StringBuilder path = new StringBuilder(Config.getSUPChartPath());
@@ -247,9 +250,7 @@ public class SupplementCharts extends BaseService {
 
 			Product product = of.createProductSetEditionProduct();
 			product.setProductName(ProductCodeList.SUPPLEMENT);
-			SimpleDateFormat formatter = new SimpleDateFormat("ddMMMyyyy");
-			path.append("/").append(
-					formatter.format(cycle.getChart_effective_date()));
+			path.append("/").append(dateFolderFormatter.format(effectiveDate));
 			path.append("/").append(elements[i].getPdf());
 
 			product.setUrl(Config.getAeronavHost() + path.toString());

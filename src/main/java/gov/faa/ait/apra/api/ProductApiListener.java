@@ -72,11 +72,11 @@ public class ProductApiListener implements ApplicationEventListener {
 			case RESOURCE_METHOD_START:
 				// Output the start of a resource event so we get a request number logged
 				ThreadContext.put("ID", "APRA-"+Integer.toString(requestNumber));
-				logger.info("Resource method "+event.getUriInfo().getMatchedResourceMethod().getHttpMethod()+" started for request "+requestNumber);
+				logger.info("Resource method {} started for request {}", event.getUriInfo().getMatchedResourceMethod().getHttpMethod(), requestNumber);
 				break;
 			case FINISHED:
 				// Mark the finish of the processing with the duration spent fulfilling the request. Useful for debugging performance problems.
-				logger.info("Request "+requestNumber+" finished. Processing time "+ (System.currentTimeMillis() - startTime) + " ms.");
+				logger.info("Request {} finished. Processing time {} ms.", requestNumber, (System.currentTimeMillis() - startTime));
 				ThreadContext.clearAll();
 				break;
 			default:

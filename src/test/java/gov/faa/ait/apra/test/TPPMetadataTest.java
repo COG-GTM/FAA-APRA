@@ -172,7 +172,7 @@ public class TPPMetadataTest {
 		TPPMetadataClient tppClient = new TPPMetadataClient(cycle, false);
 		TPPChartMetadata tppMetaRoot = tppClient.getChartMetadataByVolume("UNKNOWN");
 		if (tppMetaRoot.getElements().length > 0) {
-			logger.info("TPP metadata returned "+tppMetaRoot.getElements().length+" elements for a null volume. This is incorrect");
+			logger.info("TPP metadata returned {} elements for a null volume. This is incorrect", tppMetaRoot.getElements().length);
 			fail();	
 		}
 	}
@@ -183,7 +183,7 @@ public class TPPMetadataTest {
 		TPPMetadataClient tppClient = new TPPMetadataClient(cycle, false);
 		TPPChartMetadata tppMetaRoot = tppClient.getChartMetadataByVolume(null);
 		if (tppMetaRoot.getElements().length > 0) {
-			logger.info("TPP metadata returned "+tppMetaRoot.getElements().length+" elements for a null volume. This is incorrect");
+			logger.info("TPP metadata returned {} elements for a null volume. This is incorrect", tppMetaRoot.getElements().length);
 			fail();	
 		}
 	}
@@ -194,7 +194,7 @@ public class TPPMetadataTest {
 		TPPMetadataClient tppClient = new TPPMetadataClient(cycle, false);
 		TPPChartMetadata tppMetaRoot = tppClient.getChartMetadataByVolume("@*?$(*@#$*))=@#&foo=$%20+\\&");
 		if (tppMetaRoot != null) {
-			logger.info("TPP metadata returned a non-null result for a total junk volume name of '@*?$(*@#$*))=@#&foo=$%20+\\&'. This is incorrect");
+			logger.info("TPP metadata returned a non-null result for a total junk volume name. This is incorrect");
 			fail();	
 		}
 	}

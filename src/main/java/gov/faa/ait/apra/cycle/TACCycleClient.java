@@ -14,6 +14,9 @@
 package gov.faa.ait.apra.cycle;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
@@ -72,7 +75,7 @@ public class TACCycleClient extends DenodoClient {
 		}
 		
 		url = getWebTarget(targetDate);
-		logger.info("Calling denodo for vfr chart cycle at "+url);
+		logger.info("Calling denodo for vfr chart cycle at {}", url);
 		
 		if (TACCycleClient.current != null && TACCycleClient.next != null && TACCycleClient.tacLastUpdate != null) {
 			if (logger.isDebugEnabled())
@@ -92,7 +95,7 @@ public class TACCycleClient extends DenodoClient {
 			long now = System.currentTimeMillis();
 			unbound = webTarget.request(MediaType.APPLICATION_XML_TYPE).get(String.class);
 			long duration = System.currentTimeMillis() - now;
-			logger.info("Call for TAC chart cycle took "+duration+" ms");
+			logger.info("Call for TAC chart cycle took {} ms", duration);
 			ObjectMapper mapper = new ObjectMapper();
 			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 			mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
@@ -215,9 +218,8 @@ public class TACCycleClient extends DenodoClient {
 		StringBuilder url = new StringBuilder();
 		
 		url = url.append(Config.getDenodoHost()+Config.getDenodoVFRCycleResource());
-		SimpleDateFormat formatter = new SimpleDateFormat ("MM/dd/yyyy");
-		
-		String dateString = formatter.format(targetDate);
+		LocalDate targetLocalDate = targetDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+		String dateString = DateTimeFormatter.ofPattern("MM/dd/yyyy").format(targetLocalDate);
 		
 		StringBuilder queryString = new StringBuilder();
 		queryString = queryString.append("?query_date="+dateString);

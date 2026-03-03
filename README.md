@@ -15,7 +15,19 @@ released to the public on either a 28 day or 56 day airspace cycle. Upon release
 the chart retrieval necessarily change. APRA constructs the standard URL where the chart may be downloaded 
 to enable a software application to pull the charts without the need for a human interface or web based GUI.
 
+## Requirements
+
+- Java 8 (JDK 1.8+)
+- Maven
+
+## Build / Test
+
+- Run unit tests: `mvn clean test`
+- Build: `mvn clean package`
+
+Note: building requires access to the FAA internal Artifactory to resolve `gov.faa.ait:apraresponse`. If you are outside the FAA network/VPN, Maven dependency resolution will fail.
+
 ## Documentation
 
-Documentation for the API may be found on swaggerhub
+Documentation for the API may be found on swaggerhub:
 https://app.swaggerhub.com/apis/FAA/APRA

@@ -45,7 +45,7 @@ public class TPPTest {
 		}
 		ChartCycleClient client = new ChartCycleClient();
 		ChartCycleData cycle = client.getChartCycle(new Date (System.currentTimeMillis()), true);
-		logger.info("Updated chart cycle in prep for TPP tests "+cycle.getName());
+		logger.info("Updated chart cycle in prep for TPP tests {}", cycle.getName());
 		TPPTest.setupComplete = true;
 	}
 	
@@ -54,7 +54,7 @@ public class TPPTest {
 		ProductSet ps = (ProductSet) tpp.getTPPRelease("current",  "US").getEntity();
 		
 		for (int i = 0; i < 5; i++) {
-			logger.info("TPP test for entire US digital product set "+ps.getEdition().get(i).getProduct().getUrl());
+			logger.info("TPP test for entire US digital product set {}", ps.getEdition().get(i).getProduct().getUrl());
 			assertTrue(VerifyValues.verifyURL(ps.getEdition().get(i).getProduct().getUrl()));
 		}
 	}
@@ -65,7 +65,7 @@ public class TPPTest {
 		ProductSet ps = (ProductSet) tpp.getTPPRelease("next",  "US").getEntity();
 		
 		for (int i = 0; i < 5; i++) {
-			logger.info("TPP test for entire US digital product set "+ps.getEdition().get(i).getProduct().getUrl());
+			logger.info("TPP test for entire US digital product set {}", ps.getEdition().get(i).getProduct().getUrl());
 		}
 	}
 	
@@ -74,7 +74,7 @@ public class TPPTest {
 		logger.info("Start testAlaskaRelease()");
 		ProductSet ps = (ProductSet) tpp.getTPPRelease("current",  "Alaska").getEntity();
 		assertNotNull(ps.getEdition());
-		logger.info("Alaska has "+ps.getEdition().size()+" charts as a response.");
+		logger.info("Alaska has {} charts as a response.", ps.getEdition().size());
 		if (ps.getEdition().size() < 1)
 			fail();
 	}
@@ -83,7 +83,7 @@ public class TPPTest {
 	public void testUSChangesetRelease() {
 		ProductSet ps = (ProductSet) tpp.getTPPRelease("changeset",  "US").getEntity();
 		assertNotNull(ps.getEdition());
-		logger.info("US has "+ps.getEdition().size()+" changed charts as a response.");
+		logger.info("US has {} changed charts as a response.", ps.getEdition().size());
 		if (ps.getEdition().size() < 1)
 			fail();
 	}
@@ -93,7 +93,7 @@ public class TPPTest {
 		logger.info("Start testNewYorkRelease()");
 		ProductSet ps = (ProductSet) tpp.getTPPRelease("current",  "new york").getEntity();
 		assertNotNull(ps.getEdition());
-		logger.info("new york has "+ps.getEdition().size()+" charts as a response.");
+		logger.info("new york has {} charts as a response.", ps.getEdition().size());
 		if (ps.getEdition().size() < 1)
 			fail();
 	}	
@@ -103,7 +103,7 @@ public class TPPTest {
 		logger.info("Start testCaliforniaRelease()");
 		ProductSet ps = (ProductSet) tpp.getTPPRelease("current",  "california").getEntity();
 		assertNotNull(ps.getEdition());
-		logger.info("California has "+ps.getEdition().size()+" charts as a response.");
+		logger.info("California has {} charts as a response.", ps.getEdition().size());
 		if (ps.getEdition().size() < 1)
 			fail();
 	}
@@ -114,7 +114,7 @@ public class TPPTest {
 		logger.info("Start testCaliforniaChangeRelease()");
 		ProductSet ps = (ProductSet) tpp.getTPPRelease("changeset",  "california").getEntity();
 		assertNotNull(ps.getEdition());
-		logger.info("California change set has "+ps.getEdition().size()+" charts as a response.");
+		logger.info("California change set has {} charts as a response.", ps.getEdition().size());
 		if (ps.getEdition().size() < 1)
 			fail();
 	}
@@ -124,7 +124,7 @@ public class TPPTest {
 		logger.info("Start testMixedCasekRelease()");
 		ProductSet ps = (ProductSet) tpp.getTPPRelease("current",  "neW yOrk").getEntity();
 		assertNotNull(ps.getEdition());
-		logger.info("neW yOrk has "+ps.getEdition().size()+" charts as a response.");
+		logger.info("neW yOrk has {} charts as a response.", ps.getEdition().size());
 		if (ps.getEdition().size() < 1) {
 			logger.info(ps.toString());
 			fail();
@@ -159,7 +159,7 @@ public class TPPTest {
 	public  void testEncodedStateRelease() {
 		ProductSet ps = (ProductSet) tpp.getTPPRelease("current",  "&+california++").getEntity();
 		assertNotNull(ps.getEdition());
-		logger.info("&+california++ has "+ps.getEdition().size()+" charts as a response.");
+		logger.info("&+california++ has {} charts as a response.", ps.getEdition().size());
 		if (ps.getEdition().size() > 0)
 			fail();
 	}
@@ -170,7 +170,7 @@ public class TPPTest {
 		ProductSet ps = (ProductSet) tpp.getTPPRelease(null, null).getEntity();
 		
 		for (int i = 0; i < 5; i++) {
-			logger.info("TPP test for entire US digital product set "+ps.getEdition().get(i).getProduct().getUrl());
+			logger.info("TPP test for entire US digital product set {}", ps.getEdition().get(i).getProduct().getUrl());
 			assertTrue(VerifyValues.verifyURL(ps.getEdition().get(i).getProduct().getUrl()));
 		}
 	}	

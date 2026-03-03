@@ -19,8 +19,11 @@ import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Locale;
+import java.util.Objects;
 
 import org.apache.commons.lang3.text.WordUtils;
 import org.slf4j.Logger;
@@ -55,6 +58,7 @@ public abstract class BaseService {
 	public static final String ZIP="zip";
 	public static final String TIFF="tiff";
 	protected static final String EMPTY_STRING = "";
+	private static final DateTimeFormatter EDITION_DATE_FORMATTER = DateTimeFormatter.ofPattern("MM/dd/yyyy");
 	private boolean changeFlag;
 	private String format = EMPTY_STRING;
 	private String edition = EMPTY_STRING;
@@ -116,7 +120,7 @@ public abstract class BaseService {
      * @param format a file extension or type
      */
     public void setFormat(String fmt) {
-    	this.format = fmt != null ? fmt.toUpperCase(Locale.ENGLISH) : EMPTY_STRING;
+    	this.format = Objects.nonNull(fmt) ? fmt.toUpperCase(Locale.ENGLISH) : EMPTY_STRING;
     	if (! verifyFormat()) {
     		this.format = EMPTY_STRING;
     	}
@@ -137,15 +141,17 @@ public abstract class BaseService {
      */
     public void setEdition (String edition) {
     	this.edition = edition != null ? edition.toUpperCase(Locale.ENGLISH) : EMPTY_STRING;
-    	
-    	if (CHANGE_SET.equalsIgnoreCase(edition)){
+
+    	// changeset is a special case of current edition + change flag
+    	if (CHANGE_SET.equalsIgnoreCase(edition)) {
     		this.edition = CURRENT;
     		this.setChangeFlag(true);
     	}
-    	
-    	this.edition = edition == CHANGE_SET ? CURRENT : getEdition();
-    	
-    	if (! verifyEdition() ) {
+    	else {
+    		this.setChangeFlag(false);
+    	}
+
+    	if (!verifyEdition()) {
     		this.edition = EMPTY_STRING;
     	}
     }
@@ -191,7 +197,7 @@ public abstract class BaseService {
 		HttpURLConnection connection = null;
 		Proxy proxy = null;
 		
-		logger.info("Verifying URL "+url.toExternalForm()+" before responding to call");
+		logger.info("Verifying URL {} before responding to call", url.toExternalForm());
 		try {
 			if (Config.getFAADMZProxyHost() != null && (! EMPTY_STRING.equals(Config.getFAADMZProxyHost()))) {
 				int port = Integer.parseInt(Config.getFAADMZProxyPort());
@@ -204,7 +210,7 @@ public abstract class BaseService {
 			 * of the URL we return
 			 */
 			if (proxy != null) {
-				logger.info("Using proxy server "+proxy.toString());
+				logger.info("Using proxy server {}", proxy);
 				connection = (HttpURLConnection) url.openConnection(proxy);
 			}
 			else {
@@ -219,28 +225,25 @@ public abstract class BaseService {
 			connection.setRequestMethod("HEAD");
 			int responseCode = connection.getResponseCode();
 			if (responseCode == 200 || responseCode == 302) {
-				logger.info("URL HEAD check returned response code "+responseCode+" for url "+url.toExternalForm());
+				logger.info("URL HEAD check returned response code {} for url {}", responseCode, url.toExternalForm());
 			    ok = true;
 			}
 			else {
-				logger.warn("URL HEAD check returned response code "+responseCode+" for url "+url.toExternalForm());
+				logger.warn("URL HEAD check returned response code {} for url {}", responseCode, url.toExternalForm());
 			}
 		}
-		catch (IllegalArgumentException eillegal) {
-			logger.error("HEAD heck failed for url: "+url.toExternalForm(), eillegal);
+		catch (IllegalArgumentException | IOException ex) {
+			logger.error("HEAD check failed for url: {}", url.toExternalForm(), ex);
 			ok = false;
 		}
-		catch (IOException eio) {
-			logger.error("HEAD heck failed for url: "+url.toExternalForm(), eio);
-			ok = false;
+		finally {
+			/*
+			 * Close down the connection as cleanup action
+			 */
+			if (connection != null) {
+				connection.disconnect();
+			}
 		}
-		
-
-		/*
-		 * Close down the connection as cleanup action
-		 */
-		if (connection != null)
-			connection.disconnect();
 
 		return ok;
 	}
@@ -303,16 +306,17 @@ public abstract class BaseService {
     	ObjectFactory of = new ObjectFactory();
 
     	ProductSet.Edition ed = of.createProductSetEdition();
-	   	
-    	SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy");
-    	ed.setEditionDate(formatter.format(cycle.getChart_effective_date()));
+
+    	LocalDate effectiveDate = cycle.getChart_effective_date().toInstant()
+    			.atZone(ZoneId.systemDefault()).toLocalDate();
+    	ed.setEditionDate(EDITION_DATE_FORMATTER.format(effectiveDate));
     	ed.setEditionNumber(Integer.valueOf(cycle.getChart_cycle_number()));
     	ed.setEditionName(EditionCodeList.fromValue(cycle.getChart_cycle_period_code()));
     	ed.setFormat(FormatCodeList.fromValue(getFormat()));
-    	if (! EMPTY_STRING.equals(getGeoname())) {
+    	if (!EMPTY_STRING.equals(getGeoname())) {
     		ed.setGeoname(getGeoname());
     	}
-    	   	
+
     	return ed;
     }
     
@@ -323,8 +327,7 @@ public abstract class BaseService {
 		try {
 			URL downloadURL = new URL(url);
 			if (!verifyURL(downloadURL)) {
-				logger.warn(downloadURL.toExternalForm()
-						+ " returned a non 200 response code when completing a HTTP HEAD check.");
+				logger.warn("{} returned a non 200 response code when completing a HTTP HEAD check.", downloadURL.toExternalForm());
 				p.setUrl("");
 				ps.getStatus().setCode(404);
 				ps.getStatus()

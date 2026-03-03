@@ -19,7 +19,9 @@ import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_500;
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.RESPONSE_200;
 
 import java.net.URL;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -79,13 +81,13 @@ public class DigitalEnrouteCharts extends BaseService {
 	// http://aeronav.faa.gov/Upload_313-d/enroute/DDECUS_32.zip 
     
     public Response getDECRelease (
-    		@ApiParam(name="edition", value="Requested product edition. If omitted, current edition is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed) {
-    	logger.info("Received call to retrieve current CIFP product release for edition '"+ed+"'.");
+    			@ApiParam(name="edition", value="Requested product edition. If omitted, current edition is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed) {
+    	logger.info("Received call to retrieve current DEC product release for edition '{}'.", ed);
 
     	ChartCycleElementsJson cycle = initParameters (ed);
 
     	if (! verifyEdition() ) {
-    		logger.error("Expected edition 'current' or 'next' and received '"+ed+"' instead. Error response being generated and returned.");
+    		logger.error("Expected edition 'current' or 'next' and received '{}' instead. Error response being generated and returned.", ed);
     		return Response.status(400).entity(getIllegalArgumentError()).build();    		
     	}
 
@@ -111,7 +113,7 @@ public class DigitalEnrouteCharts extends BaseService {
     	ChartCycleElementsJson cycle = initParameters(ed);
     	
     	if (! verifyEdition() ) {
-    		logger.error("Expected edition 'current' or 'next' and received '"+ed+"' instead. Error response being generated and returned.");
+    		logger.error("Expected edition 'current' or 'next' and received '{}' instead. Error response being generated and returned.", ed);
     		return Response.status(400).entity(getIllegalArgumentError()).build();    		
     	}
     	
@@ -133,8 +135,9 @@ public class DigitalEnrouteCharts extends BaseService {
     	product.setProductName(ProductCodeList.DEC);
     	
     	path.append(Config.getAeronavHost()).append(Config.getDECPath()).append("/");
-		SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy");
-		path.append(sdf.format(cycle.getChart_effective_date())).append("/");
+		LocalDate effectiveDate = cycle.getChart_effective_date().toInstant()
+				.atZone(ZoneId.systemDefault()).toLocalDate();
+		path.append(DateTimeFormatter.ofPattern("MM-dd-yyyy").format(effectiveDate)).append("/");
 		file.append(Config.getDECFilePrefix()).append(".").append(ZIP);
     	path.append(file);
     	product.setChartName(file.toString());
@@ -147,7 +150,7 @@ public class DigitalEnrouteCharts extends BaseService {
     		}
     	}
     	catch (Exception emalformed) {
-    		logger.warn("The DEC url "+path+" is invalid or malformed.", emalformed);
+    		logger.warn("The DEC url {} is invalid or malformed.", path, emalformed);
     		response.getStatus().setCode(404);
     		response.getStatus().setMessage(ErrorCodes.ERROR_404);
     		product.setUrl("");
