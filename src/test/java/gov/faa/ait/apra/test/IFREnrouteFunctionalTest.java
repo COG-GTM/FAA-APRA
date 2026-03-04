@@ -51,14 +51,13 @@ public class IFREnrouteFunctionalTest {
 			for (String format : formats) {
 				for (String geo : geos) {
 					for (String alt : alts) {
-						logger.info("Edition: current " + "format: " + format
-								+ " geo: " + geo + " alt: " + alt);
+						logger.info("Edition: current format: {} geo: {} alt: {}", format, geo, alt);
 						ProductSet ps = (ProductSet) enroute.getIFREnrouteRelease(edition,
 								format, geo, alt).getEntity();
 						int code = ps.getStatus().getCode().intValue();
 						if (code == 200) {
-							logger.info("IFREnroute Product Relese test return url  "
-									+ ps.getEdition().get(0).getProduct()
+							logger.info("IFREnroute Product Relese test return url  {}",
+									ps.getEdition().get(0).getProduct()
 											.getUrl());
 							assertTrue(VerifyValues.verifyURL(ps.getEdition()
 									.get(0).getProduct().getUrl()));
@@ -90,8 +89,7 @@ public class IFREnrouteFunctionalTest {
 			for (String format : formats) {
 				for (String geo : geos) {
 					for (String alt : alts) {
-						logger.info("Edition: current " + "format: " + format
-								+ " geo: " + geo + " alt: " + alt);
+						logger.info("Edition: current format: {} geo: {} alt: {}", format, geo, alt);
 						ProductSet ps = (ProductSet) enroute.getIFREnrouteEdition(edition).getEntity();
 						int code = ps.getStatus().getCode().intValue();
 						if (code == 200) {

@@ -16,7 +16,10 @@ package gov.faa.ait.apra.test;
 import static org.junit.Assert.assertTrue;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 
 import org.junit.Test;
 
@@ -59,14 +62,16 @@ public class SectionalChartTableTest {
 	}
 	
 	private ChartCycleElementsJson buildElement(String city, String period, String type) throws ParseException {
-		SimpleDateFormat sdfISO = new SimpleDateFormat("yyyy-dd-MM");
+		DateTimeFormatter sdfISO = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 		ChartCycleElementsJson element = new ChartCycleElementsJson();
 		element.setChart_city_name(city);
 		element.setChart_cycle_number("97");
 		element.setChart_cycle_period_code(period);
 		element.setChart_cycle_type_code(type);
-		element.setChart_effective_date(sdfISO.parse("2016-04-28"));
-		element.setQuery_date("2016-06-16");	
+		LocalDate ld = LocalDate.parse("2016-04-28", sdfISO);
+		Date effectiveDate = Date.from(ld.atStartOfDay(ZoneId.systemDefault()).toInstant());
+		element.setChart_effective_date(effectiveDate);
+		element.setQuery_date("2016-06-16");
 		return element;
 	}
 

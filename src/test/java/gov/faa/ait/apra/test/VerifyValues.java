@@ -56,7 +56,7 @@ public class VerifyValues {
 			    ok = true;
 			}
 			else {
-				logger.warn("URL HEAD check returned response code "+responseCode+" for url "+url.toExternalForm());
+				logger.warn("URL HEAD check returned response code {} for url {}", responseCode, url.toExternalForm());
 			}
 		}
 		catch (IOException eio) {

@@ -39,7 +39,9 @@ import static gov.faa.ait.apra.bootstrap.ErrorCodes.RESPONSE_200;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -62,6 +64,8 @@ import org.slf4j.LoggerFactory;
 public class IFREnrouteCharts extends BaseService {
 	private static final String MM_DD_YYYY2 = "MM-dd-yyyy";
 	private static final String MM_DD_YYYY = "MM/dd/yyyy";
+	private static final DateTimeFormatter DASH_DATE_FORMATTER = DateTimeFormatter.ofPattern(MM_DD_YYYY2);
+	private static final DateTimeFormatter SLASH_DATE_FORMATTER = DateTimeFormatter.ofPattern(MM_DD_YYYY);
 	private static final String PACIFIC = "PACIFIC";
 	private static final String CARIBBEAN = "CARIBBEAN";
 	private static final String AREA = "AREA";
@@ -196,6 +200,9 @@ public class IFREnrouteCharts extends BaseService {
 		this.response.setStatus(status);
 
 
+		LocalDate effectiveDate = cycle.getChart_effective_date().toInstant()
+				.atZone(ZoneId.systemDefault()).toLocalDate();
+
 		// get set count by format, high-low, and geo area
 		int setCount = Config.getEnrouteSetCount(this.getGeoname(), this.getSeriesType(), this.getFormat());
 		
@@ -208,17 +215,14 @@ public class IFREnrouteCharts extends BaseService {
 
 			Edition.Product product = new Edition.Product();
 
-			SimpleDateFormat sdfUS = new SimpleDateFormat(MM_DD_YYYY);
-			ed.setEditionDate(sdfUS.format(cycle.getChart_effective_date()));
+			ed.setEditionDate(SLASH_DATE_FORMATTER.format(effectiveDate));
 			ed.setEditionNumber(Integer.valueOf(cycle.getChart_cycle_number()));
 			ed.setEditionName(EditionCodeList.valueOf(cycle
 					.getChart_cycle_period_code()));
 			ed.setGeoname(this.getGeoname());
 			ed.setFormat(gov.faa.ait.apra.jaxb.FormatCodeList.valueOf(this.getFormat()));
 			try {
-				SimpleDateFormat sdfUSDash = new SimpleDateFormat(MM_DD_YYYY2);
-				PathElement peDir = new PathElement(sdfUSDash.format(cycle
-						.getChart_effective_date()));
+				PathElement peDir = new PathElement(DASH_DATE_FORMATTER.format(effectiveDate));
 				vfrPath.addPathElement(peDir);
 				
 				String fileName = this.buildFileName(this.getGeoname(), this.getFormat(), this.seriesType, i);
@@ -339,8 +343,9 @@ public class IFREnrouteCharts extends BaseService {
 
 		Edition.Product product = new Edition.Product();
 
-		SimpleDateFormat formatter = new SimpleDateFormat(MM_DD_YYYY);
-		ed.setEditionDate(formatter.format(cycle.getChart_effective_date()));
+		LocalDate effectiveDate = cycle.getChart_effective_date().toInstant()
+				.atZone(ZoneId.systemDefault()).toLocalDate();
+		ed.setEditionDate(SLASH_DATE_FORMATTER.format(effectiveDate));
 		ed.setEditionNumber(Integer.valueOf(cycle.getChart_cycle_number()));
 		ed.setEditionName(EditionCodeList.valueOf(cycle
 				.getChart_cycle_period_code()));
@@ -378,8 +383,9 @@ public class IFREnrouteCharts extends BaseService {
 		Status status = of.createProductSetStatus();
 
 		ProductSet.Edition ed = of.createProductSetEdition();
-		SimpleDateFormat formatter = new SimpleDateFormat(MM_DD_YYYY);
-		ed.setEditionDate(formatter.format(cycle.getChart_effective_date()));
+		LocalDate effectiveDate = cycle.getChart_effective_date().toInstant()
+				.atZone(ZoneId.systemDefault()).toLocalDate();
+		ed.setEditionDate(SLASH_DATE_FORMATTER.format(effectiveDate));
 		ed.setEditionNumber(Integer.valueOf(cycle.getChart_cycle_number()));
 		ed.setEditionName(EditionCodeList.valueOf(cycle
 				.getChart_cycle_period_code()));

@@ -14,6 +14,9 @@
 package gov.faa.ait.apra.cycle;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -77,9 +80,8 @@ public class WallPlanningChartCycleClient extends DenodoClient {
 			setChartCycle(null);
 		}
 		url = url.append(Config.getDenodoHost()+Config.getDenodoVFRCycleResource());
-		SimpleDateFormat formatter = new SimpleDateFormat ("MM/dd/yyyy");
-		
-		String dateString = formatter.format(targetDate);
+		LocalDate targetLocalDate = targetDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+		String dateString = DateTimeFormatter.ofPattern("MM/dd/yyyy").format(targetLocalDate);
 
 		StringBuilder queryString = new StringBuilder();
 		queryString = queryString.append("?query_date=" + dateString);
@@ -170,9 +172,8 @@ public class WallPlanningChartCycleClient extends DenodoClient {
 		StringBuilder url = new StringBuilder();
 
 		url = url.append(Config.getDenodoHost()+Config.getDenodoVFRCycleResource());
-		SimpleDateFormat formatter = new SimpleDateFormat ("MM/dd/yyyy");
-		
-		String dateString = formatter.format(targetDate);
+		LocalDate targetLocalDate = targetDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+		String dateString = DateTimeFormatter.ofPattern("MM/dd/yyyy").format(targetLocalDate);
 
 		StringBuilder queryString = new StringBuilder();
 		queryString = queryString.append("?query_date=" + dateString);

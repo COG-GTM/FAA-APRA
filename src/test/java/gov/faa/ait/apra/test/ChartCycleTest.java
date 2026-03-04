@@ -16,8 +16,9 @@ package gov.faa.ait.apra.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -48,30 +49,27 @@ public class ChartCycleTest {
 	
 	@Parameterized.Parameters
 	public static List<Object[]> cycleNumbers () {
-		SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy");
-		Object [] [] params = null;
-		
-		try { 
-			params = new Object [] [] {
-				{formatter.parse("06/17/2016"), Integer.valueOf(3)},
-				{formatter.parse("10/13/2016"), Integer.valueOf(5)},
-				{formatter.parse("11/10/2016"), Integer.valueOf(6)},
-				{formatter.parse("01/01/2017"), Integer.valueOf(6)},
-				{formatter.parse("12/25/2016"), Integer.valueOf(6)},
-				{formatter.parse("01/05/2017"), Integer.valueOf(1)},
-				{formatter.parse("02/03/2017"), Integer.valueOf(1)},
-				{formatter.parse("06/14/2017"), Integer.valueOf(3)},
-				{formatter.parse("09/15/2017"), Integer.valueOf(5)},
-				{formatter.parse("11/09/2017"), Integer.valueOf(6)}
-			};
-		}
-		catch (ParseException e) {
-			params = new Object [] [] {
-				{new Date(System.currentTimeMillis()), Integer.valueOf(1) }
-			};
-		}
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
+
+		Object[][] params = new Object[][] {
+				{parseDate("06/17/2016", formatter), Integer.valueOf(3)},
+				{parseDate("10/13/2016", formatter), Integer.valueOf(5)},
+				{parseDate("11/10/2016", formatter), Integer.valueOf(6)},
+				{parseDate("01/01/2017", formatter), Integer.valueOf(6)},
+				{parseDate("12/25/2016", formatter), Integer.valueOf(6)},
+				{parseDate("01/05/2017", formatter), Integer.valueOf(1)},
+				{parseDate("02/03/2017", formatter), Integer.valueOf(1)},
+				{parseDate("06/14/2017", formatter), Integer.valueOf(3)},
+				{parseDate("09/15/2017", formatter), Integer.valueOf(5)},
+				{parseDate("11/09/2017", formatter), Integer.valueOf(6)}
+		};
 
 		return Arrays.asList(params);
+	}
+
+	private static Date parseDate(String dateString, DateTimeFormatter formatter) {
+		LocalDate localDate = LocalDate.parse(dateString, formatter);
+		return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
 	}
 	
 	@Test

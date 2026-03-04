@@ -16,11 +16,11 @@ package gov.faa.ait.apra.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
-import java.util.GregorianCalendar;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -47,10 +47,7 @@ public class WallPlanningChartsTest {
 	private WallPlanningCharts wallPlan;
 
 	public WallPlanningChartsTest (Date date) {
-		GregorianCalendar cal = new GregorianCalendar();
-		cal.clear();
-		cal.set(2015,  5, 1);
-		this.releaseDate = cal.getTime();
+		this.releaseDate = Date.from(LocalDate.of(2015, 6, 1).atStartOfDay(ZoneId.systemDefault()).toInstant());
 	}
 	/**
 	 * initialize
@@ -65,28 +62,25 @@ public class WallPlanningChartsTest {
  */
 	@Parameterized.Parameters
 	public static Collection<Date> cycleNumbers() {
+		LocalDate start = LocalDate.of(2016, 1, 11);
 		Date[] params = new Date[10];
 
-		GregorianCalendar cal = new GregorianCalendar();
-		cal.clear();
-		cal.set(2015, 12, 11);
-
-		params[0] = cal.getTime();
+		params[0] = toDate(start);
 		for (int i = 1; i < 6; i++) {
-			cal.add(Calendar.DATE, 56);
-			params[i] = cal.getTime();
+			start = start.plusDays(56);
+			params[i] = toDate(start);
 		}
 
-		cal.set(2016, 0, 7);
-		params[6] = cal.getTime();
-		cal.set(2016, 1, 4);
-		params[7] = cal.getTime();
-		cal.set(2016, 2, 3);
-		params[8] = cal.getTime();
-		cal.set(2016, 2, 31);
-		params[9] = cal.getTime();
+		params[6] = toDate(LocalDate.of(2016, 1, 7));
+		params[7] = toDate(LocalDate.of(2016, 2, 4));
+		params[8] = toDate(LocalDate.of(2016, 3, 3));
+		params[9] = toDate(LocalDate.of(2016, 3, 31));
 
 		return Arrays.asList(params);
+	}
+
+	private static Date toDate(LocalDate ld) {
+		return Date.from(ld.atStartOfDay(ZoneId.systemDefault()).toInstant());
 	}
 
 	/**
