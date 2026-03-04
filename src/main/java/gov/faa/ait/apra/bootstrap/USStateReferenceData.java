@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
+import java.nio.charset.StandardCharsets;
 
 import gov.faa.ait.apra.json.USState;
 import gov.faa.ait.apra.json.USStateReference;
@@ -64,16 +64,16 @@ public class USStateReferenceData {
 			long now = System.currentTimeMillis();
 			String unbound = webTarget.request(MediaType.APPLICATION_XML_TYPE).get(String.class);
 			long duration = System.currentTimeMillis() - now;
-			logger.info("Call US state reference data took "+duration+" ms");
+			logger.info("Call US state reference data took {} ms", duration);
 			ObjectMapper mapper = new ObjectMapper();
 			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 			mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
-			USStateReference data = mapper.readValue(unbound.getBytes(Charsets.UTF_16), USStateReference.class);
+			USStateReference data = mapper.readValue(unbound.getBytes(StandardCharsets.UTF_16), USStateReference.class);
 			USState [] states = data.getElements();
 			
-			for (int i = 0; i < states.length; i++) {
-				stateByAbbreviation.put(states[i].getAbbreviation().toUpperCase(), states[i].getName().toUpperCase());
-				stateByName.put(states[i].getName().toUpperCase(), states[i].getAbbreviation().toUpperCase());
+			for (USState state : states) {
+				stateByAbbreviation.put(state.getAbbreviation().toUpperCase(), state.getName().toUpperCase());
+				stateByName.put(state.getName().toUpperCase(), state.getAbbreviation().toUpperCase());
 			}
 		}
 		catch (Exception ex) {

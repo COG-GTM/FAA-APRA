@@ -80,12 +80,12 @@ public class DigitalEnrouteCharts extends BaseService {
     
     public Response getDECRelease (
     		@ApiParam(name="edition", value="Requested product edition. If omitted, current edition is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed) {
-    	logger.info("Received call to retrieve current CIFP product release for edition '"+ed+"'.");
+    	logger.info("Received call to retrieve current CIFP product release for edition '{}'.", ed);
 
     	ChartCycleElementsJson cycle = initParameters (ed);
 
     	if (! verifyEdition() ) {
-    		logger.error("Expected edition 'current' or 'next' and received '"+ed+"' instead. Error response being generated and returned.");
+    		logger.error("Expected edition 'current' or 'next' and received '{}' instead. Error response being generated and returned.", ed);
     		return Response.status(400).entity(getIllegalArgumentError()).build();    		
     	}
 
@@ -111,7 +111,7 @@ public class DigitalEnrouteCharts extends BaseService {
     	ChartCycleElementsJson cycle = initParameters(ed);
     	
     	if (! verifyEdition() ) {
-    		logger.error("Expected edition 'current' or 'next' and received '"+ed+"' instead. Error response being generated and returned.");
+    		logger.error("Expected edition 'current' or 'next' and received '{}' instead. Error response being generated and returned.", ed);
     		return Response.status(400).entity(getIllegalArgumentError()).build();    		
     	}
     	
@@ -147,7 +147,7 @@ public class DigitalEnrouteCharts extends BaseService {
     		}
     	}
     	catch (Exception emalformed) {
-    		logger.warn("The DEC url "+path+" is invalid or malformed.", emalformed);
+    		logger.warn("The DEC url {} is invalid or malformed.", path, emalformed);
     		response.getStatus().setCode(404);
     		response.getStatus().setMessage(ErrorCodes.ERROR_404);
     		product.setUrl("");

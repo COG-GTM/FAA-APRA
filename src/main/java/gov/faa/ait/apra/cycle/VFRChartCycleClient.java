@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
+import java.nio.charset.StandardCharsets;
 
 import gov.faa.ait.apra.bootstrap.Config;
 
@@ -92,9 +92,7 @@ public class VFRChartCycleClient {
 	 */
 	public void forceUpdate() {
 		
-		if (logger.isDebugEnabled()) {
-			logger.debug("VFR Chart cycle forceUpdate() was called.");
-		}
+		logger.debug("VFR Chart cycle forceUpdate() was called.");
 		
 		if (today == null) 
 			today = new Date(System.currentTimeMillis());
@@ -108,9 +106,7 @@ public class VFRChartCycleClient {
 	 * @return
 	 */
 	public ChartCycleData getChartCycle(boolean forceUpdate) {
-		if (logger.isDebugEnabled()) {
-			logger.debug("VFR Chart cycle getChartCycle("+forceUpdate+") called.");
-		}
+		logger.debug("VFR Chart cycle getChartCycle({}) called.", forceUpdate);
 		
 		return getChartCycle(today, forceUpdate);
 	}
@@ -126,9 +122,7 @@ public class VFRChartCycleClient {
 		StringBuilder url = new StringBuilder();
 
 		if (forceUpdate) {
-			if (logger.isDebugEnabled()) {
-				logger.debug("VFR Chart cycle force update is true. Setting lastUpdate and cycle to null.");
-			}
+			logger.debug("VFR Chart cycle force update is true. Setting lastUpdate and cycle to null.");
 			setLastUpdate();
 			setChartCycle(null);
 		}
@@ -159,7 +153,7 @@ public class VFRChartCycleClient {
 		String unbound = "";
 
 		try {
-			logger.info("Calling denodo for vfr chart cycle at " + url.toString());
+			logger.info("Calling denodo for vfr chart cycle at {}", url);
 			Client client = ClientBuilder.newClient();
 
 			WebTarget webTarget = client.target(url.toString());
@@ -167,13 +161,12 @@ public class VFRChartCycleClient {
 			unbound = webTarget.request(MediaType.APPLICATION_XML_TYPE).get(
 					String.class);
 			long duration = System.currentTimeMillis() - now;
-			logger.info("Call for chart cycle from denodo server took " + duration
-					+ " ms");
+			logger.info("Call for chart cycle from denodo server took {} ms", duration);
 			ObjectMapper mapper = new ObjectMapper();
 			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
 					false);
 			mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
-			cycleData = mapper.readValue(unbound.getBytes(Charsets.UTF_16), ChartCycleData.class);
+			cycleData = mapper.readValue(unbound.getBytes(StandardCharsets.UTF_16), ChartCycleData.class);
 			setChartCycle(cycleData);
 		} catch (Exception ex) {
 			logger.error("getChartCycle", ex);
@@ -191,18 +184,17 @@ public class VFRChartCycleClient {
 
 		long diff = today.getTime() - lastUpdate.getTime();
 		
-		if (logger.isDebugEnabled())
-			logger.debug("Age of VFR cycle is "+diff+" ms");
+		logger.debug("Age of VFR cycle is {} ms", diff);
 		
 		long hours = TimeUnit.HOURS.convert(diff, TimeUnit.MILLISECONDS);
 		
 		boolean updateRequired = hours >= Config.getCycleAgeLimit();
 		
-		if (updateRequired && logger.isDebugEnabled()) {
-			logger.debug("VFR chart cycle update is required due to expiration. VFR Chart cycle is "+hours+" hours old. Expiration period is "+Config.getCycleAgeLimit());
+		if (updateRequired) {
+			logger.debug("VFR chart cycle update is required due to expiration. VFR Chart cycle is {} hours old. Expiration period is {}", hours, Config.getCycleAgeLimit());
 		}
-		else if (logger.isDebugEnabled()) {
-			logger.debug("VFR chart cycle update is NOT required due to expiration. VFR Chart cycle is "+hours+" hours old. Expiration period is "+Config.getCycleAgeLimit());
+		else {
+			logger.debug("VFR chart cycle update is NOT required due to expiration. VFR Chart cycle is {} hours old. Expiration period is {}", hours, Config.getCycleAgeLimit());
 		}
 		
 		return updateRequired;
@@ -217,16 +209,15 @@ public class VFRChartCycleClient {
 		boolean found;
 
 		ChartCycleElementsJson[] elements = cycle.getElements();
-		for (int i = 0; i < elements.length; i++) {
-			ChartCycleElementsJson element = elements[i];
+		for (ChartCycleElementsJson element : elements) {
 			found = element.getChart_cycle_period_code().equalsIgnoreCase(
 					periodCode);
 			if (found) {
-				logger.info("Found VFR chart cycle in cache. Returning "+periodCode+" chart cycle.");
+				logger.info("Found VFR chart cycle in cache. Returning {} chart cycle.", periodCode);
 				return element;
 			}
 		}
-		logger.warn("VFR chart cycle "+periodCode+" not found in cache. Returning null.");
+		logger.warn("VFR chart cycle {} not found in cache. Returning null.", periodCode);
 		return null;
 	}
 
@@ -240,9 +231,7 @@ public class VFRChartCycleClient {
 	}
 	
 	private void setChartCycleTypeCode (String typeCode) {
-		if (logger.isDebugEnabled()) {
-			logger.debug("chartCycleTypeCode == "+VFRChartCycleClient.chartCycleTypeCode+" and typeCode == "+typeCode);
-		}
+		logger.debug("chartCycleTypeCode == {} and typeCode == {}", VFRChartCycleClient.chartCycleTypeCode, typeCode);
 		
 		if (VFRChartCycleClient.chartCycleTypeCode != null && VFRChartCycleClient.chartCycleTypeCode.equalsIgnoreCase(typeCode)) {
 			return;

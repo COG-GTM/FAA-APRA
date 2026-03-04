@@ -103,18 +103,14 @@ public class Config {
 	 * Ansible guarantees that the file is created and will exist with appropriate values per environment. 
 	 */
 	public static void loadConfig () {
-		if (logger.isDebugEnabled())
-			logger.debug("Setting configuration of properties for proxy server and URLs");
+		logger.debug("Setting configuration of properties for proxy server and URLs");
+		logger.debug("Attempting load of properties resources");
 		
-		if (logger.isDebugEnabled())
-			logger.debug("Attempting load of properties resources");
-		
-		try {
-			FileInputStream fis = new FileInputStream (new File("/opt/apra/conf/config.properties"));
+		try (FileInputStream fis = new FileInputStream(new File("/opt/apra/conf/config.properties"))) {
 			cfg.load(fis);	
 			logger.info("Configuration properties loaded successfully from /opt/apra/conf/config.properties");
-			logger.info("TPP HEAD CHECK FLAG is "+cfg.getProperty("gov.faa.ait.tpp.check.flag"));
-			logger.info("TPP HEAD CHECK FLAG is "+Config.getTPPCheckFlag());
+			logger.info("TPP HEAD CHECK FLAG is {}", cfg.getProperty("gov.faa.ait.tpp.check.flag"));
+			logger.info("TPP HEAD CHECK FLAG is {}", Config.getTPPCheckFlag());
 		}
 		catch (IOException eio) {
 			logger.warn("Using default configuration properties. File /opt/apra/conf/config.properties not found.", eio);

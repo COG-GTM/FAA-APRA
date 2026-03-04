@@ -26,7 +26,8 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
+
+import java.nio.charset.StandardCharsets;
 
 /**
  * Here we are getting the 28 or 56 day chart cycle from the APRA support services. This is a regular chart cycle publication and the dates
@@ -82,7 +83,7 @@ public abstract class DenodoClient {
 		
 		url = getWebTarget(targetDate);
 		
-		logger.info("Calling denodo for chart cycle at "+url);
+		logger.info("Calling denodo for chart cycle at {}", url);
 			
 		setLastUpdate();
 		
@@ -95,11 +96,11 @@ public abstract class DenodoClient {
 			long now = System.currentTimeMillis();
 			unbound = webTarget.request(MediaType.APPLICATION_XML_TYPE).get(String.class);
 			long duration = System.currentTimeMillis() - now;
-			logger.info("Call for 28/56 day chart cycle took "+duration+" ms");
+			logger.info("Call for 28/56 day chart cycle took {} ms", duration);
 			ObjectMapper mapper = new ObjectMapper();
 			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 			mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
-			setChartCycle (mapper.readValue(unbound.getBytes(Charsets.UTF_16), ChartCycleData.class));
+			setChartCycle (mapper.readValue(unbound.getBytes(StandardCharsets.UTF_16), ChartCycleData.class));
 		}
 		catch (Exception ex) {
 			logger.warn("Error getting chart cycle information.", ex);

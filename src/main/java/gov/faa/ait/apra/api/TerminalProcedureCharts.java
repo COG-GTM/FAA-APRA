@@ -95,14 +95,14 @@ public class TerminalProcedureCharts extends BaseService {
     		@ApiParam(name="geoname", value="Requested geographic region of Terminal Procedures Publication chart set. Specify either US or a valid full state name such as Alaska. If omitted, the default US complete set is returned.", defaultValue="US", allowMultiple=false, required=false) @QueryParam("geoname") String geo) {
     	ChartCycleElementsJson cycle;
     	
-    	logger.info("Received call to retrieve current TPP product release for edition '"+ed+"'.");
+    	logger.info("Received call to retrieve current TPP product release for edition '{}'.", ed);
     	
     	// Default the geoname to US, but we also accept states at this time
 		setGeoname(geo != null ? geo : US);
 		setFormat(ZIP);
 		
 		if (!verifyGeoname()) {
-    		logger.error("Expected a geographic name of a US state or just US, but received '"+geo+"' instead. Error response being generated and returned.");
+    		logger.error("Expected a geographic name of a US state or just US, but received '{}' instead. Error response being generated and returned.", geo);
     		return Response.status(400).entity(getErrorResponse (400, "Geographic name must be a full US state name or 'US'")).build();    					
 		}
 		// Check the base service class for what happens here. If someone specifies the "changeset" edition, the setEdition method 
@@ -112,7 +112,7 @@ public class TerminalProcedureCharts extends BaseService {
     	cycle = initParameters();
 		
     	if (!verifyEdition()) {
-    		logger.error("Expected edition current, next, or changeset and received '"+ed+"' instead. Error response being generated and returned.");
+    		logger.error("Expected edition current, next, or changeset and received '{}' instead. Error response being generated and returned.", ed);
     		return Response.status(400).entity(getErrorResponse (400, "Edition must be current, next, or changeset.")).build();    		
     	}
     	
@@ -157,7 +157,7 @@ public class TerminalProcedureCharts extends BaseService {
     		@ApiParam(name="geoname", value="Requested geographic region of Terminal Procedures Publication chart set. Specify US or a valid full US state name such as Alaska. If omitted, edition information for the complete US set is returned.", defaultValue="US", allowMultiple=false, required=false) @QueryParam("geoname") String geo) {
     	ChartCycleElementsJson cycle;
     	
-    	logger.info("Received call to retrieve current TPP product release for edition '"+ed+"'.");
+    	logger.info("Received call to retrieve current TPP product release for edition '{}'.", ed);
     	
 		setGeoname(geo != null ? geo : US);
 		setEdition(ed != null ? ed : CURRENT);
@@ -172,12 +172,12 @@ public class TerminalProcedureCharts extends BaseService {
     	cycle = initParameters();
     	
 		if (!verifyGeoname()) {
-    		logger.error("Expected a geographic name of a US state or just US, but received '"+geo+"' instead. Error response being generated and returned.");
+    		logger.error("Expected a geographic name of a US state or just US, but received '{}' instead. Error response being generated and returned.", geo);
     		return Response.status(400).entity(getErrorResponse (400, "Geographic name must be a full US state name or 'US'")).build();    					
 		}
 		
     	if (!verifyEdition()) {
-    		logger.error("Expected edition 'current' or 'next' and received '"+ed+"' instead. Error response being generated and returned.");
+    		logger.error("Expected edition 'current' or 'next' and received '{}' instead. Error response being generated and returned.", ed);
     		return Response.status(400).entity(getErrorResponse (400, "Edition must be current, next, or changeset.")).build();    		
     	}
     	
@@ -202,11 +202,11 @@ public class TerminalProcedureCharts extends BaseService {
     	String [] pathSet = getUSFilePaths(cycle);
     	ProductSet ps = initPositiveResponse();
     	
-    	for (int i = 0; i < pathSet.length; i++) {
+    	for (String path : pathSet) {
     		Edition ed = initEdition(cycle);
         	Product product = of.createProductSetEditionProduct();
         	product.setProductName(ProductCodeList.TPP);        	
-        	validateAndSetUrl(Config.getAeronavHost()+pathSet[i], ps, product);	
+        	validateAndSetUrl(Config.getAeronavHost()+path, ps, product);	
         	ed.setProduct(product);
         	ps.getEdition().add(ed);
         }
@@ -217,7 +217,7 @@ public class TerminalProcedureCharts extends BaseService {
     // Chart paths follow this convention http://aeronav.faa.gov/d-tpp/1607/akto.pdf   
     
     private ProductSet getChartProductSet (ChartCycleElementsJson cycle) {
-    	logger.info("Getting the chart product set for "+getEdition()+" "+capitalizeGeoname()+" with change flag = "+isChangeFlag());
+    	logger.info("Getting the chart product set for {} {} with change flag = {}", getEdition(), capitalizeGeoname(), isChangeFlag());
     	ObjectFactory of = new ObjectFactory();
     	TPPMetadataClient tppClient = new TPPMetadataClient (cycle, isChangeFlag()); 
     	TPPMetadata [] elements = tppClient.getChartMetadataByState(capitalizeGeoname()).getElements();
@@ -227,50 +227,50 @@ public class TerminalProcedureCharts extends BaseService {
     	if (elements == null || elements.length == 0) 
     		return getErrorResponse(404, ErrorCodes.ERROR_404);
     	
-    	logger.info(elements.length+" total charts found for "+getEdition()+" "+capitalizeGeoname()+" with change flag = "+isChangeFlag());
+    	logger.info("{} total charts found for {} {} with change flag = {}", elements.length, getEdition(), capitalizeGeoname(), isChangeFlag());
     	
     	String edition = tppClient.getEdition();
     	ProductSet ps = initPositiveResponse();
     	
-    	for (int i = 0; i < elements.length; i++) {
-    		if (processedFiles.contains(elements[i].getChart_name())) {
+    	for (TPPMetadata element : elements) {
+    		if (processedFiles.contains(element.getChart_name())) {
     			//skip the chart if we've already processed it
     			continue;
     		}
     		else {
     			// add the chart to our processed list and we build the response
-    			processedFiles.add(elements[i].getChart_name());
+    			processedFiles.add(element.getChart_name());
     			processTotal++;
     		}
     		
     		StringBuilder path = new StringBuilder(Config.getTPPChartPath());
     		Edition ed = initEdition(cycle);
     		ed.setFormat(FormatCodeList.PDF);
-    		ed.setGeoname(elements[i].getState_fullname());
-    		ed.setVolume(elements[i].getVolume());
+    		ed.setGeoname(element.getState_fullname());
+    		ed.setVolume(element.getVolume());
 
         	Product product = of.createProductSetEditionProduct();      	
         	product.setProductName(ProductCodeList.TPP);
-        	product.setChartName(elements[i].getChart_name());   
+        	product.setChartName(element.getChart_name());   
         	
-        	if (! isNullValue(elements[i].getAirport_icao_identifier()))
-        		product.setIcao(elements[i].getAirport_icao_identifier());
+        	if (! isNullValue(element.getAirport_icao_identifier()))
+        		product.setIcao(element.getAirport_icao_identifier());
         	
-        	if (! isNullValue(elements[i].getAirport_identifier()))
-        		product.setAirportId(elements[i].getAirport_identifier());
+        	if (! isNullValue(element.getAirport_identifier()))
+        		product.setAirportId(element.getAirport_identifier());
         	
-        	if (! isNullValue(elements[i].getCity_name()))
-        		product.setCityName(elements[i].getCity_name());
+        	if (! isNullValue(element.getCity_name()))
+        		product.setCityName(element.getCity_name());
         	
-        	if (! isNullValue(elements[i].getAirport_name())) 
-        		product.setAirportName(elements[i].getAirport_name());
+        	if (! isNullValue(element.getAirport_name())) 
+        		product.setAirportName(element.getAirport_name());
         	
     		path.append("/").append(edition);
-    		path.append("/").append(elements[i].getPdf_name());
+    		path.append("/").append(element.getPdf_name());
     		
     		product.setUrl(Config.getAeronavHost()+path.toString());
     		
-        	setChangeType(product, elements[i].getUseraction());
+        	setChangeType(product, element.getUseraction());
     		
     		// The HEAD check for TPP files can introduce a significant performance penalty. This is controlled by a flag in the Configuration. 
     		// Recommendation is to enable the flag in DEV only and leave disabled in TEST and PROD unless someone wants to check and verify in TEST
@@ -286,7 +286,7 @@ public class TerminalProcedureCharts extends BaseService {
     	}
     	
     	processedFiles.clear();
-    	logger.info("Processed a total of "+processTotal+" charts for "+this.getGeoname());
+    	logger.info("Processed a total of {} charts for {}", processTotal, this.getGeoname());
     	
        	return ps;
     }   
@@ -300,7 +300,7 @@ public class TerminalProcedureCharts extends BaseService {
     	cal.setTime(cycle.getChart_effective_date());
     	String year = Integer.toString(cal.get(Calendar.YEAR));
     	   	
-    	for (int i = 0; i < filePart.length; i++) {	
+    	for (int i = 0; i < filePart.length; i++) {
     		StringBuilder path = new StringBuilder(Config.getTPPUSPath());
     		StringBuilder fileName = new StringBuilder(Config.getTPPUSPrefix()).append(filePart[i]).append("_").append(year).append(cycle.getChart_cycle_number()).append(".zip");
     		path.append("/").append(fileName);
@@ -377,8 +377,7 @@ public class TerminalProcedureCharts extends BaseService {
 		try {
 			URL downloadURL = new URL(url);
 			if (!verifyURL(downloadURL)) {
-				logger.warn(downloadURL.toExternalForm()
-						+ " returned a non 200 response code when completing a HTTP HEAD check.");
+				logger.warn("{} returned a non 200 response code when completing a HTTP HEAD check.", downloadURL.toExternalForm());
 				p.setUrl("");
 			} else {
 				p.setUrl(downloadURL.toExternalForm());

@@ -119,8 +119,7 @@ public class HelicopterCharts extends AbstractTableDataService {
 			allowableValues="Baltimore Washington Heli, Boston Heli, Chicago Heli, Dallas Ft. Worth Heli, Detroit Heli, Houston Heli, Los Angeles Heli, New York Heli, U.S Gulf Coast",
 			allowMultiple = false, required = false) @QueryParam("geoname") String cityRegion) {
 
-		logger.info("Received call to retrieve current VFR Helicopter Route Chart product release for edition '"
-				+ ed + " City '" + cityRegion + "'.");
+		logger.info("Received call to retrieve current VFR Helicopter Route Chart product release for edition '{}' City '{}'.", ed, cityRegion);
 		this.setCity(cityRegion);
     	setEdition(ed != null ? ed : CURRENT);
     	setFormat(fmt != null ? fmt : PDF);
@@ -155,8 +154,7 @@ public class HelicopterCharts extends AbstractTableDataService {
 			allowableValues="Baltimore Washington Heli, Boston Heli, Chicago Heli, Dallas Ft. Worth Heli, Detroit Heli, Houston Heli, Los Angeles Heli, New York Heli, U.S Gulf Coast",
 			allowMultiple = false, required = false) @QueryParam("geoname") String cityRegion) {
 
-		logger.info("Received call to retrieve current VVFR Helicopter Route Chart product edition for edition '"
-				+ ed + "'.");
+		logger.info("Received call to retrieve current VVFR Helicopter Route Chart product edition for edition '{}'.", ed);
 
 		this.setCity(cityRegion);
 		ProductSet ps = super.buildInfo(ed, CHART_TYPE_HELICOPTER_VFR);
@@ -187,8 +185,7 @@ public class HelicopterCharts extends AbstractTableDataService {
 			@ApiParam(name = "edition", value = "Requested product edition. If omitted, the default current edition is returned.", allowableValues = "current, next", defaultValue = "current", allowMultiple = false, required = false) @QueryParam("edition") String ed,
     		@ApiParam (name="format", value="Format of the requested chart. TIFF is georeferenced and PDF is not georeferenced. If omitted, the default format of PDF is returned.", allowableValues="tiff, pdf", defaultValue="pdf", allowMultiple=false, required=false) @QueryParam("format") String fmt) { 
 
-		logger.info("Received call to retrieve current VFR GulfCoast Route Chart product release for edition '"
-				+ ed + "'.");
+		logger.info("Received call to retrieve current VFR GulfCoast Route Chart product release for edition '{}'.", ed);
     	setEdition(ed != null ? ed : CURRENT);
     	setFormat(fmt != null ? fmt : PDF);
     	
@@ -216,8 +213,7 @@ public class HelicopterCharts extends AbstractTableDataService {
 	public Response getGulfCoastEdition(
 			@ApiParam(name = "edition", value = "Requested product edition. If omitted, the default current edition is returned.", allowableValues = "current, next", defaultValue = "current", allowMultiple = false, required = false) @QueryParam("edition") String ed) {
 
-		logger.info("Received call to retrieve current VVFR GulfCoast Route Chart product edition for edition '"
-				+ ed + "'.");
+		logger.info("Received call to retrieve current VVFR GulfCoast Route Chart product edition for edition '{}'.", ed);
 		return getHelicopterEdition(ed, usGulfCoast);
 	}
 

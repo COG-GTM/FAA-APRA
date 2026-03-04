@@ -176,7 +176,7 @@ public abstract class AbstractTableDataService extends BaseService {
 	 * to information metadata
 	 */
 	protected void buildChartResponse(ProductSet response, ChartInfoTable table, String chartType, OutputMode mode ) {
-		LOGGER.info("Building chart response using "+this.getCity());
+		LOGGER.info("Building chart response using {}", this.getCity());
 		if(this.getCity()==null || this.getCity().length()==0) {
 			// add all sectional with the edition
 			table.entrySet().stream().filter( entry -> entry.getKey().getChartType().equals(chartType)
@@ -190,8 +190,7 @@ public abstract class AbstractTableDataService extends BaseService {
 					response.getEdition().add(ed);
 			});
 		} else {
-			LOGGER.info("Building chart response using "+
-				this.getCity().toUpperCase(Locale.ENGLISH)+" "+this.getEdition().toUpperCase()+" "+chartType);
+			LOGGER.info("Building chart response using {} {} {}", this.getCity().toUpperCase(Locale.ENGLISH), this.getEdition().toUpperCase(), chartType);
 			
 			ChartInfoTableKey key = new ChartInfoTableKey(
 				this.getCity().toUpperCase(Locale.ENGLISH), this.getEdition().toUpperCase(), chartType);
@@ -209,8 +208,7 @@ public abstract class AbstractTableDataService extends BaseService {
 				response.getEdition().add(ed);
 			}
 			else {
-				LOGGER.warn("Table data key not found for key "
-					+key.toString()+". Returning a 404 not found for this request.");
+				LOGGER.warn("Table data key not found for key {}. Returning a 404 not found for this request.", key);
 				response.getStatus().setCode(NOT_FOUND);
 				response.getStatus().setMessage(ErrorCodes.ERROR_404);
 			}

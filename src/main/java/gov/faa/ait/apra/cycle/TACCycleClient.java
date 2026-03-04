@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
+import java.nio.charset.StandardCharsets;
 
 import gov.faa.ait.apra.bootstrap.Config;
 
@@ -72,10 +72,9 @@ public class TACCycleClient extends DenodoClient {
 		}
 		
 		url = getWebTarget(targetDate);
-		logger.info("Calling denodo for vfr chart cycle at "+url);
+		logger.info("Calling denodo for vfr chart cycle at {}", url);
 		
 		if (TACCycleClient.current != null && TACCycleClient.next != null && TACCycleClient.tacLastUpdate != null) {
-			if (logger.isDebugEnabled())
 				logger.debug("Update not required for TAC Cycle. Aborting call to allow use of cache. Returning null.");
 			return null;
 		}
@@ -92,24 +91,24 @@ public class TACCycleClient extends DenodoClient {
 			long now = System.currentTimeMillis();
 			unbound = webTarget.request(MediaType.APPLICATION_XML_TYPE).get(String.class);
 			long duration = System.currentTimeMillis() - now;
-			logger.info("Call for TAC chart cycle took "+duration+" ms");
+			logger.info("Call for TAC chart cycle took {} ms", duration);
 			ObjectMapper mapper = new ObjectMapper();
 			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 			mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
 			
-			ChartCycleData cycleObjects = mapper.readValue(unbound.getBytes(Charsets.UTF_16), ChartCycleData.class);
+			ChartCycleData cycleObjects = mapper.readValue(unbound.getBytes(StandardCharsets.UTF_16), ChartCycleData.class);
 			TACCycleClient.initCycles();
 
 			ChartCycleElementsJson [] cycles = cycleObjects.getElements();
 			
-			for (int i = 0; i < cycleObjects.getElements().length; i++) {
-				String key = cycles[i].getChart_city_name();
+			for (ChartCycleElementsJson cycleElement : cycles) {
+				String key = cycleElement.getChart_city_name();
 				
-				if ("CURRENT".equalsIgnoreCase(cycles[i].getChart_cycle_period_code())) {
-					TACCycleClient.current.put(key,  cycles[i]);
+				if ("CURRENT".equalsIgnoreCase(cycleElement.getChart_cycle_period_code())) {
+					TACCycleClient.current.put(key, cycleElement);
 				}
 				else {
-					TACCycleClient.next.put(key, cycles[i]);
+					TACCycleClient.next.put(key, cycleElement);
 				}
 			}
 		}
@@ -124,7 +123,6 @@ public class TACCycleClient extends DenodoClient {
 	@Override
 	public boolean isUpdateRequired () {
 		if (TACCycleClient.tacLastUpdate == null || TACCycleClient.current == null || TACCycleClient.next == null) {
-			if (logger.isDebugEnabled()) 
 				logger.debug("TAC chart cycles need to be updated. One of current, next, or lastupdate is null. Returning true to update the cycle cache.");
 			return true;
 		}

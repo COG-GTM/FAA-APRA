@@ -85,24 +85,24 @@ public class OceanicRouteCharts extends BaseService {
     		@ApiParam (name="format", value="Format of the requested chart. TIFF is georeferenced and PDF is not georeferenced. If omitted, the default format of PDF is returned.", allowableValues="tiff, pdf", defaultValue="pdf", allowMultiple=false, required=false) @QueryParam("format") String fmt, 
     		@ApiParam (name="geoname", value="A geographic area for which the chart is requested", allowableValues="NARC, PORC, WATRS", defaultValue="PORC", required=true) @QueryParam ("geoname") String geo) {
 
-	    	logger.info("Received call to retrieve current Oceanic Route Chart release for '"+ed+"', '"+fmt+"', '"+geo+"'");
+	    	logger.info("Received call to retrieve current Oceanic Route Chart release for '{}', '{}', '{}'", ed, fmt, geo);
 			
 	    	setEdition(ed != null ? ed : CURRENT);
 	    	setGeoname(geo != null ? geo : PORC);
 	    	setFormat (fmt != null ? fmt : PDF);
 	    	
 	    	if (!verifyEdition()) {
-	    		logger.error("Expected edition 'next' and received '"+ed+ERROR);
+	    		logger.error("Expected edition 'next' and received '{}'{}", ed, ERROR);
 	    		return Response.status(400).entity(getIllegalArgumentError()).build();    		
 	    	}
 	    	
 	    	if (!verifyFormat()) {
-	    		logger.error("Expected format of 'tiff' or 'pdf'. Received format '"+fmt+ERROR);
+	    		logger.error("Expected format of 'tiff' or 'pdf'. Received format '{}'{}", fmt, ERROR);
 	    		return Response.status(400).entity(getIllegalArgumentError()).build();    		
 	    	}
 	    	
 	    	if (!verifyGeoname()) {
-	    		logger.error("Expected geographic area of NARC, PORC, or WATRS. Received geoname of '"+geo+ERROR);
+	    		logger.error("Expected geographic area of NARC, PORC, or WATRS. Received geoname of '{}'{}", geo, ERROR);
 	    		return Response.status(400).entity(getErrorResponse(400, "Expected geographic area of NARC, PORC, or WATRS. Received geoname of "+geo)).build();
 	    	}
 	    	
@@ -175,7 +175,7 @@ public class OceanicRouteCharts extends BaseService {
 
         }
     	catch (Exception exurl) {
-    		logger.error("Unable to verify the download url "+path.toString(), exurl);
+    		logger.error("Unable to verify the download url {}", path, exurl);
     		product.setUrl("");
         	response.getStatus().setCode(404);
         	response.getStatus().setMessage(ErrorCodes.ERROR_404);

@@ -191,7 +191,7 @@ public abstract class BaseService {
 		HttpURLConnection connection = null;
 		Proxy proxy = null;
 		
-		logger.info("Verifying URL "+url.toExternalForm()+" before responding to call");
+		logger.info("Verifying URL {} before responding to call", url.toExternalForm());
 		try {
 			if (Config.getFAADMZProxyHost() != null && (! EMPTY_STRING.equals(Config.getFAADMZProxyHost()))) {
 				int port = Integer.parseInt(Config.getFAADMZProxyPort());
@@ -204,7 +204,7 @@ public abstract class BaseService {
 			 * of the URL we return
 			 */
 			if (proxy != null) {
-				logger.info("Using proxy server "+proxy.toString());
+				logger.info("Using proxy server {}", proxy);
 				connection = (HttpURLConnection) url.openConnection(proxy);
 			}
 			else {
@@ -219,19 +219,15 @@ public abstract class BaseService {
 			connection.setRequestMethod("HEAD");
 			int responseCode = connection.getResponseCode();
 			if (responseCode == 200 || responseCode == 302) {
-				logger.info("URL HEAD check returned response code "+responseCode+" for url "+url.toExternalForm());
+				logger.info("URL HEAD check returned response code {} for url {}", responseCode, url.toExternalForm());
 			    ok = true;
 			}
 			else {
-				logger.warn("URL HEAD check returned response code "+responseCode+" for url "+url.toExternalForm());
+				logger.warn("URL HEAD check returned response code {} for url {}", responseCode, url.toExternalForm());
 			}
 		}
-		catch (IllegalArgumentException eillegal) {
-			logger.error("HEAD heck failed for url: "+url.toExternalForm(), eillegal);
-			ok = false;
-		}
-		catch (IOException eio) {
-			logger.error("HEAD heck failed for url: "+url.toExternalForm(), eio);
+		catch (IllegalArgumentException | IOException ex) {
+			logger.error("HEAD check failed for url: {}", url.toExternalForm(), ex);
 			ok = false;
 		}
 		

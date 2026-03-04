@@ -91,8 +91,7 @@ public class SupplementCharts extends BaseService {
 			@ApiParam(name = "volume", value = "Requested volume of Supplement chart set. If omitted, the complete US set is returned.", allowableValues = "NORTHWEST, SOUTHWEST, NORTH CENTRAL, SOUTH CENTRAL, EAST CENTRAL, SOUTHEAST, NORTHEAST, PACIFIC, ALASKA", allowMultiple = false, required = false) @QueryParam("volume") String vol) {
 		ChartCycleElementsJson cycle;
 
-		logger.info("Received call to retrieve current Supplement release for edition '"
-				+ ed + "' volume '"+ vol+"'.");
+		logger.info("Received call to retrieve current Supplement release for edition '{}' volume '{}'.", ed, vol);
 
 		if (vol == null || vol.isEmpty()) {
 			this.setVolume(US);
@@ -110,8 +109,7 @@ public class SupplementCharts extends BaseService {
 		cycle = initParameters();
 
 		if (!verifyEdition()) {
-			logger.error("Expected edition current, next, or changeset and received '"
-					+ ed + "'" + ERRMSGSUFFIX);
+			logger.error("Expected edition current, next, or changeset and received '{}'{}", ed, ERRMSGSUFFIX);
     		return Response.status(400).entity(getErrorResponse(400,
 					"Edition must be current, next, or changeset.")).build();
 		}
@@ -150,8 +148,7 @@ public class SupplementCharts extends BaseService {
 			@ApiParam(name = "volume", value = "Requested volume of Supplement chart set. If omitted, the edition information for the complete US set is returned.", allowableValues = "NORTHWEST, SOUTHWEST, NORTH CENTRAL, SOUTH CENTRAL, EAST CENTRAL, SOUTHEAST, NORTHEAST, PACIFIC, ALASKA", allowMultiple = false, required = false) @QueryParam("volume") String vol) {
 		ChartCycleElementsJson cycle;
 
-		logger.info("Received call to retrieve current SUPPLEMENT product release for edition '"
-				+ ed + "'.");
+		logger.info("Received call to retrieve current SUPPLEMENT product release for edition '{}'.", ed);
 
 		if (vol == null || vol.isEmpty()) {
 			this.setVolume(US);
@@ -170,9 +167,7 @@ public class SupplementCharts extends BaseService {
 		cycle = initParameters();
 
 		if (!verifyEdition()) {
-			logger.error("Expected edition 'current' or 'next' and received '"
-					+ ed
-					+ "' instead. Error response being generated and returned.");
+			logger.error("Expected edition 'current' or 'next' and received '{}' instead. Error response being generated and returned.", ed);
 			
 	   		return Response.status(400).entity(getErrorResponse(400,
 					"Edition must be current, next, or changeset.")).build();
@@ -222,8 +217,7 @@ public class SupplementCharts extends BaseService {
 	
 	private ProductSet getChartProductSet(ChartCycleElementsJson cycle) {
 		String wcf = " with change flag = ";
-		logger.info("Getting the chart product set for " + getEdition() + " "
-				+ capitalizeGeoname() + wcf + isChangeFlag());
+		logger.info("Getting the chart product set for {} {} {} {}", getEdition(), capitalizeGeoname(), wcf, isChangeFlag());
 		ObjectFactory of = new ObjectFactory();
 		SupplementMetadataClient supplementClient = new SupplementMetadataClient(
 				cycle);
@@ -233,24 +227,23 @@ public class SupplementCharts extends BaseService {
 		if (elements == null || elements.length == 0)
 			return getErrorResponse(404, ErrorCodes.ERROR_404);
 
-		logger.info(elements.length + " total charts found for " + getEdition()
-				+ " " + capitalizeGeoname() + wcf + isChangeFlag());
+		logger.info("{} total charts found for {} {} {} {}", elements.length, getEdition(), capitalizeGeoname(), wcf, isChangeFlag());
 
 		ProductSet ps = initPositiveResponse();
 
-		for (int i = 0; i < elements.length; i++) {
+		for (SupplementMetadata element : elements) {
 			StringBuilder path = new StringBuilder(Config.getSUPChartPath());
 			Edition ed = initEdition(cycle);
 			ed.setFormat(FormatCodeList.PDF);
-			ed.setGeoname(elements[i].getState());
-			ed.setVolume(elements[i].getVolumeName());
+			ed.setGeoname(element.getState());
+			ed.setVolume(element.getVolumeName());
 
 			Product product = of.createProductSetEditionProduct();
 			product.setProductName(ProductCodeList.SUPPLEMENT);
 			SimpleDateFormat formatter = new SimpleDateFormat("ddMMMyyyy");
 			path.append("/").append(
 					formatter.format(cycle.getChart_effective_date()));
-			path.append("/").append(elements[i].getPdf());
+			path.append("/").append(element.getPdf());
 
 			product.setUrl(Config.getAeronavHost() + path.toString());
 

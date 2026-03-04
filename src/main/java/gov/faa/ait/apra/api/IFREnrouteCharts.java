@@ -128,8 +128,7 @@ public class IFREnrouteCharts extends BaseService {
 			@ApiParam(name = "geoname", value = "Geographic region for requested chart", allowableValues="US, Alaska, Pacific, Caribbean", required = true) @QueryParam("geoname") String geo,
 			@ApiParam(name = "seriesType", value = "The series type", allowableValues="low, high, area", required = true) @QueryParam("seriesType") String seriesType) {
 
-		logger.info("Received call to retrieve current IFR Enroute Charts product release for '"
-				+ ed + "', '" + fmt + "', '" + geo + "', '" + seriesType + "'");
+		logger.info("Received call to retrieve current IFR Enroute Charts product release for '{}', '{}', '{}', '{}'", ed, fmt, geo, seriesType);
 		ObjectFactory of = new ObjectFactory();
 
 		response = of.createProductSet();
@@ -166,8 +165,7 @@ public class IFREnrouteCharts extends BaseService {
 			@ApiParam(name = "edition", value = "Requested product edition", allowableValues = "current, next", defaultValue = "current", 
 				allowMultiple = false, required = false) @QueryParam("edition") String ed) {
 
-		logger.info("Received call to retrieve current IFR Enroute Charts edition release for '"
-				+ ed);
+		logger.info("Received call to retrieve current IFR Enroute Charts edition release for '{}'", ed);
 
 		ObjectFactory of = new ObjectFactory();
 
@@ -231,8 +229,7 @@ public class IFREnrouteCharts extends BaseService {
 				downloadURL = new URL(Config.getAeronavHost()
 						+ vfrPath.getPathAsString());
 				if (!verifyURL(downloadURL)) {
-					logger.warn(downloadURL.toExternalForm()
-							+ " returned a non 200 response code when completing a HTTP HEAD check.");
+						logger.warn("{} returned a non 200 response code when completing a HTTP HEAD check.", downloadURL.toExternalForm());
 					downloadURL = null;
 				}
 				if(downloadURL != null) {
@@ -267,7 +264,7 @@ public class IFREnrouteCharts extends BaseService {
 		if(PDF.equalsIgnoreCase(format)) {
 			filename.append("d");
 		}
-		logger.debug("computing filename for "+ geoname + ", "+format+", "+ altLevel +", "+ setIndex);
+		logger.debug("computing filename for {}, {}, {}, {}", geoname, format, altLevel, setIndex);
 		if(US.equalsIgnoreCase(geoname) ) {
 			if( TIFF.equalsIgnoreCase(format) ) {
 				if (LOW.equalsIgnoreCase(altLevel)) {
@@ -419,25 +416,19 @@ public class IFREnrouteCharts extends BaseService {
 		this.setSeriesType(seriesType);
 
 		if (!verifyEdition()) {
-			logger.error("Expected edition 'current or next' not received '"
-					+ ed
-					+ "' instead. Error response being generated and returned back.");
+			logger.error("Expected edition 'current or next' not received '{}' instead. Error response being generated and returned back.", ed);
 			response = getIllegalArgumentError();
 			return false;
 		}
 
 		if (!verifyFormat()) {
-			logger.error("Expected format of 'tiff' or 'pdf'. Received format '"
-					+ fmt
-					+ "' instead. Error response being generated and returned");
+			logger.error("Expected format of 'tiff' or 'pdf'. Received format '{}' instead. Error response being generated and returned", fmt);
 			response = getIllegalArgumentError();
 			return false;
 		}
 
 		if (!verifyGeo()) {
-			logger.error("Expected 'geo' value, but it is null or empty '"
-					+ geo
-					+ "' Geoname which is a city for which the chart is requested.");
+			logger.error("Expected 'geo' value, but it is null or empty '{}' Geoname which is a city for which the chart is requested.", geo);
 			response = this
 					.getErrorResponse(
 							404,
@@ -447,9 +438,7 @@ public class IFREnrouteCharts extends BaseService {
 		}
 
 		if (!verifySeriesType()) {
-			logger.error("Expected 'alt' value, but it is null or empty '"
-					+ seriesType
-					+ "' seriesType the chart is requested which is either 'Low', 'high', or 'area'.");
+			logger.error("Expected 'alt' value, but it is null or empty '{}' seriesType the chart is requested which is either 'Low', 'high', or 'area'.", seriesType);
 			response = this
 					.getErrorResponse(
 							404,
@@ -466,8 +455,7 @@ public class IFREnrouteCharts extends BaseService {
 		}
 
 		if (cycle == null) {
-			logger.warn("Unable to locate " + this.getEdition()
-					+ " edition chart for geoname " + this.getGeoname());
+			logger.warn("Unable to locate {} edition chart for geoname {}", this.getEdition(), this.getGeoname());
 			response = this
 					.getErrorResponse(
 							404,

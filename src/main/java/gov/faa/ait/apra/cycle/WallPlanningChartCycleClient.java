@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
+import java.nio.charset.StandardCharsets;
 
 import gov.faa.ait.apra.bootstrap.Config;
 
@@ -88,7 +88,7 @@ public class WallPlanningChartCycleClient extends DenodoClient {
 		queryString = queryString.append("&%24format=json");
 
 		url = url.append(queryString);
-		logger.info("Calling denodo for vfr chart cycle at " + url.toString());
+		logger.info("Calling denodo for vfr chart cycle at {}", url);
 
 		if (wpCycle != null && wpLastUpdate != null) {
 			return wpCycle;
@@ -106,13 +106,12 @@ public class WallPlanningChartCycleClient extends DenodoClient {
 			unbound = webTarget.request(MediaType.APPLICATION_XML_TYPE).get(
 					String.class);
 			long duration = System.currentTimeMillis() - now;
-			logger.info("Call for WallPlan chart cycle took " + duration
-					+ " ms");
+			logger.info("Call for WallPlan chart cycle took {} ms", duration);
 			ObjectMapper mapper = new ObjectMapper();
 			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
 					false);
 			mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
-			cycleData = mapper.readValue(unbound.getBytes(Charsets.UTF_16), ChartCycleData.class);
+			cycleData = mapper.readValue(unbound.getBytes(StandardCharsets.UTF_16), ChartCycleData.class);
 			setChartCycle(cycleData);
 		} catch (Exception ex) {
 			logger.error("getChartCycle", ex);
@@ -143,8 +142,7 @@ public class WallPlanningChartCycleClient extends DenodoClient {
 		boolean found;
 
 		ChartCycleElementsJson[] elements = getChartCycle().getElements();
-		for (int i = 0; i < elements.length; i++) {
-			ChartCycleElementsJson element = elements[i];
+		for (ChartCycleElementsJson element : elements) {
 			found = element.getChart_cycle_period_code().equalsIgnoreCase(
 					periodCode);
 			if (found) {
