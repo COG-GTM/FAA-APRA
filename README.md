@@ -15,6 +15,11 @@ released to the public on either a 28 day or 56 day airspace cycle. Upon release
 the chart retrieval necessarily change. APRA constructs the standard URL where the chart may be downloaded 
 to enable a software application to pull the charts without the need for a human interface or web based GUI.
 
+## Prerequisites
+
+- **Java 21** or higher
+- **Apache Maven 3.9+**
+
 ## Documentation
 
 Documentation for the API may be found on swaggerhub
