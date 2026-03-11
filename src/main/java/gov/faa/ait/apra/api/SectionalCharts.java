@@ -262,7 +262,7 @@ public class SectionalCharts extends AbstractTableDataService {
 			return false;
 			*/
 		
-		return Arrays.asList(validCities).stream().filter(value -> value.equalsIgnoreCase(this.getCity())).count()==1;
+		return Arrays.stream(validCities).anyMatch(value -> value.equalsIgnoreCase(this.getCity()));
 	}
 
 }

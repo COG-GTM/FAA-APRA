@@ -226,12 +226,8 @@ public abstract class BaseService {
 				logger.warn("URL HEAD check returned response code "+responseCode+" for url "+url.toExternalForm());
 			}
 		}
-		catch (IllegalArgumentException eillegal) {
-			logger.error("HEAD heck failed for url: "+url.toExternalForm(), eillegal);
-			ok = false;
-		}
-		catch (IOException eio) {
-			logger.error("HEAD heck failed for url: "+url.toExternalForm(), eio);
+		catch (IllegalArgumentException | IOException ex) {
+			logger.error("HEAD check failed for url: "+url.toExternalForm(), ex);
 			ok = false;
 		}
 		

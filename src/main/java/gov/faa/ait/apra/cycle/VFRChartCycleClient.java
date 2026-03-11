@@ -13,7 +13,9 @@
  */
 package gov.faa.ait.apra.cycle;
 
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -27,7 +29,6 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
 
 import gov.faa.ait.apra.bootstrap.Config;
 
@@ -173,7 +174,7 @@ public class VFRChartCycleClient {
 			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
 					false);
 			mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
-			cycleData = mapper.readValue(unbound.getBytes(Charsets.UTF_16), ChartCycleData.class);
+			cycleData = mapper.readValue(unbound.getBytes(StandardCharsets.UTF_16), ChartCycleData.class);
 			setChartCycle(cycleData);
 		} catch (Exception ex) {
 			logger.error("getChartCycle", ex);
@@ -214,20 +215,14 @@ public class VFRChartCycleClient {
 			getChartCycle();
 		}
 
-		boolean found;
-
 		ChartCycleElementsJson[] elements = cycle.getElements();
-		for (int i = 0; i < elements.length; i++) {
-			ChartCycleElementsJson element = elements[i];
-			found = element.getChart_cycle_period_code().equalsIgnoreCase(
-					periodCode);
-			if (found) {
-				logger.info("Found VFR chart cycle in cache. Returning "+periodCode+" chart cycle.");
-				return element;
-			}
-		}
-		logger.warn("VFR chart cycle "+periodCode+" not found in cache. Returning null.");
-		return null;
+		return Arrays.stream(elements)
+			.filter(element -> element.getChart_cycle_period_code().equalsIgnoreCase(periodCode))
+			.findFirst()
+			.orElseGet(() -> {
+				logger.warn("VFR chart cycle "+periodCode+" not found in cache. Returning null.");
+				return null;
+			});
 	}
 
 	public ChartCycleElementsJson getNextCycle() {

@@ -13,10 +13,11 @@
  */
 package gov.faa.ait.apra.util;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashSet;
-import java.util.TimeZone;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,13 +70,10 @@ public class URLCache {
 
 		CycleDateUtil cdu = new CycleDateUtil();
 		
-		GregorianCalendar cycle = new GregorianCalendar(TimeZone.getDefault());
-		GregorianCalendar lastRefresh = new GregorianCalendar(TimeZone.getDefault());
+		ZonedDateTime cycleDate = cdu.getCurrentCycle().toInstant().atZone(ZoneId.systemDefault());
+		ZonedDateTime lastRefreshDate = URLCache.lastFlush.toInstant().atZone(ZoneId.systemDefault());
 		
-		lastRefresh.setTime(URLCache.lastFlush);
-		cycle.setTime(cdu.getCurrentCycle());
-		
-		if (cycle.after(lastRefresh)) {
+		if (cycleDate.isAfter(lastRefreshDate)) {
 			logger.info("URL cache requires a refresh");
 			return true;
 		}

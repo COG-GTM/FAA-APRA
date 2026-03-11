@@ -13,7 +13,9 @@
  */
 package gov.faa.ait.apra.bootstrap;
 
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Locale;
 
@@ -27,7 +29,6 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
 
 import gov.faa.ait.apra.json.USState;
 import gov.faa.ait.apra.json.USStateReference;
@@ -68,13 +69,13 @@ public class USStateReferenceData {
 			ObjectMapper mapper = new ObjectMapper();
 			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 			mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
-			USStateReference data = mapper.readValue(unbound.getBytes(Charsets.UTF_16), USStateReference.class);
+			USStateReference data = mapper.readValue(unbound.getBytes(StandardCharsets.UTF_16), USStateReference.class);
 			USState [] states = data.getElements();
 			
-			for (int i = 0; i < states.length; i++) {
-				stateByAbbreviation.put(states[i].getAbbreviation().toUpperCase(), states[i].getName().toUpperCase());
-				stateByName.put(states[i].getName().toUpperCase(), states[i].getAbbreviation().toUpperCase());
-			}
+			Arrays.stream(states).forEach(state -> {
+				stateByAbbreviation.put(state.getAbbreviation().toUpperCase(), state.getName().toUpperCase());
+				stateByName.put(state.getName().toUpperCase(), state.getAbbreviation().toUpperCase());
+			});
 		}
 		catch (Exception ex) {
 			logger.warn("Unable to load the US state reference data from denodo", ex);

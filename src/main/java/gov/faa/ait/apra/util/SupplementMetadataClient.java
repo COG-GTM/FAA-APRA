@@ -14,7 +14,7 @@
 package gov.faa.ait.apra.util;
 
 import java.io.UnsupportedEncodingException;
-
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 
 import javax.ws.rs.client.Client;
@@ -111,7 +111,7 @@ public class SupplementMetadataClient {
 			ObjectMapper mapper = new ObjectMapper();
 			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 			mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
-			return mapper.readValue(unbound.getBytes("UTF-8"), SupplementChartMetadata.class);
+			return mapper.readValue(unbound.getBytes(StandardCharsets.UTF_8), SupplementChartMetadata.class);
 		}
 		catch (Exception ex) {
 			logger.warn("Error getting chart cycle information using url "+this.url.toString(), ex);

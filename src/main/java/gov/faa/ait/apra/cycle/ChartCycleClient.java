@@ -15,7 +15,9 @@
 
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -27,11 +29,8 @@ import javax.ws.rs.core.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
 
 import gov.faa.ait.apra.bootstrap.Config;
 
@@ -118,7 +117,7 @@ public class ChartCycleClient extends DenodoClient {
 			ObjectMapper mapper = new ObjectMapper();
 			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 			mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
-			setChartCycle (mapper.readValue(unbound.getBytes(Charsets.UTF_16), ChartCycleData.class));
+			setChartCycle (mapper.readValue(unbound.getBytes(StandardCharsets.UTF_16), ChartCycleData.class));
 		}
 		catch (IOException ex) {
 			logger.warn("Error getting chart cycle information.", ex);
@@ -174,23 +173,17 @@ public class ChartCycleClient extends DenodoClient {
 	 * @return
 	 */
 	public ChartCycleElementsJson getCycle (String periodCode, String typeCode) {
-		boolean found; 
-		
 		if (isUpdateRequired()) {
 			getChartCycle(true);
 		}
 		
-		if(ChartCycleClient.chartCycle !=null) {
-			ChartCycleElementsJson [] elements = ChartCycleClient.chartCycle.getElements();
-			for (int i = 0; i < elements.length; i++) {
-				ChartCycleElementsJson element = elements[i];
-				
-				found = element.getChart_cycle_period_code().equalsIgnoreCase(periodCode)
-						& element.getChart_cycle_type_code().equalsIgnoreCase(typeCode);
-				if (found) {
-					return element;
-				}
-			}
+		if (ChartCycleClient.chartCycle != null) {
+			ChartCycleElementsJson[] elements = ChartCycleClient.chartCycle.getElements();
+			return Arrays.stream(elements)
+				.filter(element -> element.getChart_cycle_period_code().equalsIgnoreCase(periodCode)
+					&& element.getChart_cycle_type_code().equalsIgnoreCase(typeCode))
+				.findFirst()
+				.orElse(null);
 		}
 		return null;
 	}
