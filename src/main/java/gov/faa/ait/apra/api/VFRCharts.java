@@ -88,8 +88,7 @@ public class VFRCharts extends BaseService {
 	public Response getGrandCanyonRelease(
 			@ApiParam(name="edition", value="Requested product edition. If omitted, the default current edition is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed) {
 
-		logger.info("Received call to retrieve current VFR product release for edition '"
-				+ ed + "'.");
+		logger.info("Received call to retrieve current VFR product release for edition '{}'.", ed);
 		this.setGeoname("Grand_Canyon");
 		ObjectFactory of = new ObjectFactory();
 
@@ -125,8 +124,7 @@ public class VFRCharts extends BaseService {
 	public Response getGrandCanyonEdition(
 			@ApiParam(name="edition", value="Requested product edition. If omitted, the default current edition information is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed) {
 
-		logger.info("Received call to retrieve current VFR product edition for edition '"
-				+ ed + "'.");
+		logger.info("Received call to retrieve current VFR product edition for edition '{}'.", ed);
 
 		this.setGeoname("Grand_Canyon");
 		ObjectFactory of = new ObjectFactory();
@@ -167,8 +165,7 @@ public class VFRCharts extends BaseService {
 			downloadURL = new URL(Config.getAeronavHost()
 					+ vfrPath.toString());
 			if (!verifyURL(downloadURL)) {
-				logger.warn(downloadURL.toExternalForm()
-						+ " returned a non 200 response code when completing a HTTP HEAD check.");
+				logger.warn("{} returned a non 200 response code when completing a HTTP HEAD check.", downloadURL.toExternalForm());
 				downloadURL = null;
 			}
 		} catch (MalformedURLException emalformed) {
@@ -244,11 +241,9 @@ public class VFRCharts extends BaseService {
 	}
 
 	private boolean validateParameters(ChartCycleElementsJson cycle) {
-		if (logger.isDebugEnabled()) {
-			logger.debug("Cycle city = "+cycle.getChart_city_name()+" this.formatCity() = "+this.formatCity());
-			logger.debug("Chart cycle effective date is "+cycle.getChart_effective_date());
-			logger.debug("Validation result is "+(cycle.getChart_effective_date() != null && cycle.getChart_city_name().equalsIgnoreCase(this.formatCity())));
-		}
+		logger.debug("Cycle city = {} this.formatCity() = {}", cycle.getChart_city_name(), this.formatCity());
+		logger.debug("Chart cycle effective date is {}", cycle.getChart_effective_date());
+		logger.debug("Validation result is {}", cycle.getChart_effective_date() != null && cycle.getChart_city_name().equalsIgnoreCase(this.formatCity()));
 		return cycle.getChart_effective_date() != null
 				&& cycle.getChart_city_name().equalsIgnoreCase(this.formatCity());
 	}
@@ -262,9 +257,7 @@ public class VFRCharts extends BaseService {
 		}
 
 		if (!verifyEdition()) {
-			logger.error("Expected edition 'current or next' not received '"
-					+ ed
-					+ "' instead. Error response being generated and returned back.");
+			logger.error("Expected edition 'current or next' not received '{}' instead. Error response being generated and returned back.", ed);
 			response = getIllegalArgumentError();
 			return false;
 		}
@@ -276,9 +269,8 @@ public class VFRCharts extends BaseService {
 		}
 
 		if (cycle == null) {
-			logger.warn("Chart cycle infomration was NULL for "+this.getEdition()+" "+this.getGeoname());
-			logger.warn("Unable to locate " + this.getEdition()
-					+ " edition chart for " + this.getGeoname());
+			logger.warn("Chart cycle infomration was NULL for {} {}", this.getEdition(), this.getGeoname());
+			logger.warn("Unable to locate {} edition chart for {}", this.getEdition(), this.getGeoname());
 			response = this.getErrorResponse(404, ErrorCodes.ERROR_404);
 			return false;
 		}
@@ -299,10 +291,8 @@ public class VFRCharts extends BaseService {
 		String retVal = scratch.replace(" ", "_");
 		retVal = WordUtils.capitalizeFully(retVal, separators);
 
-		logger.info("Converted " + this.getGeoname() + " to " + retVal);
-
-		if (logger.isDebugEnabled())
-			logger.debug("Converted " + this.getGeoname() + " to " + retVal);
+		logger.info("Converted {} to {}", this.getGeoname(), retVal);
+		logger.debug("Converted {} to {}", this.getGeoname(), retVal);
 
 		return retVal;
 	}

@@ -13,6 +13,10 @@
  */
 package gov.faa.ait.apra.util;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -47,7 +51,7 @@ public class CycleDateUtil {
 	 * @return the current cycle date
 	 */
 	public Date getCurrentCycle () {
-		logger.info("Cycle client in CycleDateUtil is instanceof "+cycleClient.getClass().getName());
+		logger.info("Cycle client in CycleDateUtil is instanceof {}", cycleClient.getClass().getName());
 		return cycleClient.getCurrentCycle().getChart_effective_date();
 	}
 	
@@ -93,10 +97,10 @@ public class CycleDateUtil {
 	 * @return
 	 */
 	public Date get56DayCycleDate (int increment) {
-		GregorianCalendar calendar = new GregorianCalendar(TimeZone.getDefault());
-		calendar.setTime(getCurrent56Day());
-		calendar.add(Calendar.DATE, 56*increment);
-		return calendar.getTime();		
+		LocalDate cycleDate = getCurrent56Day().toInstant()
+			.atZone(ZoneId.systemDefault()).toLocalDate();
+		LocalDate result = cycleDate.plusDays(56L * increment);
+		return Date.from(result.atStartOfDay(ZoneId.systemDefault()).toInstant());
 	}
 	
 	/**
@@ -133,10 +137,10 @@ public class CycleDateUtil {
 	 * @return
 	 */
 	public Date get28DayCycleDate (int increment) {
-		GregorianCalendar calendar = new GregorianCalendar(TimeZone.getDefault());
-		calendar.setTime(getCurrent28Day());
-		calendar.add(Calendar.DATE, 28*increment);
-		return calendar.getTime();		
+		LocalDate cycleDate = getCurrent28Day().toInstant()
+			.atZone(ZoneId.systemDefault()).toLocalDate();
+		LocalDate result = cycleDate.plusDays(28L * increment);
+		return Date.from(result.atStartOfDay(ZoneId.systemDefault()).toInstant());
 	}
 	
 	/**
@@ -145,9 +149,11 @@ public class CycleDateUtil {
 	 * @return the current DEC cycle number
 	 */
 	public static int getCurrentDECCycleNumber () {
-		GregorianCalendar now = new GregorianCalendar (TimeZone.getDefault());
-		now.setTimeInMillis(System.currentTimeMillis());
-		return CycleDateUtil.getDECCycleNumber(now);
+		Instant now = Instant.now();
+		Instant epoch = LocalDate.of(2011, 10, 20).atTime(0, 1)
+			.atZone(ZoneId.systemDefault()).toInstant();
+		long days = ChronoUnit.DAYS.between(epoch, now);
+		return (int) Math.floor(days / 56d) + 1;
 	}
 	
 	public static int getNextDECCycleNumber () {
@@ -160,17 +166,13 @@ public class CycleDateUtil {
 		// Set the epoch to October 20, 2011 00:01:00
 		epoch.set(2011, 9, 20, 0, 1, 0);
 		
-		if (logger.isDebugEnabled()) {
-			logger.debug("Using startDate of "+startDate.toString());
-			logger.debug("Using epoch Date of "+epoch.toString());
-		}
+		logger.debug("Using startDate of {}", startDate);
+		logger.debug("Using epoch Date of {}", epoch);
 		
 		long diff = startDate.getTimeInMillis() - epoch.getTimeInMillis();
 		long days = TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS);
 		
-		if (logger.isDebugEnabled()) {
-			logger.debug("Number of days since epoch is "+days+". Returning cycle number "+Math.floor(days/56d));
-		}
+		logger.debug("Number of days since epoch is {}. Returning cycle number {}", days, Math.floor(days/56d));
 		
 		return (int) Math.floor(days / 56d)+1;
 	}

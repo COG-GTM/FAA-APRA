@@ -14,6 +14,9 @@
 package gov.faa.ait.apra.cycle;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -27,7 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
+import java.nio.charset.StandardCharsets;
 
 import gov.faa.ait.apra.bootstrap.Config;
 import gov.faa.ait.apra.cycle.ChartCycleData;
@@ -67,7 +70,7 @@ public class HelicopterChartCycleClient {
 				lastUpdate = new Date(System.currentTimeMillis());
 				cycle = getChartCycle();
 			}
-			logger.info("city  " + city);
+			logger.info("city  {}", city);
 
 		} catch (Exception e) {
 			logger.error(" HelicopterChartCycleClient ", e);
@@ -114,9 +117,8 @@ public class HelicopterChartCycleClient {
 		}
 		url = url.append(Config.getDenodoHost()
 				+ Config.getDenodoVFRCycleResource());
-		SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy");
-
-		String dateString = formatter.format(targetDate);
+		LocalDate targetLocalDate = targetDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+		String dateString = DateTimeFormatter.ofPattern("MM/dd/yyyy").format(targetLocalDate);
 
 		StringBuilder queryString = new StringBuilder();
 		queryString = queryString.append("?query_date=" + dateString);
@@ -126,8 +128,7 @@ public class HelicopterChartCycleClient {
 		queryString = queryString.append("&%24format=json");
 
 		url = url.append(queryString);
-		logger.info("Calling denodo for Helicopter chart cycle at "
-				+ url.toString());
+		logger.info("Calling denodo for Helicopter chart cycle at {}", url);
 
 		if (cycle != null && lastUpdate != null) {
 			return cycle;
@@ -145,13 +146,12 @@ public class HelicopterChartCycleClient {
 			unbound = webTarget.request(MediaType.APPLICATION_XML_TYPE).get(
 					String.class);
 			long duration = System.currentTimeMillis() - now;
-			logger.info("Call for Helicopter chart cycle took " + duration
-					+ " ms");
+			logger.info("Call for Helicopter chart cycle took {} ms", duration);
 			ObjectMapper mapper = new ObjectMapper();
 			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
 					false);
 			mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
-			cycle = mapper.readValue(unbound.getBytes(Charsets.UTF_16), ChartCycleData.class);
+			cycle = mapper.readValue(unbound.getBytes(StandardCharsets.UTF_16), ChartCycleData.class);
 		} catch (Exception ex) {
 			logger.error("getChartCycle", ex);
 			cycle = null;
@@ -179,8 +179,7 @@ public class HelicopterChartCycleClient {
 		boolean found;
 
 		ChartCycleElementsJson[] elements = cycle.getElements();
-		for (int i = 0; i < elements.length; i++) {
-			ChartCycleElementsJson element = elements[i];
+		for (ChartCycleElementsJson element : elements) {
 			found = element.getChart_cycle_period_code().equalsIgnoreCase(
 					periodCode);
 			if (found) {

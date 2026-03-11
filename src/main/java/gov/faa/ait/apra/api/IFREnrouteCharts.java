@@ -39,7 +39,9 @@ import static gov.faa.ait.apra.bootstrap.ErrorCodes.RESPONSE_200;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -62,6 +64,8 @@ import org.slf4j.LoggerFactory;
 public class IFREnrouteCharts extends BaseService {
 	private static final String MM_DD_YYYY2 = "MM-dd-yyyy";
 	private static final String MM_DD_YYYY = "MM/dd/yyyy";
+	private static final DateTimeFormatter DASH_DATE_FORMATTER = DateTimeFormatter.ofPattern(MM_DD_YYYY2);
+	private static final DateTimeFormatter SLASH_DATE_FORMATTER = DateTimeFormatter.ofPattern(MM_DD_YYYY);
 	private static final String PACIFIC = "PACIFIC";
 	private static final String CARIBBEAN = "CARIBBEAN";
 	private static final String AREA = "AREA";
@@ -128,8 +132,7 @@ public class IFREnrouteCharts extends BaseService {
 			@ApiParam(name = "geoname", value = "Geographic region for requested chart", allowableValues="US, Alaska, Pacific, Caribbean", required = true) @QueryParam("geoname") String geo,
 			@ApiParam(name = "seriesType", value = "The series type", allowableValues="low, high, area", required = true) @QueryParam("seriesType") String seriesType) {
 
-		logger.info("Received call to retrieve current IFR Enroute Charts product release for '"
-				+ ed + "', '" + fmt + "', '" + geo + "', '" + seriesType + "'");
+		logger.info("Received call to retrieve current IFR Enroute Charts product release for '{}', '{}', '{}', '{}'", ed, fmt, geo, seriesType);
 		ObjectFactory of = new ObjectFactory();
 
 		response = of.createProductSet();
@@ -166,8 +169,7 @@ public class IFREnrouteCharts extends BaseService {
 			@ApiParam(name = "edition", value = "Requested product edition", allowableValues = "current, next", defaultValue = "current", 
 				allowMultiple = false, required = false) @QueryParam("edition") String ed) {
 
-		logger.info("Received call to retrieve current IFR Enroute Charts edition release for '"
-				+ ed);
+		logger.info("Received call to retrieve current IFR Enroute Charts edition release for '{}'", ed);
 
 		ObjectFactory of = new ObjectFactory();
 
@@ -198,6 +200,9 @@ public class IFREnrouteCharts extends BaseService {
 		this.response.setStatus(status);
 
 
+		LocalDate effectiveDate = cycle.getChart_effective_date().toInstant()
+				.atZone(ZoneId.systemDefault()).toLocalDate();
+
 		// get set count by format, high-low, and geo area
 		int setCount = Config.getEnrouteSetCount(this.getGeoname(), this.getSeriesType(), this.getFormat());
 		
@@ -210,17 +215,14 @@ public class IFREnrouteCharts extends BaseService {
 
 			Edition.Product product = new Edition.Product();
 
-			SimpleDateFormat sdfUS = new SimpleDateFormat(MM_DD_YYYY);
-			ed.setEditionDate(sdfUS.format(cycle.getChart_effective_date()));
+			ed.setEditionDate(SLASH_DATE_FORMATTER.format(effectiveDate));
 			ed.setEditionNumber(Integer.valueOf(cycle.getChart_cycle_number()));
 			ed.setEditionName(EditionCodeList.valueOf(cycle
 					.getChart_cycle_period_code()));
 			ed.setGeoname(this.getGeoname());
 			ed.setFormat(gov.faa.ait.apra.jaxb.FormatCodeList.valueOf(this.getFormat()));
 			try {
-				SimpleDateFormat sdfUSDash = new SimpleDateFormat(MM_DD_YYYY2);
-				PathElement peDir = new PathElement(sdfUSDash.format(cycle
-						.getChart_effective_date()));
+				PathElement peDir = new PathElement(DASH_DATE_FORMATTER.format(effectiveDate));
 				vfrPath.addPathElement(peDir);
 				
 				String fileName = this.buildFileName(this.getGeoname(), this.getFormat(), this.seriesType, i);
@@ -231,8 +233,7 @@ public class IFREnrouteCharts extends BaseService {
 				downloadURL = new URL(Config.getAeronavHost()
 						+ vfrPath.getPathAsString());
 				if (!verifyURL(downloadURL)) {
-					logger.warn(downloadURL.toExternalForm()
-							+ " returned a non 200 response code when completing a HTTP HEAD check.");
+						logger.warn("{} returned a non 200 response code when completing a HTTP HEAD check.", downloadURL.toExternalForm());
 					downloadURL = null;
 				}
 				if(downloadURL != null) {
@@ -267,7 +268,7 @@ public class IFREnrouteCharts extends BaseService {
 		if(PDF.equalsIgnoreCase(format)) {
 			filename.append("d");
 		}
-		logger.debug("computing filename for "+ geoname + ", "+format+", "+ altLevel +", "+ setIndex);
+		logger.debug("computing filename for {}, {}, {}, {}", geoname, format, altLevel, setIndex);
 		if(US.equalsIgnoreCase(geoname) ) {
 			if( TIFF.equalsIgnoreCase(format) ) {
 				if (LOW.equalsIgnoreCase(altLevel)) {
@@ -342,8 +343,9 @@ public class IFREnrouteCharts extends BaseService {
 
 		Edition.Product product = new Edition.Product();
 
-		SimpleDateFormat formatter = new SimpleDateFormat(MM_DD_YYYY);
-		ed.setEditionDate(formatter.format(cycle.getChart_effective_date()));
+		LocalDate effectiveDate = cycle.getChart_effective_date().toInstant()
+				.atZone(ZoneId.systemDefault()).toLocalDate();
+		ed.setEditionDate(SLASH_DATE_FORMATTER.format(effectiveDate));
 		ed.setEditionNumber(Integer.valueOf(cycle.getChart_cycle_number()));
 		ed.setEditionName(EditionCodeList.valueOf(cycle
 				.getChart_cycle_period_code()));
@@ -381,8 +383,9 @@ public class IFREnrouteCharts extends BaseService {
 		Status status = of.createProductSetStatus();
 
 		ProductSet.Edition ed = of.createProductSetEdition();
-		SimpleDateFormat formatter = new SimpleDateFormat(MM_DD_YYYY);
-		ed.setEditionDate(formatter.format(cycle.getChart_effective_date()));
+		LocalDate effectiveDate = cycle.getChart_effective_date().toInstant()
+				.atZone(ZoneId.systemDefault()).toLocalDate();
+		ed.setEditionDate(SLASH_DATE_FORMATTER.format(effectiveDate));
 		ed.setEditionNumber(Integer.valueOf(cycle.getChart_cycle_number()));
 		ed.setEditionName(EditionCodeList.valueOf(cycle
 				.getChart_cycle_period_code()));
@@ -419,25 +422,19 @@ public class IFREnrouteCharts extends BaseService {
 		this.setSeriesType(seriesType);
 
 		if (!verifyEdition()) {
-			logger.error("Expected edition 'current or next' not received '"
-					+ ed
-					+ "' instead. Error response being generated and returned back.");
+			logger.error("Expected edition 'current or next' not received '{}' instead. Error response being generated and returned back.", ed);
 			response = getIllegalArgumentError();
 			return false;
 		}
 
 		if (!verifyFormat()) {
-			logger.error("Expected format of 'tiff' or 'pdf'. Received format '"
-					+ fmt
-					+ "' instead. Error response being generated and returned");
+			logger.error("Expected format of 'tiff' or 'pdf'. Received format '{}' instead. Error response being generated and returned", fmt);
 			response = getIllegalArgumentError();
 			return false;
 		}
 
 		if (!verifyGeo()) {
-			logger.error("Expected 'geo' value, but it is null or empty '"
-					+ geo
-					+ "' Geoname which is a city for which the chart is requested.");
+			logger.error("Expected 'geo' value, but it is null or empty '{}' Geoname which is a city for which the chart is requested.", geo);
 			response = this
 					.getErrorResponse(
 							404,
@@ -447,9 +444,7 @@ public class IFREnrouteCharts extends BaseService {
 		}
 
 		if (!verifySeriesType()) {
-			logger.error("Expected 'alt' value, but it is null or empty '"
-					+ seriesType
-					+ "' seriesType the chart is requested which is either 'Low', 'high', or 'area'.");
+			logger.error("Expected 'alt' value, but it is null or empty '{}' seriesType the chart is requested which is either 'Low', 'high', or 'area'.", seriesType);
 			response = this
 					.getErrorResponse(
 							404,
@@ -466,8 +461,7 @@ public class IFREnrouteCharts extends BaseService {
 		}
 
 		if (cycle == null) {
-			logger.warn("Unable to locate " + this.getEdition()
-					+ " edition chart for geoname " + this.getGeoname());
+			logger.warn("Unable to locate {} edition chart for geoname {}", this.getEdition(), this.getGeoname());
 			response = this
 					.getErrorResponse(
 							404,

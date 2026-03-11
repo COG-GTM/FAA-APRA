@@ -30,7 +30,7 @@ public class NASRTest {
 	public void testDefaults() {
 		NASRSubscription nasr = new NASRSubscription();
 		ProductSet ps = (ProductSet) nasr.getNASRSubscription(null).getEntity();
-		logger.info("NASR default test return url of "+ps.getEdition().get(0).getProduct().getUrl());
+		logger.info("NASR default test return url of {}", ps.getEdition().get(0).getProduct().getUrl());
 		int code = ps.getStatus().getCode().intValue();
 		assertEquals(200, code);
 	}
@@ -39,7 +39,7 @@ public class NASRTest {
 	public void testCurrentRelease() {
 		NASRSubscription nasr = new NASRSubscription();
 		ProductSet ps = (ProductSet) nasr.getNASRSubscription("current").getEntity();
-		logger.info("NASR default test return url of "+ps.getEdition().get(0).getProduct().getUrl());
+		logger.info("NASR default test return url of {}", ps.getEdition().get(0).getProduct().getUrl());
 		int code = ps.getStatus().getCode().intValue();
 		assertEquals(200, code);
 	}
@@ -48,7 +48,7 @@ public class NASRTest {
 	public void testNextRelease() {
 		NASRSubscription nasr = new NASRSubscription();
 		ProductSet ps = (ProductSet) nasr.getNASRSubscription("next").getEntity();
-		logger.info("NASR default test return url of "+ps.getEdition().get(0).getProduct().getUrl());
+		logger.info("NASR default test return url of {}", ps.getEdition().get(0).getProduct().getUrl());
 	}
 
 	@Test 

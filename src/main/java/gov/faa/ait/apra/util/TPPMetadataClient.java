@@ -14,11 +14,11 @@
 package gov.faa.ait.apra.util;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
+import java.time.LocalDate;
+import java.time.ZoneId;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -28,7 +28,6 @@ import javax.ws.rs.core.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -60,13 +59,13 @@ public class TPPMetadataClient {
 	public TPPMetadataClient (ChartCycleElementsJson cycle) {
 		this.url = new StringBuilder(BASE_URI);
 		
-		GregorianCalendar cal = (GregorianCalendar) GregorianCalendar.getInstance();
-		cal.setTime(cycle.getChart_effective_date());
-		String year = Integer.toString(cal.get(Calendar.YEAR));
+		LocalDate effectiveDate = cycle.getChart_effective_date().toInstant()
+			.atZone(ZoneId.systemDefault()).toLocalDate();
+		String year = Integer.toString(effectiveDate.getYear());
 		this.edition = year.substring(2, 4)+cycle.getChart_cycle_number();
 		this.url = this.url.append(EDITION_PARAM).append(edition);
 		
-		logger.info("URL for TPP metadata query constructed as is currently "+url);
+		logger.info("URL for TPP metadata query constructed as is currently {}", url);
 	}
 
 	/**
@@ -80,7 +79,7 @@ public class TPPMetadataClient {
 		if (changeFlag)
 			this.url = this.url.append(CHANGE_FLAG);
 		
-		logger.info("URL for TPP metadata query now using change flag "+url);
+		logger.info("URL for TPP metadata query now using change flag {}", url);
 	}
 
 	/**
@@ -100,24 +99,15 @@ public class TPPMetadataClient {
 	public TPPChartMetadata getChartMetadataByState (String stateName) {	
 		String state = "";
 		
-		if (stateName == null) 
-			state = "US";
-		else
-			state = stateName;
+		state = (stateName == null) ? "US" : stateName;
 		
 		if ("US".equalsIgnoreCase(state)) {
 			this.url.append(JSON_FORMAT);
 			return getTPPChartMetadataQuery();
 		}
 		else {
-			try {
-				String encodedState = URLEncoder.encode(state, "UTF-8");
-				this.url = this.url.append(STATE_PARAM).append(encodedState).append(JSON_FORMAT);
-			}
-			catch (UnsupportedEncodingException ex) {
-				logger.info("State encoding failed. Attempting to retrieve TPP metadata with unencoded state value of "+stateName, ex);
-				this.url = this.url.append(STATE_PARAM).append(state).append(JSON_FORMAT);
-			}
+			String encodedState = URLEncoder.encode(state, StandardCharsets.UTF_8.name());
+			this.url = this.url.append(STATE_PARAM).append(encodedState).append(JSON_FORMAT);
 		}
 		
 		return getTPPChartMetadataQuery ();	
@@ -143,7 +133,7 @@ public class TPPMetadataClient {
 		String unbound = "";
 		
 		try {
-			logger.info("Calling denodo for TPP metadata at "+url.toString());
+			logger.info("Calling denodo for TPP metadata at {}", url);
 			
 			Client client = ClientBuilder.newClient();	
 			WebTarget webTarget = client.target(this.url.toString());
@@ -151,14 +141,14 @@ public class TPPMetadataClient {
 			long now = System.currentTimeMillis();
 			unbound = webTarget.request(MediaType.APPLICATION_XML_TYPE).get(String.class);
 			long duration = System.currentTimeMillis() - now;
-			logger.info("Call for DTPP Metadata took "+duration+" ms");
+			logger.info("Call for DTPP Metadata took {} ms", duration);
 			ObjectMapper mapper = new ObjectMapper();
 			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 			mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
-			return mapper.readValue(unbound.getBytes("UTF-8"), TPPChartMetadata.class);
+			return mapper.readValue(unbound.getBytes(StandardCharsets.UTF_8), TPPChartMetadata.class);
 		}
 		catch (IOException eio) {
-			logger.warn("Error getting chart cycle information using url "+this.url.toString(), eio);
+			logger.warn("Error getting chart cycle information using url {}", this.url, eio);
 			return null;
 		}
 		

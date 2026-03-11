@@ -36,7 +36,7 @@ public class VFRFunctionalTest {
 	public void testProductReleseCurrent() {
 		vfr = new VFRCharts();
 		ProductSet ps = (ProductSet) vfr.getGrandCanyonRelease("current").getEntity();
-		logger.info("VFR Product Relese Test for 'current' return url of "+ps.getEdition().get(0).getProduct().getUrl());
+		logger.info("VFR Product Relese Test for 'current' return url of {}", ps.getEdition().get(0).getProduct().getUrl());
 		assertTrue(VerifyValues.verifyURL(ps.getEdition().get(0).getProduct().getUrl()));
 	}	
 
@@ -44,7 +44,7 @@ public class VFRFunctionalTest {
 	public void testProductEditionCurrent() {
 		vfr = new VFRCharts();
 		ProductSet ps = (ProductSet) vfr.getGrandCanyonEdition("current").getEntity();
-		logger.info("VFR Product Edition Test for 'current' return code "+ps.getStatus().getCode().intValue());
+		logger.info("VFR Product Edition Test for 'current' return code {}", ps.getStatus().getCode().intValue());
 		int code = ps.getStatus().getCode().intValue();
 		assertEquals(code, 200);
 	}	
@@ -53,7 +53,7 @@ public class VFRFunctionalTest {
 	public void testProductReleseNext() {
 		vfr = new VFRCharts();
 		ProductSet ps = (ProductSet) vfr.getGrandCanyonRelease("next").getEntity();
-		logger.info("VFR Product Edition Test for 'Next' return code "+ps.getStatus().getCode().intValue());
+		logger.info("VFR Product Edition Test for 'Next' return code {}", ps.getStatus().getCode().intValue());
 		int code = ps.getStatus().getCode().intValue();
 		assertEquals(code, 404);
 	}
@@ -63,7 +63,7 @@ public class VFRFunctionalTest {
 		vfr = new VFRCharts();
 		ProductSet ps = (ProductSet) vfr.getGrandCanyonEdition("next").getEntity();
 		int code = ps.getStatus().getCode().intValue();
-		logger.info("VFR Product Edition Test for 'next' return code "+ps.getStatus().getCode().intValue());
+		logger.info("VFR Product Edition Test for 'next' return code {}", ps.getStatus().getCode().intValue());
 		
 		switch (code) {
 			case 200: assertEquals(new Integer(200), new Integer(code));
@@ -85,7 +85,7 @@ public class VFRFunctionalTest {
 		vfr = new VFRCharts();
 		ProductSet ps = (ProductSet) vfr.getGrandCanyonEdition("TYPO").getEntity();
 		int code = ps.getStatus().getCode().intValue();
-		logger.info("VFR Product Edition Test for 'incorrect edition' return code "+ps.getStatus().getCode().intValue());
+		logger.info("VFR Product Edition Test for 'incorrect edition' return code {}", ps.getStatus().getCode().intValue());
 		assertEquals(code, 400);
 	}	
 
@@ -94,7 +94,7 @@ public class VFRFunctionalTest {
 		vfr = new VFRCharts();
 		ProductSet ps = (ProductSet) vfr.getGrandCanyonRelease("TYPO").getEntity();
 		int code = ps.getStatus().getCode().intValue();
-		logger.info("VFR Product Relese Test for 'incorrect Release' return code "+ps.getStatus().getCode().intValue());
+		logger.info("VFR Product Relese Test for 'incorrect Release' return code {}", ps.getStatus().getCode().intValue());
 		assertEquals(code, 400);
 	}	
 	
@@ -103,7 +103,7 @@ public class VFRFunctionalTest {
 		vfr = new VFRCharts();
 		ProductSet ps = (ProductSet) vfr.getGrandCanyonEdition("").getEntity();
 		int code = ps.getStatus().getCode().intValue();
-		logger.info("VFR Product Edition Test for 'incorrect Geo' return code "+ps.getStatus().getCode().intValue());
+		logger.info("VFR Product Edition Test for 'incorrect Geo' return code {}", ps.getStatus().getCode().intValue());
 		assertEquals(code, 200);
 	}	
 	
@@ -112,7 +112,7 @@ public class VFRFunctionalTest {
 		vfr = new VFRCharts();
 		ProductSet ps = (ProductSet) vfr.getGrandCanyonRelease("").getEntity();
 		int code = ps.getStatus().getCode().intValue();
-		logger.info("VFR Product Release Test for 'incorrect Geo' return code "+ps.getStatus().getCode().intValue());
+		logger.info("VFR Product Release Test for 'incorrect Geo' return code {}", ps.getStatus().getCode().intValue());
 		assertEquals(code, 200);
 	}
 
@@ -121,7 +121,7 @@ public class VFRFunctionalTest {
 		vfr = new VFRCharts();
 		ProductSet ps = (ProductSet) vfr.getGrandCanyonEdition("Typo").getEntity();
 		int code = ps.getStatus().getCode().intValue();
-		logger.info("VFR Product Edition Test for 'incorrect edition and geo' return code "+ps.getStatus().getCode().intValue());
+		logger.info("VFR Product Edition Test for 'incorrect edition and geo' return code {}", ps.getStatus().getCode().intValue());
 		assertEquals(code, 400);
 	}	
 	
@@ -130,7 +130,7 @@ public class VFRFunctionalTest {
 		vfr = new VFRCharts();
 		ProductSet ps = (ProductSet) vfr.getGrandCanyonRelease("Typo").getEntity();
 		int code = ps.getStatus().getCode().intValue();
-		logger.info("VFR Product Release Test for 'incorrect Release and geo' return code "+ps.getStatus().getCode().intValue());
+		logger.info("VFR Product Release Test for 'incorrect Release and geo' return code {}", ps.getStatus().getCode().intValue());
 		assertEquals(code, 400);
 	}
 	
@@ -139,7 +139,7 @@ public class VFRFunctionalTest {
 		vfr = new VFRCharts();
 		ProductSet ps = (ProductSet) vfr.getGrandCanyonRelease("").getEntity();
 		int code = ps.getStatus().getCode().intValue();
-		logger.info("VFR Product Edition Test for 'empty and empty' return code "+ps.getStatus().getCode().intValue());
+		logger.info("VFR Product Edition Test for 'empty and empty' return code {}", ps.getStatus().getCode().intValue());
 		assertEquals(code, 200);
 	}
 	

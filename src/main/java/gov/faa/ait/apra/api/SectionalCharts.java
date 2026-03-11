@@ -167,31 +167,24 @@ public class SectionalCharts extends AbstractTableDataService {
 			productUrl.append(".zip");
 		}
 		try {
-			logger.info("HEAD check flag is "+Config.getTPPCheckFlag());
+			logger.info("HEAD check flag is {}", Config.getTPPCheckFlag());
 			
 			if (Config.getSectioanlCheckFlag()) {
 				if (this.verifyURL(new URL(productUrl.toString()))) {
-					
-					if (logger.isInfoEnabled()) {
-						logger.info("HEAD check succeeeded for Sectional product URL: "+productUrl.toString());
-					}
+					logger.info("HEAD check succeeeded for Sectional product URL: {}", productUrl);
 					prod.setUrl(productUrl.toString());
 				}
 				else {
-					if (logger.isWarnEnabled()) {
-						logger.warn("HEAD check failed for Sectional product URL: "+productUrl.toString());
-					}
+					logger.warn("HEAD check failed for Sectional product URL: {}", productUrl);
 					prod.setUrl("");
 				}
 			}
 			else {
-				if (logger.isDebugEnabled()) {
-					logger.debug("HEAD check not executed for Sectional product URL: "+productUrl.toString());
-				}
+				logger.debug("HEAD check not executed for Sectional product URL: {}", productUrl);
 				prod.setUrl(productUrl.toString());
 			}
 		} catch (MalformedURLException emalformed) {
-    		logger.warn("The download URL "+productUrl.toString()+" is not valid", emalformed);
+    		logger.warn("The download URL {} is not valid", productUrl, emalformed);
 		}	
 		
 		logger.info("Ending call to create sectional product.");
@@ -262,7 +255,7 @@ public class SectionalCharts extends AbstractTableDataService {
 			return false;
 			*/
 		
-		return Arrays.asList(validCities).stream().filter(value -> value.equalsIgnoreCase(this.getCity())).count()==1;
+		return Arrays.stream(validCities).anyMatch(value -> value.equalsIgnoreCase(this.getCity()));
 	}
 
 }

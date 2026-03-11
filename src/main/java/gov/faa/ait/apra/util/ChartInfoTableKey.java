@@ -39,8 +39,7 @@ public class ChartInfoTableKey {
 	 */
 	public ChartInfoTableKey(String cityRegion, String periodCode, String chartType) {
 		
-		if (logger.isDebugEnabled())
-			logger.debug("Creating Key("+cityRegion+","+periodCode+","+chartType+")");
+		logger.debug("Creating Key({},{},{})", cityRegion, periodCode, chartType);
 		
 		this.cityRegion = cityRegion;
 		this.periodCode = periodCode;

@@ -20,9 +20,10 @@ import static gov.faa.ait.apra.bootstrap.ErrorCodes.RESPONSE_200;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.HashSet;
+import java.util.stream.IntStream;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -202,11 +203,11 @@ public class TerminalProcedureCharts extends BaseService {
     	String [] pathSet = getUSFilePaths(cycle);
     	ProductSet ps = initPositiveResponse();
     	
-    	for (int i = 0; i < pathSet.length; i++) {
+    	for (String path : pathSet) {
     		Edition ed = initEdition(cycle);
         	Product product = of.createProductSetEditionProduct();
         	product.setProductName(ProductCodeList.TPP);        	
-        	validateAndSetUrl(Config.getAeronavHost()+pathSet[i], ps, product);	
+        	validateAndSetUrl(Config.getAeronavHost()+path, ps, product);	
         	ed.setProduct(product);
         	ps.getEdition().add(ed);
         }
@@ -293,21 +294,22 @@ public class TerminalProcedureCharts extends BaseService {
     
     // This is where we get the full US product set file path that is divided into 5 separate ZIP files for download. The files are named A through E
     private String [] getUSFilePaths (ChartCycleElementsJson cycle) {
-    	String [] usPathSet = new String [5];
     	char [] filePart = { 'A', 'B', 'C', 'D', 'E' };
     	
-    	GregorianCalendar cal = new GregorianCalendar();
-    	cal.setTime(cycle.getChart_effective_date());
-    	String year = Integer.toString(cal.get(Calendar.YEAR));
+    	LocalDate effectiveDate = cycle.getChart_effective_date().toInstant()
+    		.atZone(ZoneId.systemDefault()).toLocalDate();
+    	String year = Integer.toString(effectiveDate.getYear());
     	   	
-    	for (int i = 0; i < filePart.length; i++) {	
-    		StringBuilder path = new StringBuilder(Config.getTPPUSPath());
-    		StringBuilder fileName = new StringBuilder(Config.getTPPUSPrefix()).append(filePart[i]).append("_").append(year).append(cycle.getChart_cycle_number()).append(".zip");
-    		path.append("/").append(fileName);
-    		usPathSet[i] = path.toString();
-    	}
-    	
-    	return usPathSet;
+    	return IntStream.range(0, filePart.length)
+    		.mapToObj(i -> {
+    			StringBuilder path = new StringBuilder(Config.getTPPUSPath());
+    			StringBuilder fileName = new StringBuilder(Config.getTPPUSPrefix())
+    				.append(filePart[i]).append("_").append(year)
+    				.append(cycle.getChart_cycle_number()).append(".zip");
+    			path.append("/").append(fileName);
+    			return path.toString();
+    		})
+    		.toArray(String[]::new);
     }
     
     private ChartCycleElementsJson initParameters () {
