@@ -13,7 +13,9 @@
  */
 package gov.faa.ait.apra.api;
 
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
 import org.slf4j.Logger;
@@ -176,7 +178,7 @@ public abstract class AbstractTableDataService extends BaseService {
 	 * to information metadata
 	 */
 	protected void buildChartResponse(ProductSet response, ChartInfoTable table, String chartType, OutputMode mode ) {
-		LOGGER.info("Building chart response using "+this.getCity());
+		LOGGER.info("Building chart response using {}", this.getCity());
 		if(this.getCity()==null || this.getCity().length()==0) {
 			// add all sectional with the edition
 			table.entrySet().stream().filter( entry -> entry.getKey().getChartType().equals(chartType)
@@ -184,14 +186,13 @@ public abstract class AbstractTableDataService extends BaseService {
 				.sorted((entry1, entry2) -> entry1.getKey().getCityRegion().compareTo(entry2.getKey().getCityRegion()))
 				.forEach(entry -> {
 					Edition ed = this.createEdition(entry.getValue());
-					if(mode.equals(OutputMode.PRODUCT)) {
+					if (mode == OutputMode.PRODUCT) {
 						ed.setProduct(this.createProduct(entry.getValue()));
 					}
 					response.getEdition().add(ed);
 			});
 		} else {
-			LOGGER.info("Building chart response using "+
-				this.getCity().toUpperCase(Locale.ENGLISH)+" "+this.getEdition().toUpperCase()+" "+chartType);
+			LOGGER.info("Building chart response using {} {} {}", this.getCity().toUpperCase(Locale.ENGLISH), this.getEdition().toUpperCase(), chartType);
 			
 			ChartInfoTableKey key = new ChartInfoTableKey(
 				this.getCity().toUpperCase(Locale.ENGLISH), this.getEdition().toUpperCase(), chartType);
@@ -199,7 +200,7 @@ public abstract class AbstractTableDataService extends BaseService {
 			if(table.containsKey(key)) {
 				ChartCycleElementsJson element = table.get(key);
 				Edition ed = this.createEdition(element);
-				if(mode.equals(OutputMode.PRODUCT)) {
+				if (mode == OutputMode.PRODUCT) {
 					ed.setProduct(this.createProduct(element));
 					if (EMPTY_STRING.equals(ed.getProduct().getUrl())) {
 						response.getStatus().setCode(NOT_FOUND);
@@ -209,8 +210,7 @@ public abstract class AbstractTableDataService extends BaseService {
 				response.getEdition().add(ed);
 			}
 			else {
-				LOGGER.warn("Table data key not found for key "
-					+key.toString()+". Returning a 404 not found for this request.");
+				LOGGER.warn("Table data key not found for key {}. Returning a 404 not found for this request.", key);
 				response.getStatus().setCode(NOT_FOUND);
 				response.getStatus().setMessage(ErrorCodes.ERROR_404);
 			}
@@ -227,13 +227,13 @@ public abstract class AbstractTableDataService extends BaseService {
 		gov.faa.ait.apra.jaxb.ObjectFactory of = 
 				new gov.faa.ait.apra.jaxb.ObjectFactory();
 		
-		SimpleDateFormat sdfUSA = new SimpleDateFormat("MM/dd/yyyy");
 		Edition ed = of.createProductSetEdition();		
 		ed.setGeoname(element.getChart_city_name());
 		
-		if(element.getChart_effective_date()!=null) {
-			ed.setEditionDate(sdfUSA.format(
-				element.getChart_effective_date()));
+		if (element.getChart_effective_date() != null) {
+			LocalDate effectiveDate = element.getChart_effective_date().toInstant()
+					.atZone(ZoneId.systemDefault()).toLocalDate();
+			ed.setEditionDate(DateTimeFormatter.ofPattern("MM/dd/yyyy").format(effectiveDate));
 		}
 		
 		ed.setEditionName(EditionCodeList.fromValue(

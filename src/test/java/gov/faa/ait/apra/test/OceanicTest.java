@@ -31,7 +31,7 @@ public class OceanicTest {
 	public void testDefaults() {
 		OceanicRouteCharts oceanic = new OceanicRouteCharts();
 		ProductSet ps = (ProductSet) oceanic.getOceanicRouteChart(null, null, null).getEntity();
-		logger.info("Oceanic default test return url of "+ps.getEdition().get(0).getProduct().getUrl());
+		logger.info("Oceanic default test return url of {}", ps.getEdition().get(0).getProduct().getUrl());
 		assertTrue(VerifyValues.verifyURL(ps.getEdition().get(0).getProduct().getUrl()));
 	}
 	
@@ -39,7 +39,7 @@ public class OceanicTest {
 	public void testNARCCurrentPDF() {
 		OceanicRouteCharts oceanic = new OceanicRouteCharts();
 		ProductSet ps = (ProductSet) oceanic.getOceanicRouteChart("current", null, "NARC").getEntity();
-		logger.info("Oceanic test NARC current PDF return url of "+ps.getEdition().get(0).getProduct().getUrl());
+		logger.info("Oceanic test NARC current PDF return url of {}", ps.getEdition().get(0).getProduct().getUrl());
 		assertTrue(VerifyValues.verifyURL(ps.getEdition().get(0).getProduct().getUrl()));
 	}	
 	
@@ -47,7 +47,7 @@ public class OceanicTest {
 	public void testPORCCurrentPDF() {
 		OceanicRouteCharts oceanic = new OceanicRouteCharts();
 		ProductSet ps = (ProductSet) oceanic.getOceanicRouteChart("current", null, "PORC").getEntity();
-		logger.info("Oceanic test PORC current PDF return url of "+ps.getEdition().get(0).getProduct().getUrl());
+		logger.info("Oceanic test PORC current PDF return url of {}", ps.getEdition().get(0).getProduct().getUrl());
 		assertTrue(VerifyValues.verifyURL(ps.getEdition().get(0).getProduct().getUrl()));
 	}	
 
@@ -55,7 +55,7 @@ public class OceanicTest {
 	public void testWATRSCurrentPDF() {
 		OceanicRouteCharts oceanic = new OceanicRouteCharts();
 		ProductSet ps = (ProductSet)  oceanic.getOceanicRouteChart("current", null, "WATRS").getEntity();
-		logger.info("Oceanic test WATRS current PDF return url of "+ps.getEdition().get(0).getProduct().getUrl());
+		logger.info("Oceanic test WATRS current PDF return url of {}", ps.getEdition().get(0).getProduct().getUrl());
 		assertTrue(VerifyValues.verifyURL(ps.getEdition().get(0).getProduct().getUrl()));
 	}
 
@@ -63,7 +63,7 @@ public class OceanicTest {
 	public void testNARCCurrentTIFF() {
 		OceanicRouteCharts oceanic = new OceanicRouteCharts();
 		ProductSet ps = (ProductSet)  oceanic.getOceanicRouteChart("current", "TIFF", "NARC").getEntity();
-		logger.info("Oceanic test NARC current TIFF return url of "+ps.getEdition().get(0).getProduct().getUrl());
+		logger.info("Oceanic test NARC current TIFF return url of {}", ps.getEdition().get(0).getProduct().getUrl());
 		assertTrue(VerifyValues.verifyURL(ps.getEdition().get(0).getProduct().getUrl()));
 	}	
 	
@@ -71,7 +71,7 @@ public class OceanicTest {
 	public void testPORCCurrentTIFF() {
 		OceanicRouteCharts oceanic = new OceanicRouteCharts();
 		ProductSet ps = (ProductSet)  oceanic.getOceanicRouteChart("current", "TIFF", "PORC").getEntity();
-		logger.info("Oceanic test PORC current TIFF return url of "+ps.getEdition().get(0).getProduct().getUrl());
+		logger.info("Oceanic test PORC current TIFF return url of {}", ps.getEdition().get(0).getProduct().getUrl());
 		assertTrue(VerifyValues.verifyURL(ps.getEdition().get(0).getProduct().getUrl()));
 	}	
 
@@ -79,7 +79,7 @@ public class OceanicTest {
 	public void testWATRSCurrentTIFF() {
 		OceanicRouteCharts oceanic = new OceanicRouteCharts();
 		ProductSet ps = (ProductSet)  oceanic.getOceanicRouteChart("current", "TIFF", "WATRS").getEntity();
-		logger.info("Oceanic test WATRS current TIFF return url of "+ps.getEdition().get(0).getProduct().getUrl());
+		logger.info("Oceanic test WATRS current TIFF return url of {}", ps.getEdition().get(0).getProduct().getUrl());
 		assertTrue(VerifyValues.verifyURL(ps.getEdition().get(0).getProduct().getUrl()));
 	}
 	
@@ -90,7 +90,7 @@ public class OceanicTest {
 	public void testNARCNextPDF() {
 		OceanicRouteCharts oceanic = new OceanicRouteCharts();
 		ProductSet ps = (ProductSet)  oceanic.getOceanicRouteChart("next", null, "NARC").getEntity();
-		logger.info("Oceanic test NARC next PDF return url of "+ps.getEdition().get(0).getProduct().getUrl());
+		logger.info("Oceanic test NARC next PDF return url of {}", ps.getEdition().get(0).getProduct().getUrl());
 		int code = ps.getStatus().getCode().intValue();
 		if (! (code == 200 || code == 404) )
 			fail();
@@ -100,7 +100,7 @@ public class OceanicTest {
 	public void testPORCNextPDF() {
 		OceanicRouteCharts oceanic = new OceanicRouteCharts();
 		ProductSet ps = (ProductSet)  oceanic.getOceanicRouteChart("next", null, "PORC").getEntity();
-		logger.info("Oceanic test PORC next PDF return url of "+ps.getEdition().get(0).getProduct().getUrl());
+		logger.info("Oceanic test PORC next PDF return url of {}", ps.getEdition().get(0).getProduct().getUrl());
 		int code = ps.getStatus().getCode().intValue();
 		if (! (code == 200 || code == 404) )
 			fail();
@@ -110,7 +110,7 @@ public class OceanicTest {
 	public void testWATRSNextPDF() {
 		OceanicRouteCharts oceanic = new OceanicRouteCharts();
 		ProductSet ps = (ProductSet)  oceanic.getOceanicRouteChart("next", null, "WATRS").getEntity();
-		logger.info("Oceanic test WATRS next PDF return url of "+ps.getEdition().get(0).getProduct().getUrl());
+		logger.info("Oceanic test WATRS next PDF return url of {}", ps.getEdition().get(0).getProduct().getUrl());
 		int code = ps.getStatus().getCode().intValue();
 		if (! (code == 200 || code == 404) )
 			fail();
@@ -120,7 +120,7 @@ public class OceanicTest {
 	public void testNARCNextTIFF() {
 		OceanicRouteCharts oceanic = new OceanicRouteCharts();
 		ProductSet ps = (ProductSet)  oceanic.getOceanicRouteChart("next", "TIFF", "NARC").getEntity();
-		logger.info("Oceanic test NARC next TIFF return url of "+ps.getEdition().get(0).getProduct().getUrl());
+		logger.info("Oceanic test NARC next TIFF return url of {}", ps.getEdition().get(0).getProduct().getUrl());
 		int code = ps.getStatus().getCode().intValue();
 		if (! (code == 200 || code == 404) )
 			fail();
@@ -130,7 +130,7 @@ public class OceanicTest {
 	public void testPORCNextTIFF() {
 		OceanicRouteCharts oceanic = new OceanicRouteCharts();
 		ProductSet ps = (ProductSet)  oceanic.getOceanicRouteChart("next", "TIFF", "PORC").getEntity();
-		logger.info("Oceanic test PORC next TIFF return url of "+ps.getEdition().get(0).getProduct().getUrl());
+		logger.info("Oceanic test PORC next TIFF return url of {}", ps.getEdition().get(0).getProduct().getUrl());
 		int code = ps.getStatus().getCode().intValue();
 		if (! (code == 200 || code == 404) )
 			fail();
@@ -140,7 +140,7 @@ public class OceanicTest {
 	public void testWATRSNextTIFF() {
 		OceanicRouteCharts oceanic = new OceanicRouteCharts();
 		ProductSet ps = (ProductSet)  oceanic.getOceanicRouteChart("next", "TIFF", "WATRS").getEntity();
-		logger.info("Oceanic test WATRS next TIFF return url of "+ps.getEdition().get(0).getProduct().getUrl());
+		logger.info("Oceanic test WATRS next TIFF return url of {}", ps.getEdition().get(0).getProduct().getUrl());
 		int code = ps.getStatus().getCode().intValue();
 		if (! (code == 200 || code == 404) )
 			fail();

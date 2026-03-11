@@ -94,25 +94,25 @@ public class GulfOfMexicoEnrouteCharts extends BaseService {
     	
     	ChartCycleElementsJson cycle;
     	
-    	logger.info("Received call to retrieve current Gulf of Mexico IFR enroute product release "+ed+" "+fmt+" "+geo);
+    	logger.info("Received call to retrieve current Gulf of Mexico IFR enroute product release {} {} {}", ed, fmt, geo);
     	setFormat(fmt != null ? fmt.toUpperCase(Locale.ENGLISH) : PDF);
     	setGeoname(geo != null ? geo : ALL);
 
        	cycle = initParameters(ed);
     	
        	if (!verifyFormat()) {
-       		logger.error("Expected a format of PDF or TIFF, received format "+getFormat()+" instead.");
+       		logger.error("Expected a format of PDF or TIFF, received format {} instead.", getFormat());
     		return Response.status(400).entity(getIllegalArgumentError()).build();    		
        	}
        	
         if (!verifyGeoname()) {
-    		logger.error("Expected geographic name of 'west' or 'central' and received '"+geoname+ERRMSG);
+    		logger.error("Expected geographic name of 'west' or 'central' and received '{}'{}", geoname, ERRMSG);
     		return Response.status(400).entity(getErrorResponse(400, 
     				"Geographic area name must be either west, central, or omitted. If both charts are required, leave the geoname null")).build();
         }
         
     	if (!verifyEdition()) {
-    		logger.error("Expected edition 'current' or 'next' and received '"+ed+ERRMSG);
+    		logger.error("Expected edition 'current' or 'next' and received '{}'{}", ed, ERRMSG);
     		return Response.status(400).entity(getIllegalArgumentError()).build();    		
     	}
 
@@ -148,13 +148,13 @@ public class GulfOfMexicoEnrouteCharts extends BaseService {
     	
     	cycle = initParameters(ed);
         if (!verifyGeoname()) {
-    		logger.error("Expected geographic name of 'west' or 'central' and received '"+geoname+ERRMSG);
+    		logger.error("Expected geographic name of 'west' or 'central' and received '{}'{}", geoname, ERRMSG);
     		return Response.status(400).entity(getErrorResponse(400, 
     				"Geographic area name must be either west, central, or omitted. If both charts are required, leave the geoname null")).build();
         }
         
     	if (!verifyEdition()) {
-    		logger.error("Expected edition 'next' and received '"+ed+ERRMSG);
+    		logger.error("Expected edition 'next' and received '{}'{}", ed, ERRMSG);
     		return Response.status(400).entity(getIllegalArgumentError()).build();    		
     	}
     		
@@ -184,7 +184,7 @@ public class GulfOfMexicoEnrouteCharts extends BaseService {
     			// Verify the web gulf URL first
     			westUrl = new URL (Config.getAeronavHost()+gomPathWest.toString());
     			if (! verifyURL(westUrl)) {
-    				logger.warn(westUrl.toExternalForm()+" returned a non 200 response code when completing a HTTP HEAD check.");
+    				logger.warn("{} returned a non 200 response code when completing a HTTP HEAD check.", westUrl.toExternalForm());
     				westUrl = null;
     			}
     		}
@@ -202,7 +202,7 @@ public class GulfOfMexicoEnrouteCharts extends BaseService {
     		try {
     			centralUrl = new URL (Config.getAeronavHost()+gomPathCentral.toString());
     			if (! verifyURL(centralUrl)) {
-    				logger.warn(centralUrl.toExternalForm()+" returned a non 200 response code when completing a HTTP HEAD check.");
+    				logger.warn("{} returned a non 200 response code when completing a HTTP HEAD check.", centralUrl.toExternalForm());
     				centralUrl = null;
     			}
     		}

@@ -15,10 +15,9 @@ package gov.faa.ait.apra.test;
 
 import static org.junit.Assert.*;
 
-import java.text.SimpleDateFormat;
-
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
@@ -53,14 +52,14 @@ public class IFREnrouteProductSetTest {
 		ChartCycleClient cycleClient = new ChartCycleClient();
 		ChartCycleElementsJson currentCycle = cycleClient.getCurrent56DayCycle();
 		Date chartDate = currentCycle.getChart_effective_date();
-		SimpleDateFormat sdfUsDash = new SimpleDateFormat("MM-dd-yyyy");
+		DateTimeFormatter sdfUsDash = DateTimeFormatter.ofPattern("MM-dd-yyyy").withZone(ZoneId.systemDefault());
 		ChartCycleData csj = cycleClient.getChartCycle(cal.getTime(), true);
 		Date chartDate2 = csj.getElements()[0].getChart_effective_date();
-		String chartDateString = sdfUsDash.format(chartDate2);
-		logger.info("Chart date 2 "+sdfUsDash.format(chartDate2));
-		logger.info("unformatted chart date " + chartDate.toString());
-		logger.info("Current date-time "+sdfUsDash.format(cal.getTime()));
-		logger.info("Using current chart date of " + chartDateString);
+		String chartDateString = sdfUsDash.format(chartDate2.toInstant());
+		logger.info("Chart date 2 {}", sdfUsDash.format(chartDate2.toInstant()));
+		logger.info("unformatted chart date {}", chartDate);
+		logger.info("Current date-time {}", sdfUsDash.format(cal.getTime().toInstant()));
+		logger.info("Using current chart date of {}", chartDateString);
 		// current, us, low, tiff, expected
 		// case 0
 		parameters.add(new TestParameter(cal.getTime(), "CURRENT", "US", "LOW", "TIFF",  
@@ -220,7 +219,7 @@ public class IFREnrouteProductSetTest {
 	
 	@Test
 	public void testIFREnrouteProduct() {
-		logger.info("Testing " + this.testParameterSet.getGeoname() + ", " + this.testParameterSet.getEdition() + ", " + this.testParameterSet.getFormat()+ ", "+ this.testParameterSet.getSeriesType());
+		logger.info("Testing {}, {}, {}, {}", this.testParameterSet.getGeoname(), this.testParameterSet.getEdition(), this.testParameterSet.getFormat(), this.testParameterSet.getSeriesType());
 		ChartCycleClient client = new ChartCycleClient();
 		client.getChartCycle(this.testParameterSet.getQueryDate(), true);
 		IFREnrouteCharts chartService = new IFREnrouteCharts(client);

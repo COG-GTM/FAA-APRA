@@ -51,7 +51,7 @@ public class CycleDateUtil {
 	 * @return the current cycle date
 	 */
 	public Date getCurrentCycle () {
-		logger.info("Cycle client in CycleDateUtil is instanceof "+cycleClient.getClass().getName());
+		logger.info("Cycle client in CycleDateUtil is instanceof {}", cycleClient.getClass().getName());
 		return cycleClient.getCurrentCycle().getChart_effective_date();
 	}
 	
@@ -166,17 +166,13 @@ public class CycleDateUtil {
 		// Set the epoch to October 20, 2011 00:01:00
 		epoch.set(2011, 9, 20, 0, 1, 0);
 		
-		if (logger.isDebugEnabled()) {
-			logger.debug("Using startDate of "+startDate.toString());
-			logger.debug("Using epoch Date of "+epoch.toString());
-		}
+		logger.debug("Using startDate of {}", startDate);
+		logger.debug("Using epoch Date of {}", epoch);
 		
 		long diff = startDate.getTimeInMillis() - epoch.getTimeInMillis();
 		long days = TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS);
 		
-		if (logger.isDebugEnabled()) {
-			logger.debug("Number of days since epoch is "+days+". Returning cycle number "+Math.floor(days/56d));
-		}
+		logger.debug("Number of days since epoch is {}. Returning cycle number {}", days, Math.floor(days/56d));
 		
 		return (int) Math.floor(days / 56d)+1;
 	}

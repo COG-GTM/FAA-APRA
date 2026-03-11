@@ -46,8 +46,7 @@ public class DownloadServiceApp extends Application {
 
 	@Override
 	public Set<Class<?>> getClasses() {
-		if (logger.isDebugEnabled())
-			logger.debug("Resource classes being retrieved from AirportStatus jersey application.");
+		logger.debug("Resource classes being retrieved from AirportStatus jersey application.");
 		Set<Class<?>> s = new HashSet <>();
 		s.add(gov.faa.ait.apra.api.CIFP.class);
 		s.add(gov.faa.ait.apra.api.ProductApiListener.class);

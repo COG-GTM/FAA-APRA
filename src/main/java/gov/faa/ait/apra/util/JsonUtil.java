@@ -21,7 +21,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
+import java.nio.charset.StandardCharsets;
 /**
  * Unmarshalling utility class for json data.   Target type must extend this.
  * This construct was due to Java Generics and type erasure.
@@ -48,6 +48,6 @@ public abstract class JsonUtil<T> {
 		mapper.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
 		mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
 		Class<?> targetClass = (Class<T>) GenericsUtil.getTypeArguments(JsonUtil.class, this.getClass()).get(0);
-		return (T) mapper.readValue(unbound.getBytes(Charsets.UTF_16), targetClass);
+		return (T) mapper.readValue(unbound.getBytes(StandardCharsets.UTF_16), targetClass);
 	}
 }

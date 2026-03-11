@@ -74,7 +74,7 @@ public class TableChartClient {
 		url.append(Config.getDenodoHost()).append(Config.getDenodoVFRCycleResource()).append("?query_date=")
 										.append(sdf.format(targetDate))
 										.append("&%24format=json");
-		logger.info("Calling denodo for sectional at "+url.toString());
+		logger.info("Calling denodo for sectional at {}", url);
 		TableChartClient.lastUpdate = new Date(System.currentTimeMillis());
 		
 		try {
@@ -85,10 +85,9 @@ public class TableChartClient {
 			long now = System.currentTimeMillis();
 			unbound = webTarget.request(MediaType.APPLICATION_JSON_TYPE).get(String.class);
 			long duration = System.currentTimeMillis() - now;
-			logger.info("Call for sectional chart cycle took "+duration+" ms");
+			logger.info("Call for sectional chart cycle took {} ms", duration);
 			
-			if (logger.isDebugEnabled())
-				logger.debug("JSON return value for sectional chart cycle = "+unbound);
+			logger.debug("JSON return value for sectional chart cycle = {}", unbound);
 			
 			ChartCycleJsonUnmarshaller converter = new ChartCycleJsonUnmarshaller();
 			logger.debug("Got the unmarshaller ChartCycleJsonUnmarshaller");
