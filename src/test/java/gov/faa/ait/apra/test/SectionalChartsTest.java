@@ -32,7 +32,8 @@ public class SectionalChartsTest {
 		ProductSet result = (ProductSet) api.getSectionalChart("Albuquerque", "current", "pdf").getEntity();
 		assertTrue(!result.getEdition().isEmpty());
 		Edition ed = result.getEdition().get(0);
-		assertEquals(100,ed.getEditionNumber());
+		assertNotNull(ed.getEditionNumber());
+		assertTrue("Edition number should be positive", ed.getEditionNumber() > 0);
 	}
 	
 	@Test

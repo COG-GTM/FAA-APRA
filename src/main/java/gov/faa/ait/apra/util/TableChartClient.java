@@ -18,7 +18,6 @@ import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
@@ -78,7 +77,7 @@ public class TableChartClient {
 		TableChartClient.lastUpdate = new Date(System.currentTimeMillis());
 		
 		try {
-			Client client = ClientBuilder.newClient();	
+			Client client = JaxrsClientHolder.getClient();
 			
 			WebTarget webTarget = client.target(url.toString());
 			

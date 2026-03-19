@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import gov.faa.ait.apra.bootstrap.Config;
 import gov.faa.ait.apra.bootstrap.ErrorCodes;
+import gov.faa.ait.apra.util.URLCache;
 import gov.faa.ait.apra.jaxb.EditionCodeList;
 import gov.faa.ait.apra.jaxb.FormatCodeList;
 import gov.faa.ait.apra.jaxb.ObjectFactory;
@@ -190,8 +191,13 @@ public abstract class BaseService {
 		boolean ok = false; 
 		HttpURLConnection connection = null;
 		Proxy proxy = null;
+		String externalForm = url.toExternalForm();
 		
-		logger.info("Verifying URL "+url.toExternalForm()+" before responding to call");
+		if (URLCache.getInstance().contains(externalForm)) {
+			return true;
+		}
+		
+		logger.info("Verifying URL "+externalForm+" before responding to call");
 		try {
 			if (Config.getFAADMZProxyHost() != null && (! EMPTY_STRING.equals(Config.getFAADMZProxyHost()))) {
 				int port = Integer.parseInt(Config.getFAADMZProxyPort());
@@ -212,6 +218,9 @@ public abstract class BaseService {
 				connection = (HttpURLConnection) url.openConnection();
 			}
 			
+			connection.setConnectTimeout(5000);
+			connection.setReadTimeout(5000);
+			
 			/*
 			 * This is the actual HTTP HEAD check to determine if the URL is valid
 			 * and exists on the FAA web server
@@ -219,11 +228,12 @@ public abstract class BaseService {
 			connection.setRequestMethod("HEAD");
 			int responseCode = connection.getResponseCode();
 			if (responseCode == 200 || responseCode == 302) {
-				logger.info("URL HEAD check returned response code "+responseCode+" for url "+url.toExternalForm());
+				logger.info("URL HEAD check returned response code "+responseCode+" for url "+externalForm);
 			    ok = true;
+			    URLCache.addUrl(externalForm);
 			}
 			else {
-				logger.warn("URL HEAD check returned response code "+responseCode+" for url "+url.toExternalForm());
+				logger.warn("URL HEAD check returned response code "+responseCode+" for url "+externalForm);
 			}
 		}
 		catch (IllegalArgumentException eillegal) {

@@ -26,9 +26,9 @@ import gov.faa.ait.apra.api.IFREnrouteCharts;
 import gov.faa.ait.apra.bootstrap.ErrorCodes;
 import gov.faa.ait.apra.jaxb.ProductSet;
 
-public class IFREnrouteFunctionalTest {
+public class IFREnrouteIT {
 	private static final Logger logger = LoggerFactory
-			.getLogger(IFREnrouteFunctionalTest.class);
+			.getLogger(IFREnrouteIT.class);
 	private static final String CURRENT = "CURRENT";
 	private static final String TIFF = "TIFF";
 	private static final String CARIBBEAN = "CARIBBEAN";
@@ -40,7 +40,7 @@ public class IFREnrouteFunctionalTest {
 	private String geos[] = {"us", "alaska" };
 	private String alts[] = {"low", "high" };
 
-	public IFREnrouteFunctionalTest () {
+	public IFREnrouteIT () {
 		enroute = new IFREnrouteCharts();
 	}
 	

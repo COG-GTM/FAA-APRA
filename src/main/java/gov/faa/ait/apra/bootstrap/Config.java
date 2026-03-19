@@ -16,6 +16,7 @@ package gov.faa.ait.apra.bootstrap;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Locale;
 import java.util.Properties;
 
@@ -118,6 +119,21 @@ public class Config {
 		}
 		catch (IOException eio) {
 			logger.warn("Using default configuration properties. File /opt/apra/conf/config.properties not found.", eio);
+		}
+	}
+	
+	/**
+	 * Load configuration from an arbitrary InputStream. Useful for testing
+	 * where /opt/apra/conf/config.properties is not available.
+	 * @param is the input stream containing properties
+	 */
+	public static void loadConfig (InputStream is) {
+		try {
+			cfg.load(is);
+			logger.info("Configuration properties loaded from InputStream");
+		}
+		catch (IOException eio) {
+			logger.warn("Failed to load configuration from InputStream.", eio);
 		}
 	}
 	

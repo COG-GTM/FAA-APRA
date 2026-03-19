@@ -24,11 +24,11 @@ import org.slf4j.LoggerFactory;
 import gov.faa.ait.apra.api.VFRCharts;
 import gov.faa.ait.apra.jaxb.ProductSet;
 
-public class VFRFunctionalTest {
-	private static final  Logger logger = LoggerFactory.getLogger(VFRFunctionalTest.class);
+public class VFRIT {
+	private static final  Logger logger = LoggerFactory.getLogger(VFRIT.class);
 	private VFRCharts vfr;
 	
-	public VFRFunctionalTest () {
+	public VFRIT () {
 		vfr = new VFRCharts();
 	}
 	

@@ -67,6 +67,7 @@ import io.swagger.annotations.ApiResponses;
 public class TerminalProcedureCharts extends BaseService {
 	private static final Logger logger = LoggerFactory.getLogger(TerminalProcedureCharts.class);
 	private static final String US = "US";
+	private final ChartCycleClient cycleClient = new ChartCycleClient();
 
     @GET
     @Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.TEXT_XML})
@@ -314,10 +315,10 @@ public class TerminalProcedureCharts extends BaseService {
     	ChartCycleElementsJson cycle;
     	   	
     	if (CURRENT.equalsIgnoreCase(this.getEdition())) {   		
-    		cycle = new ChartCycleClient().getCurrent28DayCycle();
+    		cycle = cycleClient.getCurrent28DayCycle();
     	}
     	else {
-    		cycle = new ChartCycleClient().getNext28DayCycle();
+    		cycle = cycleClient.getNext28DayCycle();
     	}    	
     	
     	return cycle;

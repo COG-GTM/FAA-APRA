@@ -20,20 +20,18 @@ import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 
 import gov.faa.ait.apra.bootstrap.Config;
+import gov.faa.ait.apra.util.JaxrsClientHolder;
+import gov.faa.ait.apra.util.JsonMapperHolder;
 
 /**
  * Here we are getting the 28 or 56 day chart cycle from the APRA support services. 
@@ -108,16 +106,14 @@ public class ChartCycleClient extends DenodoClient {
 		setLastUpdate();
 		
 		try {
-			Client client = ClientBuilder.newClient();	
+			Client client = JaxrsClientHolder.getClient();
 			
 			WebTarget webTarget = client.target(url);
 			long now = System.currentTimeMillis();
 			unbound = webTarget.request(MediaType.APPLICATION_XML_TYPE).get(String.class);
 			long duration = System.currentTimeMillis() - now;
 			logger.info("Call for 28/56 day chart cycle took "+duration+" ms");
-			ObjectMapper mapper = new ObjectMapper();
-			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-			mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
+			ObjectMapper mapper = JsonMapperHolder.MAPPER;
 			setChartCycle (mapper.readValue(unbound.getBytes(Charsets.UTF_16), ChartCycleData.class));
 		}
 		catch (IOException ex) {

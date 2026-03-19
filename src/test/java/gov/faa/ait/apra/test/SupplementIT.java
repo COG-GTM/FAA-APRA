@@ -50,15 +50,15 @@ import org.slf4j.LoggerFactory;
  * @author FAA
  *
  */
-public class SupplementFunctionalTest {
+public class SupplementIT {
 	private static final Logger logger = LoggerFactory
-			.getLogger(SupplementFunctionalTest.class);
+			.getLogger(SupplementIT.class);
 	private SupplementCharts supplement;
 	private String cities[] = { "NORTHWEST", "SOUTHWEST", "NORTH CENTRAL",
 			"SOUTH CENTRAL", "EAST CENTRAL", "SOUTHEAST", "NORTHEAST",
 			"PACIFIC", "ALASKA" };
 
-	public SupplementFunctionalTest () {
+	public SupplementIT () {
 		supplement = new SupplementCharts();
 	}
 	
