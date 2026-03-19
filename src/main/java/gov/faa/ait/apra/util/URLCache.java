@@ -49,7 +49,7 @@ public class URLCache {
 		return cache.contains(url);
 	}
 	
-	public static void addUrl (String url) {
+	public static synchronized void addUrl (String url) {
 		if (URLCache.cache ==  null) {
 			URLCache.cache = Collections.newSetFromMap(new ConcurrentHashMap<>());
 		}

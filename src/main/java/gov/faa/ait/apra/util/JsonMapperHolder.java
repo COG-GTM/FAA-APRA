@@ -13,19 +13,22 @@
  */
 package gov.faa.ait.apra.util;
 
+import java.text.SimpleDateFormat;
+
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.util.StdDateFormat;
 
 /**
  * Thread-safe singleton holder for a pre-configured {@link ObjectMapper}.
- * Uses {@link StdDateFormat} which is thread-safe, unlike {@code SimpleDateFormat}.
+ * Note: {@link SimpleDateFormat} is not thread-safe but Jackson's
+ * {@link ObjectMapper} clones the date format internally for each
+ * serialization/deserialization call, so this is safe.
  */
 public final class JsonMapperHolder {
 
 	public static final ObjectMapper MAPPER = new ObjectMapper()
 		.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-		.setDateFormat(new StdDateFormat());
+		.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
 
 	private JsonMapperHolder() { }
 }
