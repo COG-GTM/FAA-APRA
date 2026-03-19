@@ -16,7 +16,7 @@
         </init-param>
         <init-param>
         	<param-name>com.sun.jersey.config.feature.Debug</param-name>
-        	<param-value>true</param-value>
+        	<param-value>false</param-value>
         </init-param>
         <!-- 
         <init-param>
@@ -72,4 +72,26 @@
 			<transport-guarantee>NONE</transport-guarantee>
 		</user-data-constraint>
 	</security-constraint>
+
+	<security-constraint>
+		<display-name>Management Endpoints</display-name>
+		<web-resource-collection>
+			<web-resource-name>ManagementControl</web-resource-name>
+			<url-pattern>/management/stop</url-pattern>
+			<url-pattern>/management/start</url-pattern>
+			<url-pattern>/management/flush</url-pattern>
+			<url-pattern>/management/config</url-pattern>
+			<http-method>GET</http-method>
+		</web-resource-collection>
+		<auth-constraint>
+			<role-name>apra-admin</role-name>
+		</auth-constraint>
+		<user-data-constraint>
+			<transport-guarantee>CONFIDENTIAL</transport-guarantee>
+		</user-data-constraint>
+	</security-constraint>
+
+	<security-role>
+		<role-name>apra-admin</role-name>
+	</security-role>
 </web-app>

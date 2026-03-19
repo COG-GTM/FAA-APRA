@@ -24,11 +24,11 @@ import org.slf4j.LoggerFactory;
 import gov.faa.ait.apra.api.WallPlanningCharts;
 import gov.faa.ait.apra.jaxb.ProductSet;
 
-public class WallPanFunctionalTest {
-	private static final  Logger logger = LoggerFactory.getLogger(WallPanFunctionalTest.class);
+public class WallPlanningIT {
+	private static final  Logger logger = LoggerFactory.getLogger(WallPlanningIT.class);
 	private WallPlanningCharts wallPlan;
 
-	public WallPanFunctionalTest () {
+	public WallPlanningIT () {
 		wallPlan = new WallPlanningCharts();
 	}
 	

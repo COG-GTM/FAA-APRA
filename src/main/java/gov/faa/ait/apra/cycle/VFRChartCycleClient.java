@@ -15,21 +15,22 @@ package gov.faa.ait.apra.cycle;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 
 import gov.faa.ait.apra.bootstrap.Config;
+import gov.faa.ait.apra.util.JaxrsClientHolder;
+import gov.faa.ait.apra.util.JsonMapperHolder;
 
 /**
  * 
@@ -38,10 +39,10 @@ import gov.faa.ait.apra.bootstrap.Config;
 
 
 public class VFRChartCycleClient {
-	private static ChartCycleData cycle;
-	private static Date lastUpdate;
+	private static final ConcurrentHashMap<String, ChartCycleData> cycleCache = new ConcurrentHashMap<>();
+	private static final ConcurrentHashMap<String, Date> lastUpdateCache = new ConcurrentHashMap<>();
 	private Date today;
-	private static String chartCycleTypeCode;
+	private final String chartCycleTypeCode;
 	private static final Logger logger = LoggerFactory
 			.getLogger(VFRChartCycleClient.class);
 
@@ -51,10 +52,7 @@ public class VFRChartCycleClient {
 	 */
 	public VFRChartCycleClient(String typeCode) {
 		this.today = new Date(System.currentTimeMillis());
-
-		// specify the type code desired. For the Gulf of Mexico charts, this is
-		// the type code of IFR_PGOM
-		setChartCycleTypeCode (typeCode);
+		this.chartCycleTypeCode = typeCode;
 
 		if (this.isUpdateRequired()) {
 			setLastUpdate();
@@ -68,9 +66,7 @@ public class VFRChartCycleClient {
 
 	public VFRChartCycleClient() {
 		this.today = new Date(System.currentTimeMillis());
-		// default to the Grand Canyon type code to avoid breaking Grand Canyon
-		// service
-		setChartCycleTypeCode("Grand_Canyon");
+		this.chartCycleTypeCode = "Grand_Canyon";
 
 		if (this.isUpdateRequired()) {
 			setLastUpdate();
@@ -141,14 +137,16 @@ public class VFRChartCycleClient {
 		StringBuilder queryString = new StringBuilder();
 		queryString = queryString.append("?query_date=" + dateString);
 		queryString = queryString.append("&chart_cycle_type_code="
-				+ VFRChartCycleClient.chartCycleTypeCode);
+				+ this.chartCycleTypeCode);
 		queryString = queryString.append("&%24format=json");
 
 		url = url.append(queryString);
 
-		if (cycle != null && lastUpdate != null) {
+		ChartCycleData cachedCycle = getCachedCycle();
+		Date cachedUpdate = getCachedLastUpdate();
+		if (cachedCycle != null && cachedUpdate != null) {
 			logger.info("VFR Chart cycle already available. Returning cycle without round trip to denodo server.");
-			return cycle;
+			return cachedCycle;
 		} 
 		else {
 			logger.info("VFR Chart cycle or lastUpdate is null. Continuing with cycle retrieval.");			
@@ -160,7 +158,7 @@ public class VFRChartCycleClient {
 
 		try {
 			logger.info("Calling denodo for vfr chart cycle at " + url.toString());
-			Client client = ClientBuilder.newClient();
+			Client client = JaxrsClientHolder.getClient();
 
 			WebTarget webTarget = client.target(url.toString());
 			long now = System.currentTimeMillis();
@@ -169,10 +167,7 @@ public class VFRChartCycleClient {
 			long duration = System.currentTimeMillis() - now;
 			logger.info("Call for chart cycle from denodo server took " + duration
 					+ " ms");
-			ObjectMapper mapper = new ObjectMapper();
-			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
-					false);
-			mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
+			ObjectMapper mapper = JsonMapperHolder.MAPPER;
 			cycleData = mapper.readValue(unbound.getBytes(Charsets.UTF_16), ChartCycleData.class);
 			setChartCycle(cycleData);
 		} catch (Exception ex) {
@@ -180,16 +175,18 @@ public class VFRChartCycleClient {
 			setChartCycle(null);
 			return null;
 		}
-		return cycle;
+		return getCachedCycle();
 	}
 
 	private boolean isUpdateRequired() {
-		if (lastUpdate == null || cycle == null) {
+		Date lastUpd = getCachedLastUpdate();
+		ChartCycleData cachedCycle = getCachedCycle();
+		if (lastUpd == null || cachedCycle == null) {
 			logger.info("VFR chart cycle update required. Either last update or cycle was null and needs to be refreshed.");
 			return true;
 		}
 
-		long diff = today.getTime() - lastUpdate.getTime();
+		long diff = today.getTime() - lastUpd.getTime();
 		
 		if (logger.isDebugEnabled())
 			logger.debug("Age of VFR cycle is "+diff+" ms");
@@ -216,7 +213,7 @@ public class VFRChartCycleClient {
 
 		boolean found;
 
-		ChartCycleElementsJson[] elements = cycle.getElements();
+		ChartCycleElementsJson[] elements = getCachedCycle().getElements();
 		for (int i = 0; i < elements.length; i++) {
 			ChartCycleElementsJson element = elements[i];
 			found = element.getChart_cycle_period_code().equalsIgnoreCase(
@@ -239,24 +236,23 @@ public class VFRChartCycleClient {
 		return getCycle("CURRENT");
 	}
 	
-	private void setChartCycleTypeCode (String typeCode) {
-		if (logger.isDebugEnabled()) {
-			logger.debug("chartCycleTypeCode == "+VFRChartCycleClient.chartCycleTypeCode+" and typeCode == "+typeCode);
-		}
-		
-		if (VFRChartCycleClient.chartCycleTypeCode != null && VFRChartCycleClient.chartCycleTypeCode.equalsIgnoreCase(typeCode)) {
-			return;
-		}
-
-		VFRChartCycleClient.chartCycleTypeCode = typeCode;
-		forceUpdate();
-	}
-
 	public void setLastUpdate () {
-		VFRChartCycleClient.lastUpdate = new Date (System.currentTimeMillis());
+		lastUpdateCache.put(this.chartCycleTypeCode, new Date(System.currentTimeMillis()));
 	}
 	
 	public void setChartCycle(ChartCycleData data) {
-		VFRChartCycleClient.cycle = data;
+		if (data != null) {
+			cycleCache.put(this.chartCycleTypeCode, data);
+		} else {
+			cycleCache.remove(this.chartCycleTypeCode);
+		}
+	}
+
+	private ChartCycleData getCachedCycle() {
+		return cycleCache.get(this.chartCycleTypeCode);
+	}
+
+	private Date getCachedLastUpdate() {
+		return lastUpdateCache.get(this.chartCycleTypeCode);
 	}
 }

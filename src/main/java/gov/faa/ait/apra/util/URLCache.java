@@ -13,10 +13,12 @@
  */
 package gov.faa.ait.apra.util;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.HashSet;
+import java.util.Set;
 import java.util.TimeZone;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +26,7 @@ import org.slf4j.LoggerFactory;
 public class URLCache {
 	private static final Logger logger = LoggerFactory.getLogger(URLCache.class);
 	private static URLCache instance;
-	private static HashSet <String> cache;
+	private static Set<String> cache;
 	private static Date lastFlush;
 	
 	private URLCache () {
@@ -47,9 +49,9 @@ public class URLCache {
 		return cache.contains(url);
 	}
 	
-	public static void addUrl (String url) {
+	public static synchronized void addUrl (String url) {
 		if (URLCache.cache ==  null) {
-			URLCache.cache = new HashSet<>();
+			URLCache.cache = Collections.newSetFromMap(new ConcurrentHashMap<>());
 		}
 		
 		cache.add(url);
@@ -58,7 +60,7 @@ public class URLCache {
 	public static synchronized void flush () {		
 		logger.info("URL cache is being flushed.");
 		if (URLCache.cache == null) {
-			URLCache.cache = new HashSet<>();
+			URLCache.cache = Collections.newSetFromMap(new ConcurrentHashMap<>());
 		}
 		
 		cache.clear();

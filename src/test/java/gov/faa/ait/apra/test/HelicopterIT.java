@@ -23,9 +23,9 @@ import org.slf4j.LoggerFactory;
 import gov.faa.ait.apra.api.HelicopterCharts;
 import gov.faa.ait.apra.jaxb.ProductSet;
 
-public class HelicopterFunctionalTest {
+public class HelicopterIT {
 	private static final Logger logger = LoggerFactory
-			.getLogger(HelicopterFunctionalTest.class);
+			.getLogger(HelicopterIT.class);
 	private HelicopterCharts helicopter;
 	private String cities[] = {
 
@@ -33,7 +33,7 @@ public class HelicopterFunctionalTest {
 			"Los Angeles Heli", "New York Heli", "Baltimore Washington Heli",
 			"Dallas Ft. Worth Heli", "U.S Gulf Coast" };
 
-	public HelicopterFunctionalTest () { 
+	public HelicopterIT () { 
 		helicopter = new HelicopterCharts();
 	}
 	
