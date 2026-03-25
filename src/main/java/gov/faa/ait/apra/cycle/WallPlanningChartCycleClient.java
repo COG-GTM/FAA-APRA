@@ -18,18 +18,17 @@ import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 
 import gov.faa.ait.apra.bootstrap.Config;
+import gov.faa.ait.apra.util.HttpClientProvider;
 
 /**
  * 
@@ -46,9 +45,11 @@ public class WallPlanningChartCycleClient extends DenodoClient {
 	public WallPlanningChartCycleClient() {
 		this.today = new Date(System.currentTimeMillis());
 
-		if (this.isUpdateRequired()) {
-			setLastUpdate();
-			setChartCycle(getChartCycle(true));
+		synchronized (WallPlanningChartCycleClient.class) {
+			if (this.isUpdateRequired()) {
+				setLastUpdate();
+				setChartCycle(getChartCycle(true));
+			}
 		}
 	}
 
@@ -68,7 +69,7 @@ public class WallPlanningChartCycleClient extends DenodoClient {
 	 * @return
 	 */
 	
-	public ChartCycleData getChartCycle(Date targetDate, boolean forceUpdate) {
+	public synchronized ChartCycleData getChartCycle(Date targetDate, boolean forceUpdate) {
 		ChartCycleData cycleData;
 		StringBuilder url = new StringBuilder();
 
@@ -99,7 +100,7 @@ public class WallPlanningChartCycleClient extends DenodoClient {
 		String unbound = "";
 
 		try {
-			Client client = ClientBuilder.newClient();
+			Client client = HttpClientProvider.getClient();
 
 			WebTarget webTarget = client.target(url.toString());
 			long now = System.currentTimeMillis();
@@ -108,10 +109,7 @@ public class WallPlanningChartCycleClient extends DenodoClient {
 			long duration = System.currentTimeMillis() - now;
 			logger.info("Call for WallPlan chart cycle took " + duration
 					+ " ms");
-			ObjectMapper mapper = new ObjectMapper();
-			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
-					false);
-			mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
+			ObjectMapper mapper = HttpClientProvider.getObjectMapper();
 			cycleData = mapper.readValue(unbound.getBytes(Charsets.UTF_16), ChartCycleData.class);
 			setChartCycle(cycleData);
 		} catch (Exception ex) {
@@ -124,7 +122,7 @@ public class WallPlanningChartCycleClient extends DenodoClient {
 	
 	
 	@Override
-	public boolean isUpdateRequired() {
+	public synchronized boolean isUpdateRequired() {
 		if (getLastUpdate() == null || WallPlanningChartCycleClient.wpCycle == null) {
 			return true;
 		}

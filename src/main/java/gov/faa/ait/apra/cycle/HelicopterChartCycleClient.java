@@ -18,20 +18,17 @@ import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 
 import gov.faa.ait.apra.bootstrap.Config;
-import gov.faa.ait.apra.cycle.ChartCycleData;
-import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
+import gov.faa.ait.apra.util.HttpClientProvider;
 
 /**
  * 
@@ -138,7 +135,7 @@ public class HelicopterChartCycleClient {
 		String unbound = "";
 
 		try {
-			Client client = ClientBuilder.newClient();
+			Client client = HttpClientProvider.getClient();
 
 			WebTarget webTarget = client.target(url.toString());
 			long now = System.currentTimeMillis();
@@ -147,10 +144,7 @@ public class HelicopterChartCycleClient {
 			long duration = System.currentTimeMillis() - now;
 			logger.info("Call for Helicopter chart cycle took " + duration
 					+ " ms");
-			ObjectMapper mapper = new ObjectMapper();
-			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
-					false);
-			mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
+			ObjectMapper mapper = HttpClientProvider.getObjectMapper();
 			cycle = mapper.readValue(unbound.getBytes(Charsets.UTF_16), ChartCycleData.class);
 		} catch (Exception ex) {
 			logger.error("getChartCycle", ex);

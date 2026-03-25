@@ -16,20 +16,16 @@ package gov.faa.ait.apra.util;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import gov.faa.ait.apra.bootstrap.Config;
@@ -145,16 +141,14 @@ public class TPPMetadataClient {
 		try {
 			logger.info("Calling denodo for TPP metadata at "+url.toString());
 			
-			Client client = ClientBuilder.newClient();	
+			Client client = HttpClientProvider.getClient();
 			WebTarget webTarget = client.target(this.url.toString());
 
 			long now = System.currentTimeMillis();
 			unbound = webTarget.request(MediaType.APPLICATION_XML_TYPE).get(String.class);
 			long duration = System.currentTimeMillis() - now;
 			logger.info("Call for DTPP Metadata took "+duration+" ms");
-			ObjectMapper mapper = new ObjectMapper();
-			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-			mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
+			ObjectMapper mapper = HttpClientProvider.getObjectMapper();
 			return mapper.readValue(unbound.getBytes("UTF-8"), TPPChartMetadata.class);
 		}
 		catch (IOException eio) {

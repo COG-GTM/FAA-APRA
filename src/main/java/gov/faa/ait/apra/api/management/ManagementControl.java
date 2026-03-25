@@ -14,6 +14,7 @@
 package gov.faa.ait.apra.api.management;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
@@ -49,7 +50,7 @@ public class ManagementControl {
 	}
 	
 	@Path("/stop") 
-    @GET
+    @POST
     @Produces(MediaType.TEXT_PLAIN)
 	
 	/**
@@ -62,7 +63,7 @@ public class ManagementControl {
 	}
 	
 	@Path("/start") 
-    @GET
+    @POST
     @Produces(MediaType.TEXT_PLAIN)
 	/**
 	 * Start or restart the service. This will cause the healthcheck to return "ServerOK" indicating to the load balancer that the service is online
@@ -74,7 +75,7 @@ public class ManagementControl {
 	}
 	
 	@Path("/flush")
-    @GET
+    @POST
     @Produces(MediaType.TEXT_PLAIN)
 	/**
 	 * This method flushes the cache for the ChartCycleClient, TAC cycle, VFR cycle, and Wall Planning cycle
@@ -96,7 +97,7 @@ public class ManagementControl {
 	}
 
 	@Path("/config")
-    @GET
+    @POST
     @Produces(MediaType.TEXT_PLAIN)
 	/**
 	 * This causes the application to reload its configuration from disk. This reloads the properties file without an app restart

@@ -18,18 +18,17 @@ import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 
 import gov.faa.ait.apra.bootstrap.Config;
+import gov.faa.ait.apra.util.HttpClientProvider;
 
 /**
  * 
@@ -56,9 +55,11 @@ public class VFRChartCycleClient {
 		// the type code of IFR_PGOM
 		setChartCycleTypeCode (typeCode);
 
-		if (this.isUpdateRequired()) {
-			setLastUpdate();
-			setChartCycle(getChartCycle());
+		synchronized (VFRChartCycleClient.class) {
+			if (this.isUpdateRequired()) {
+				setLastUpdate();
+				setChartCycle(getChartCycle());
+			}
 		}
 	}
 
@@ -72,9 +73,11 @@ public class VFRChartCycleClient {
 		// service
 		setChartCycleTypeCode("Grand_Canyon");
 
-		if (this.isUpdateRequired()) {
-			setLastUpdate();
-			setChartCycle(getChartCycle());
+		synchronized (VFRChartCycleClient.class) {
+			if (this.isUpdateRequired()) {
+				setLastUpdate();
+				setChartCycle(getChartCycle());
+			}
 		}
 	}
 
@@ -121,7 +124,7 @@ public class VFRChartCycleClient {
 	 * @param forceUpdate
 	 * @return
 	 */
-	public ChartCycleData getChartCycle(Date targetDate, boolean forceUpdate) {
+	public synchronized ChartCycleData getChartCycle(Date targetDate, boolean forceUpdate) {
 		ChartCycleData cycleData;
 		StringBuilder url = new StringBuilder();
 
@@ -160,7 +163,7 @@ public class VFRChartCycleClient {
 
 		try {
 			logger.info("Calling denodo for vfr chart cycle at " + url.toString());
-			Client client = ClientBuilder.newClient();
+			Client client = HttpClientProvider.getClient();
 
 			WebTarget webTarget = client.target(url.toString());
 			long now = System.currentTimeMillis();
@@ -169,10 +172,7 @@ public class VFRChartCycleClient {
 			long duration = System.currentTimeMillis() - now;
 			logger.info("Call for chart cycle from denodo server took " + duration
 					+ " ms");
-			ObjectMapper mapper = new ObjectMapper();
-			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
-					false);
-			mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
+			ObjectMapper mapper = HttpClientProvider.getObjectMapper();
 			cycleData = mapper.readValue(unbound.getBytes(Charsets.UTF_16), ChartCycleData.class);
 			setChartCycle(cycleData);
 		} catch (Exception ex) {
@@ -183,7 +183,7 @@ public class VFRChartCycleClient {
 		return cycle;
 	}
 
-	private boolean isUpdateRequired() {
+	private synchronized boolean isUpdateRequired() {
 		if (lastUpdate == null || cycle == null) {
 			logger.info("VFR chart cycle update required. Either last update or cycle was null and needs to be refreshed.");
 			return true;
