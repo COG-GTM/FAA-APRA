@@ -15,32 +15,38 @@ package gov.faa.ait.apra.util;
 
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.HashSet;
+import java.util.Set;
 import java.util.TimeZone;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class URLCache {
 	private static final Logger logger = LoggerFactory.getLogger(URLCache.class);
-	private static URLCache instance;
-	private static HashSet <String> cache;
-	private static Date lastFlush;
+	private static volatile URLCache instance;
+	private static final Set<String> cache = ConcurrentHashMap.newKeySet();
+	private static volatile Date lastFlush;
 	
 	private URLCache () {
 		flush();
 	}
 	
-	public static synchronized URLCache getInstance() {
-		if(instance == null) {
-			instance = new URLCache();
-			URLCache.lastFlush = new Date (System.currentTimeMillis());
+	public static URLCache getInstance() {
+		URLCache local = instance;
+		if (local == null) {
+			synchronized (URLCache.class) {
+				local = instance;
+				if (local == null) {
+					instance = local = new URLCache();
+				}
+			}
 		}
 		
-		if (instance.isUpdateRequired()) {
-			URLCache.flush();
+		if (local.isUpdateRequired()) {
+			flush();
 		}
-		return instance;
+		return local;
 	}
 	
 	public boolean contains (String url) {
@@ -48,19 +54,11 @@ public class URLCache {
 	}
 	
 	public static void addUrl (String url) {
-		if (URLCache.cache ==  null) {
-			URLCache.cache = new HashSet<>();
-		}
-		
 		cache.add(url);
 	}
 	
 	public static synchronized void flush () {		
 		logger.info("URL cache is being flushed.");
-		if (URLCache.cache == null) {
-			URLCache.cache = new HashSet<>();
-		}
-		
 		cache.clear();
 		URLCache.lastFlush = new Date (System.currentTimeMillis());
 	}

@@ -19,18 +19,17 @@ import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 
 import gov.faa.ait.apra.bootstrap.Config;
+import gov.faa.ait.apra.util.HttpClientProvider;
 
 /**
  * The TAC chart cycle client to obtain the TAC chart cycle from the denodo data source
@@ -50,9 +49,11 @@ public class TACCycleClient extends DenodoClient {
 	public TACCycleClient () {
 		this.today = new Date (System.currentTimeMillis());
 		
-		if (this.isUpdateRequired()) {
-			setLastUpdate();
-			getChartCycle(today, false);
+		synchronized (TACCycleClient.class) {
+			if (this.isUpdateRequired()) {
+				setLastUpdate();
+				getChartCycle(today, false);
+			}
 		}
 	}	
 	
@@ -63,7 +64,7 @@ public class TACCycleClient extends DenodoClient {
 	 * @return 
 	 */
 	@Override
-	public ChartCycleData getChartCycle(Date targetDate, boolean forceUpdate) {
+	public synchronized ChartCycleData getChartCycle(Date targetDate, boolean forceUpdate) {
 		String url;
 		
 		if (forceUpdate) {
@@ -86,16 +87,14 @@ public class TACCycleClient extends DenodoClient {
 		
 		try {
 			logger.info("Updating the TAC chart cycle cache.");
-			Client client = ClientBuilder.newClient();	
+			Client client = HttpClientProvider.getClient();
 			
 			WebTarget webTarget = client.target(url);
 			long now = System.currentTimeMillis();
 			unbound = webTarget.request(MediaType.APPLICATION_XML_TYPE).get(String.class);
 			long duration = System.currentTimeMillis() - now;
 			logger.info("Call for TAC chart cycle took "+duration+" ms");
-			ObjectMapper mapper = new ObjectMapper();
-			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-			mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
+			ObjectMapper mapper = HttpClientProvider.getObjectMapper();
 			
 			ChartCycleData cycleObjects = mapper.readValue(unbound.getBytes(Charsets.UTF_16), ChartCycleData.class);
 			TACCycleClient.initCycles();
@@ -122,7 +121,7 @@ public class TACCycleClient extends DenodoClient {
 	}
 
 	@Override
-	public boolean isUpdateRequired () {
+	public synchronized boolean isUpdateRequired () {
 		if (TACCycleClient.tacLastUpdate == null || TACCycleClient.current == null || TACCycleClient.next == null) {
 			if (logger.isDebugEnabled()) 
 				logger.debug("TAC chart cycles need to be updated. One of current, next, or lastupdate is null. Returning true to update the cycle cache.");

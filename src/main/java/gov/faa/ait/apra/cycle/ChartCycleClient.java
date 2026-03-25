@@ -20,20 +20,17 @@ import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 
 import gov.faa.ait.apra.bootstrap.Config;
+import gov.faa.ait.apra.util.HttpClientProvider;
 
 /**
  * Here we are getting the 28 or 56 day chart cycle from the APRA support services. 
@@ -58,9 +55,11 @@ public class ChartCycleClient extends DenodoClient {
 	public ChartCycleClient () {
 		this.today = new Date (System.currentTimeMillis());
 		
-		if (this.isUpdateRequired()) {
-			setLastUpdate();
-			setChartCycle(getChartCycle(true));
+		synchronized (ChartCycleClient.class) {
+			if (this.isUpdateRequired()) {
+				setLastUpdate();
+				setChartCycle(getChartCycle(true));
+			}
 		}
 	}
 	
@@ -88,7 +87,7 @@ public class ChartCycleClient extends DenodoClient {
 	 * @return the chart cycle in Json format bound to the Json POJO 
 	 */
 	@Override
-	public ChartCycleData getChartCycle (Date targetDate, boolean forceUpdate) {
+	public synchronized ChartCycleData getChartCycle (Date targetDate, boolean forceUpdate) {
 		String url;
 		String unbound = "";
 		
@@ -108,16 +107,14 @@ public class ChartCycleClient extends DenodoClient {
 		setLastUpdate();
 		
 		try {
-			Client client = ClientBuilder.newClient();	
+			Client client = HttpClientProvider.getClient();
 			
 			WebTarget webTarget = client.target(url);
 			long now = System.currentTimeMillis();
 			unbound = webTarget.request(MediaType.APPLICATION_XML_TYPE).get(String.class);
 			long duration = System.currentTimeMillis() - now;
 			logger.info("Call for 28/56 day chart cycle took "+duration+" ms");
-			ObjectMapper mapper = new ObjectMapper();
-			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-			mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
+			ObjectMapper mapper = HttpClientProvider.getObjectMapper();
 			setChartCycle (mapper.readValue(unbound.getBytes(Charsets.UTF_16), ChartCycleData.class));
 		}
 		catch (IOException ex) {
@@ -153,7 +150,7 @@ public class ChartCycleClient extends DenodoClient {
 	}
 	
 	@Override
-	public boolean isUpdateRequired () {
+	public synchronized boolean isUpdateRequired () {
 		if (ChartCycleClient.lastCycleUpdate == null || ChartCycleClient.chartCycle == null) {
 			return true;
 		}

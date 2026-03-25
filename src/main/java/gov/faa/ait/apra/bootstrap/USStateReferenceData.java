@@ -13,21 +13,20 @@
  */
 package gov.faa.ait.apra.bootstrap;
 
-import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Locale;
 
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
+
+import gov.faa.ait.apra.util.HttpClientProvider;
 
 import gov.faa.ait.apra.json.USState;
 import gov.faa.ait.apra.json.USStateReference;
@@ -58,16 +57,14 @@ public class USStateReferenceData {
 			StringBuilder url = new StringBuilder();
 			url = url.append(Config.getDenodoHost()).append(Config.getDenodoViewPath()).append("/state_reference?%24format=json");
 			
-			Client client = ClientBuilder.newClient();	
+			Client client = HttpClientProvider.getClient();
 			
 			WebTarget webTarget = client.target(url.toString());
 			long now = System.currentTimeMillis();
 			String unbound = webTarget.request(MediaType.APPLICATION_XML_TYPE).get(String.class);
 			long duration = System.currentTimeMillis() - now;
 			logger.info("Call US state reference data took "+duration+" ms");
-			ObjectMapper mapper = new ObjectMapper();
-			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-			mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
+			ObjectMapper mapper = HttpClientProvider.getObjectMapper();
 			USStateReference data = mapper.readValue(unbound.getBytes(Charsets.UTF_16), USStateReference.class);
 			USState [] states = data.getElements();
 			
