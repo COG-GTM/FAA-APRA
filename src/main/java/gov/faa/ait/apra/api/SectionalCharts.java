@@ -20,7 +20,7 @@ import static gov.faa.ait.apra.bootstrap.ErrorCodes.RESPONSE_200;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Arrays;
+import java.util.Set;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -199,70 +199,24 @@ public class SectionalCharts extends AbstractTableDataService {
 		return prod;
 	}
 
+	private static final Set<String> VALID_CITIES = Set.of(
+			"Albuquerque", "Anchorage", "Atlanta", "Bethel", "Billings",
+			"Brownsville", "Cape Lisburne", "Charlotte", "Cheyenne", "Chicago",
+			"Cincinnati", "Cold Bay", "Dallas-Ft Worth", "Dawson", "Denver",
+			"Detroit", "Dutch Harbor", "El Paso", "Fairbanks", "Great Falls",
+			"Green Bay", "Halifax", "Hawaiian Islands", "Houston",
+			"Jacksonville", "Juneau", "Kansas City", "Ketchikan",
+			"Klamath Falls", "Kodiak", "Lake Huron", "Las Vegas",
+			"Los Angeles", "McGrath", "Memphis", "Miami", "Montreal",
+			"New Orleans", "New York", "Nome", "Omaha", "Phoenix",
+			"Point Barrow", "Salt Lake City", "San Antonio", "San Francisco",
+			"Seattle", "Seward", "St Louis", "Twin Cities", "Washington",
+			"Western Aleutian Islands", "Whitehorse", "Wichita");
+
 	@Override
 	protected boolean verifyGeoName() {
-		String[] validCities = {"Albuquerque",
-				"Anchorage",
-				"Atlanta",
-				"Bethel",
-				"Billings",
-				"Brownsville",
-				"Cape Lisburne",
-				"Charlotte",
-				"Cheyenne",
-				"Chicago",
-				"Cincinnati",
-				"Cold Bay",
-				"Dallas-Ft Worth",
-				"Dawson",
-				"Denver",
-				"Detroit",
-				"Dutch Harbor",
-				"El Paso",
-				"Fairbanks",
-				"Great Falls",
-				"Green Bay",
-				"Halifax",
-				"Hawaiian Islands",
-				"Houston",
-				"Jacksonville",
-				"Juneau",
-				"Kansas City",
-				"Ketchikan",
-				"Klamath Falls",
-				"Kodiak",
-				"Lake Huron",
-				"Las Vegas",
-				"Los Angeles",
-				"McGrath",
-				"Memphis",
-				"Miami",
-				"Montreal",
-				"New Orleans",
-				"New York",
-				"Nome",
-				"Omaha",
-				"Phoenix",
-				"Point Barrow",
-				"Salt Lake City",
-				"San Antonio",
-				"San Francisco",
-				"Seattle",
-				"Seward",
-				"St Louis",
-				"Twin Cities",
-				"Washington",
-				"Western Aleutian Islands",
-				"Whitehorse",
-				"Wichita"};
-		/*
-		if(Arrays.asList(validCities).stream().filter(value -> value.equalsIgnoreCase(this.getCity())).count()==1)
-			return true;
-		else 
-			return false;
-			*/
-		
-		return Arrays.asList(validCities).stream().filter(value -> value.equalsIgnoreCase(this.getCity())).count()==1;
+		if (this.getCity() == null) return false;
+		return VALID_CITIES.stream().anyMatch(c -> c.equalsIgnoreCase(this.getCity()));
 	}
 
 }
