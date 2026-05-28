@@ -22,7 +22,7 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 
-import org.apache.commons.lang3.text.WordUtils;
+import org.apache.commons.text.WordUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

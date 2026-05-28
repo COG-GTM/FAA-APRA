@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
+import java.nio.charset.StandardCharsets;
 
 import gov.faa.ait.apra.bootstrap.Config;
 
@@ -97,7 +97,7 @@ public class TACCycleClient extends DenodoClient {
 			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 			mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
 			
-			ChartCycleData cycleObjects = mapper.readValue(unbound.getBytes(Charsets.UTF_16), ChartCycleData.class);
+			ChartCycleData cycleObjects = mapper.readValue(unbound.getBytes(StandardCharsets.UTF_16), ChartCycleData.class);
 			TACCycleClient.initCycles();
 
 			ChartCycleElementsJson [] cycles = cycleObjects.getElements();

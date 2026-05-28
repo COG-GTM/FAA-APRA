@@ -17,7 +17,7 @@ import static org.junit.Assert.fail;
 
 import java.util.Locale;
 
-import org.apache.commons.lang3.text.WordUtils;
+import org.apache.commons.text.WordUtils;
 import org.junit.Test;
 
 
