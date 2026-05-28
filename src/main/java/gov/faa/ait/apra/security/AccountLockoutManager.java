@@ -63,6 +63,10 @@ public final class AccountLockoutManager {
             if (existing == null) {
                 existing = new LockoutRecord();
             }
+            if (existing.lockedUntil > 0 && System.currentTimeMillis() >= existing.lockedUntil) {
+                existing.failedAttempts = 0;
+                existing.lockedUntil = 0;
+            }
             existing.failedAttempts++;
             existing.lastAttempt = System.currentTimeMillis();
             if (existing.failedAttempts >= MAX_FAILED_ATTEMPTS) {
