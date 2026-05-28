@@ -68,7 +68,16 @@ public abstract class AbstractTableDataService extends BaseService {
 			return;
 		}
 		String sanitized = InputSanitizer.sanitize(city);
-		this.city = sanitized != null ? sanitized : "";
+		if (sanitized != null) {
+			this.city = sanitized;
+		} else if (!city.trim().isEmpty()) {
+			// Non-empty input that sanitized to nothing (all dangerous chars).
+			// Preserve non-empty state so downstream lookup returns 404
+			// instead of falling into the "return all charts" code path.
+			this.city = "INVALID_INPUT";
+		} else {
+			this.city = "";
+		}
 	}	
 	
 	/**

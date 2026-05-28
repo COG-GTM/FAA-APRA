@@ -169,7 +169,13 @@ public abstract class BaseService {
     		return;
     	}
     	String sanitized = InputSanitizer.sanitize(geo);
-    	this.geoname = sanitized != null ? sanitized.toUpperCase(Locale.ENGLISH) : EMPTY_STRING;
+    	if (sanitized != null) {
+    		this.geoname = sanitized.toUpperCase(Locale.ENGLISH);
+    	} else if (!geo.trim().isEmpty()) {
+    		this.geoname = "INVALID_INPUT";
+    	} else {
+    		this.geoname = EMPTY_STRING;
+    	}
     }
     
     /**
