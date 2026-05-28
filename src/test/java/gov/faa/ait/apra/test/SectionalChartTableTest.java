@@ -39,9 +39,9 @@ public class SectionalChartTableTest {
 		ChartCycleData jsonData = buildJson();
 		ChartInfoTable table = new ChartInfoTable(jsonData);
 		ChartInfoTableKey key = new ChartInfoTableKey("ALBUQUERQUE", "CURRENT", "SECTIONAL");
-		assertTrue("Expected Key not found", table.containsKey(key));
+		assertTrue(table.containsKey(key), "Expected Key not found");
 		ChartInfoTableKey key2 = new ChartInfoTableKey("ALBUQUERQUE", "NEXT", "SECTIONAL");
-		assertTrue("Expected Key not found", table.containsKey(key2));
+		assertTrue(table.containsKey(key2), "Expected Key not found");
 		
 	}
 	

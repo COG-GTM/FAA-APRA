@@ -97,10 +97,10 @@ public class ProductSet {
 
     public static class Status {
 
-        protected int code;
+        protected Integer code;
         protected String message;
 
-        public int getCode() { return code; }
+        public Integer getCode() { return code; }
         public void setCode(int value) { this.code = value; }
 
         public String getMessage() { return message; }
