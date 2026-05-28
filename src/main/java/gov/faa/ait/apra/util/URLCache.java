@@ -67,7 +67,7 @@ public class URLCache {
 	}
 
 	private static Set<String> newLruSet() {
-		return Collections.newSetFromMap(new LinkedHashMap<String, Boolean>(64, 0.75f, true) {
+		return Collections.newSetFromMap(new LinkedHashMap<String, Boolean>(64, 0.75f, false) {
 			@Override
 			protected boolean removeEldestEntry(java.util.Map.Entry<String, Boolean> eldest) {
 				return size() > MAX_CACHE_SIZE;
