@@ -169,7 +169,7 @@ public class SectionalCharts extends AbstractTableDataService {
 		try {
 			logger.info("HEAD check flag is "+Config.getTPPCheckFlag());
 			
-			if (Config.getSectioanlCheckFlag()) {
+			if (Config.getSectionalCheckFlag()) {
 				if (this.verifyURL(new URL(productUrl.toString()))) {
 					
 					if (logger.isInfoEnabled()) {

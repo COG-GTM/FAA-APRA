@@ -139,14 +139,12 @@ public abstract class BaseService {
      * @param edition
      */
     public void setEdition (String edition) {
-    	this.edition = edition != null ? edition.toUpperCase(Locale.ENGLISH) : EMPTY_STRING;
-    	
-    	if (CHANGE_SET.equalsIgnoreCase(edition)){
+    	if (CHANGE_SET.equalsIgnoreCase(edition)) {
     		this.edition = CURRENT;
     		this.setChangeFlag(true);
+    	} else {
+    		this.edition = edition != null ? edition.toUpperCase(Locale.ENGLISH) : EMPTY_STRING;
     	}
-    	
-    	this.edition = edition == CHANGE_SET ? CURRENT : getEdition();
     	
     	if (! verifyEdition() ) {
     		this.edition = EMPTY_STRING;
