@@ -46,7 +46,7 @@ public class URLCache {
 		return instance;
 	}
 	
-	public boolean contains (String url) {
+	public synchronized boolean contains (String url) {
 		return cache.contains(url);
 	}
 	

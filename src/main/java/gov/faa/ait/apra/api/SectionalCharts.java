@@ -215,7 +215,8 @@ public class SectionalCharts extends AbstractTableDataService {
 
 	@Override
 	protected boolean verifyGeoName() {
-		return VALID_CITIES.contains(this.getCity());
+		if (this.getCity() == null) return false;
+		return VALID_CITIES.stream().anyMatch(c -> c.equalsIgnoreCase(this.getCity()));
 	}
 
 }
