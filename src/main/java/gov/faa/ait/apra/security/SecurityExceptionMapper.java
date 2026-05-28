@@ -8,6 +8,7 @@
  */
 package gov.faa.ait.apra.security;
 
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
@@ -18,8 +19,10 @@ import org.slf4j.LoggerFactory;
 
 /**
  * STIG V-220641: Generic error handling to prevent information leakage.
- * Maps all unhandled exceptions to generic error responses while logging
+ * Maps unhandled exceptions to generic error responses while logging
  * full details internally per NIST SI-11.
+ * Preserves JAX-RS WebApplicationException responses (404, 400, etc.)
+ * so that standard HTTP status codes are not swallowed as 500s.
  */
 @Provider
 public class SecurityExceptionMapper implements ExceptionMapper<Throwable> {
@@ -28,6 +31,17 @@ public class SecurityExceptionMapper implements ExceptionMapper<Throwable> {
 
     @Override
     public Response toResponse(Throwable exception) {
+        // Preserve JAX-RS WebApplicationException responses (404, 400, etc.)
+        if (exception instanceof WebApplicationException) {
+            Response original = ((WebApplicationException) exception).getResponse();
+            int status = original.getStatus();
+            logger.warn("JAX-RS exception: {} (status {})", exception.getMessage(), status);
+            return Response.status(status)
+                .entity("{\"status\":{\"code\":" + status + ",\"message\":\"" + original.getStatusInfo().getReasonPhrase() + "\"}}")
+                .type(MediaType.APPLICATION_JSON)
+                .build();
+        }
+
         logger.error("Unhandled exception in request processing", exception);
 
         AuditLogger.log("unhandled_exception", "unknown", "unknown", "unknown",

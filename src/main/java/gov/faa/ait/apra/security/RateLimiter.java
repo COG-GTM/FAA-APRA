@@ -19,24 +19,12 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public final class RateLimiter {
 
-    private static final int DEFAULT_MAX_REQUESTS = 100;
-    private static final long DEFAULT_WINDOW_MS = 60_000L; // 1 minute
-    private static final int CLEANUP_PROBABILITY = 100; // run cleanup every ~100 requests
+    private static final int MAX_REQUESTS = 100;
+    private static final long WINDOW_MS = 60_000L; // 1 minute
+    private static final int CLEANUP_INTERVAL = 100; // run cleanup every ~100 requests
     private static final AtomicLong requestCount = new AtomicLong(0);
 
     private static final ConcurrentHashMap<String, RequestCounter> counters = new ConcurrentHashMap<>();
-
-    private final int maxRequests;
-    private final long windowMs;
-
-    public RateLimiter() {
-        this(DEFAULT_MAX_REQUESTS, DEFAULT_WINDOW_MS);
-    }
-
-    public RateLimiter(int maxRequests, long windowMs) {
-        this.maxRequests = maxRequests;
-        this.windowMs = windowMs;
-    }
 
     /**
      * Check if a request from the given IP should be allowed.
@@ -46,18 +34,17 @@ public final class RateLimiter {
     public boolean allowRequest(String clientIp) {
         long now = System.currentTimeMillis();
 
-        // Probabilistic cleanup: run every ~CLEANUP_PROBABILITY requests
-        if (requestCount.incrementAndGet() % CLEANUP_PROBABILITY == 0) {
+        if (requestCount.incrementAndGet() % CLEANUP_INTERVAL == 0) {
             cleanup(now);
         }
 
         RequestCounter counter = counters.compute(clientIp, (key, existing) -> {
-            if (existing == null || now - existing.windowStart.get() > windowMs) {
+            if (existing == null || now - existing.windowStart.get() > WINDOW_MS) {
                 return new RequestCounter(now);
             }
             return existing;
         });
-        return counter.count.incrementAndGet() <= maxRequests;
+        return counter.count.incrementAndGet() <= MAX_REQUESTS;
     }
 
     /**
@@ -65,7 +52,7 @@ public final class RateLimiter {
      */
     static void cleanup(long now) {
         counters.entrySet().removeIf(entry ->
-            now - entry.getValue().windowStart.get() > DEFAULT_WINDOW_MS * 2);
+            now - entry.getValue().windowStart.get() > WINDOW_MS * 2);
     }
 
     private static class RequestCounter {
