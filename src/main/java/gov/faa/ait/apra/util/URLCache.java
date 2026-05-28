@@ -13,9 +13,11 @@
  */
 package gov.faa.ait.apra.util;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Set;
 import java.util.TimeZone;
 
 import org.slf4j.Logger;
@@ -24,7 +26,8 @@ import org.slf4j.LoggerFactory;
 public class URLCache {
 	private static final Logger logger = LoggerFactory.getLogger(URLCache.class);
 	private static URLCache instance;
-	private static HashSet <String> cache;
+	private static final int MAX_CACHE_SIZE = 10000;
+	private static Set<String> cache;
 	private static Date lastFlush;
 	
 	private URLCache () {
@@ -47,22 +50,27 @@ public class URLCache {
 		return cache.contains(url);
 	}
 	
-	public static void addUrl (String url) {
-		if (URLCache.cache ==  null) {
-			URLCache.cache = new HashSet<>();
+	public static synchronized void addUrl (String url) {
+		if (URLCache.cache == null) {
+			URLCache.cache = newLruSet();
 		}
-		
+
 		cache.add(url);
 	}
 	
-	public static synchronized void flush () {		
+	public static synchronized void flush () {
 		logger.info("URL cache is being flushed.");
-		if (URLCache.cache == null) {
-			URLCache.cache = new HashSet<>();
-		}
-		
-		cache.clear();
+		URLCache.cache = newLruSet();
 		URLCache.lastFlush = new Date (System.currentTimeMillis());
+	}
+
+	private static Set<String> newLruSet() {
+		return Collections.newSetFromMap(new LinkedHashMap<String, Boolean>(64, 0.75f, true) {
+			@Override
+			protected boolean removeEldestEntry(java.util.Map.Entry<String, Boolean> eldest) {
+				return size() > MAX_CACHE_SIZE;
+			}
+		});
 	}
 	
 	private boolean isUpdateRequired () {

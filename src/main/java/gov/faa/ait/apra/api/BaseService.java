@@ -19,7 +19,8 @@ import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
-import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
 import org.apache.commons.lang3.text.WordUtils;
@@ -28,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import gov.faa.ait.apra.bootstrap.Config;
 import gov.faa.ait.apra.bootstrap.ErrorCodes;
+import gov.faa.ait.apra.util.URLCache;
 import gov.faa.ait.apra.jaxb.EditionCodeList;
 import gov.faa.ait.apra.jaxb.FormatCodeList;
 import gov.faa.ait.apra.jaxb.ObjectFactory;
@@ -60,6 +62,7 @@ public abstract class BaseService {
 	private String edition = EMPTY_STRING;
 	private String geoname = EMPTY_STRING;
 	private static final Logger logger = LoggerFactory.getLogger(BaseService.class);
+	private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("MM/dd/yyyy");
 
 	/**
 	 * Verify edition and format parameters
@@ -187,22 +190,25 @@ public abstract class BaseService {
 	 * @return true if the url response is 200 when issuing a HTTP HEAD check; false otherwise
 	 */
 	public boolean verifyURL (URL url) {
-		boolean ok = false; 
+		String externalForm = url.toExternalForm();
+
+		if (URLCache.getInstance().contains(externalForm)) {
+			logger.info("URL cache hit for "+externalForm);
+			return true;
+		}
+
+		boolean ok = false;
 		HttpURLConnection connection = null;
 		Proxy proxy = null;
-		
-		logger.info("Verifying URL "+url.toExternalForm()+" before responding to call");
+
+		logger.info("Verifying URL "+externalForm+" before responding to call");
 		try {
 			if (Config.getFAADMZProxyHost() != null && (! EMPTY_STRING.equals(Config.getFAADMZProxyHost()))) {
 				int port = Integer.parseInt(Config.getFAADMZProxyPort());
 				InetSocketAddress proxyAddress = new InetSocketAddress(Config.getFAADMZProxyHost(), port);
-				proxy = new Proxy(Proxy.Type.HTTP, proxyAddress);			
+				proxy = new Proxy(Proxy.Type.HTTP, proxyAddress);
 			}
-			
-			/*
-			 * Determine if we are going to use a proxy server to check the validity
-			 * of the URL we return
-			 */
+
 			if (proxy != null) {
 				logger.info("Using proxy server "+proxy.toString());
 				connection = (HttpURLConnection) url.openConnection(proxy);
@@ -211,34 +217,29 @@ public abstract class BaseService {
 				logger.info("Direct connection. No proxy server defined.");
 				connection = (HttpURLConnection) url.openConnection();
 			}
-			
-			/*
-			 * This is the actual HTTP HEAD check to determine if the URL is valid
-			 * and exists on the FAA web server
-			 */
+
+			connection.setConnectTimeout(5000);
+			connection.setReadTimeout(5000);
 			connection.setRequestMethod("HEAD");
 			int responseCode = connection.getResponseCode();
 			if (responseCode == 200 || responseCode == 302) {
-				logger.info("URL HEAD check returned response code "+responseCode+" for url "+url.toExternalForm());
-			    ok = true;
+				logger.info("URL HEAD check returned response code "+responseCode+" for url "+externalForm);
+				ok = true;
+				URLCache.addUrl(externalForm);
 			}
 			else {
-				logger.warn("URL HEAD check returned response code "+responseCode+" for url "+url.toExternalForm());
+				logger.warn("URL HEAD check returned response code "+responseCode+" for url "+externalForm);
 			}
 		}
 		catch (IllegalArgumentException eillegal) {
-			logger.error("HEAD heck failed for url: "+url.toExternalForm(), eillegal);
+			logger.error("HEAD check failed for url: "+externalForm, eillegal);
 			ok = false;
 		}
 		catch (IOException eio) {
-			logger.error("HEAD heck failed for url: "+url.toExternalForm(), eio);
+			logger.error("HEAD check failed for url: "+externalForm, eio);
 			ok = false;
 		}
-		
 
-		/*
-		 * Close down the connection as cleanup action
-		 */
 		if (connection != null)
 			connection.disconnect();
 
@@ -304,8 +305,8 @@ public abstract class BaseService {
 
     	ProductSet.Edition ed = of.createProductSetEdition();
 	   	
-    	SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy");
-    	ed.setEditionDate(formatter.format(cycle.getChart_effective_date()));
+    	ed.setEditionDate(DATE_FORMATTER.format(
+    		cycle.getChart_effective_date().toInstant().atZone(ZoneId.systemDefault()).toLocalDate()));
     	ed.setEditionNumber(Integer.valueOf(cycle.getChart_cycle_number()));
     	ed.setEditionName(EditionCodeList.fromValue(cycle.getChart_cycle_period_code()));
     	ed.setFormat(FormatCodeList.fromValue(getFormat()));

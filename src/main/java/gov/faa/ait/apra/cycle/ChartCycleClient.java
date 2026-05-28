@@ -15,7 +15,7 @@
 
 
 import java.io.IOException;
-import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -45,6 +45,7 @@ import gov.faa.ait.apra.bootstrap.Config;
  *
  */
 public class ChartCycleClient extends DenodoClient {
+	private static final Client HTTP_CLIENT = ClientBuilder.newClient();
 	private Date today;
 	private static ChartCycleData chartCycle;
 	private static Date lastCycleUpdate;
@@ -108,16 +109,14 @@ public class ChartCycleClient extends DenodoClient {
 		setLastUpdate();
 		
 		try {
-			Client client = ClientBuilder.newClient();	
-			
-			WebTarget webTarget = client.target(url);
+			WebTarget webTarget = HTTP_CLIENT.target(url);
 			long now = System.currentTimeMillis();
 			unbound = webTarget.request(MediaType.APPLICATION_XML_TYPE).get(String.class);
 			long duration = System.currentTimeMillis() - now;
 			logger.info("Call for 28/56 day chart cycle took "+duration+" ms");
 			ObjectMapper mapper = new ObjectMapper();
 			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-			mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
+			mapper.setDateFormat(new java.text.SimpleDateFormat("yyyy-MM-dd"));
 			setChartCycle (mapper.readValue(unbound.getBytes(Charsets.UTF_16), ChartCycleData.class));
 		}
 		catch (IOException ex) {
@@ -249,12 +248,14 @@ public class ChartCycleClient extends DenodoClient {
 	 * 
 	 * @return the URL to obtain cycle information
 	 */
+	private static final DateTimeFormatter CYCLE_DATE_FORMATTER = DateTimeFormatter.ofPattern("MM/dd/yyyy");
+
 	public String getWebTarget (Date targetDate) {
 		StringBuilder url = new StringBuilder();
 		url = url.append(Config.getDenodoHost()+Config.getDenodoCycleResource());
-		SimpleDateFormat formatter = new SimpleDateFormat ("MM/dd/yyyy");
-		
-		String dateString = formatter.format(targetDate);
+
+		String dateString = CYCLE_DATE_FORMATTER.format(
+			targetDate.toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate());
 		
 		StringBuilder queryString = new StringBuilder();
 		queryString = queryString.append("?query_date="+dateString);

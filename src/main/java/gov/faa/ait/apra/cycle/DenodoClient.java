@@ -36,6 +36,7 @@ import com.google.common.base.Charsets;
  *
  */
 public abstract class DenodoClient {
+	private static final Client HTTP_CLIENT = ClientBuilder.newClient();
 	private Date today;
 	private ChartCycleData cycle = null;
 	private static final Logger logger = LoggerFactory.getLogger(ChartCycleClient.class);
@@ -89,9 +90,7 @@ public abstract class DenodoClient {
 		String unbound = "";
 		
 		try {
-			Client client = ClientBuilder.newClient();	
-			
-			WebTarget webTarget = client.target(url);
+			WebTarget webTarget = HTTP_CLIENT.target(url);
 			long now = System.currentTimeMillis();
 			unbound = webTarget.request(MediaType.APPLICATION_XML_TYPE).get(String.class);
 			long duration = System.currentTimeMillis() - now;
