@@ -20,6 +20,8 @@ import javax.ws.rs.ext.Provider;
 /**
  * STIG V-220629: Rate limiting filter to prevent brute-force
  * and denial-of-service attacks against the API.
+ * Uses the TCP peer address (getRemoteAddr) to prevent
+ * X-Forwarded-For header spoofing to bypass rate limits.
  */
 @Provider
 public class RateLimitFilter implements ContainerRequestFilter {
@@ -43,13 +45,13 @@ public class RateLimitFilter implements ContainerRequestFilter {
         }
     }
 
+    /**
+     * Returns the actual TCP peer address for rate limiting decisions.
+     * Does not trust X-Forwarded-For to prevent spoofing-based bypass.
+     */
     private String getClientIp() {
         if (servletRequest == null) {
             return "unknown";
-        }
-        String forwarded = servletRequest.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isEmpty()) {
-            return forwarded.split(",")[0].trim();
         }
         return servletRequest.getRemoteAddr();
     }

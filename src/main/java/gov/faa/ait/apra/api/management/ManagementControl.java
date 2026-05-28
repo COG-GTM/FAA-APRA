@@ -58,8 +58,13 @@ public class ManagementControl {
 	 * @return the String ServerDown
 	 */
 	public static String stop() {
-		AuditLogger.logManagementAccess("system", "stop", "success");
-		ManagementControl.mode = 0;
+		try {
+			ManagementControl.mode = 0;
+			AuditLogger.logManagementAccess("system", "stop", "success");
+		} catch (Exception e) {
+			AuditLogger.logManagementAccess("system", "stop", "failure");
+			throw e;
+		}
 		return "ServerDown";
 	}
 	
@@ -71,8 +76,13 @@ public class ManagementControl {
 	 * @return the String ServerOK
 	 */
 	public static String start() {
-		AuditLogger.logManagementAccess("system", "start", "success");
-		ManagementControl.mode = 1;
+		try {
+			ManagementControl.mode = 1;
+			AuditLogger.logManagementAccess("system", "start", "success");
+		} catch (Exception e) {
+			AuditLogger.logManagementAccess("system", "start", "failure");
+			throw e;
+		}
 		return "ServerOK";
 	}
 	
@@ -84,18 +94,21 @@ public class ManagementControl {
 	 * @return the string "Cycle reload complete"
 	 */
 	public String refresh() {
-		AuditLogger.logManagementAccess("system", "flush", "success");
-		ChartCycleClient cycleClient = new ChartCycleClient();
-		cycleClient.forceUpdate();
-		TACCycleClient tacCycleClient = new TACCycleClient();
-		tacCycleClient.forceUpdate();
-		VFRChartCycleClient vfrClient = new VFRChartCycleClient();
-		vfrClient.forceUpdate();
-		WallPlanningChartCycleClient wpClient = new WallPlanningChartCycleClient();
-		wpClient.forceUpdate();
-		
-		URLCache.getInstance().flush();
-		
+		try {
+			ChartCycleClient cycleClient = new ChartCycleClient();
+			cycleClient.forceUpdate();
+			TACCycleClient tacCycleClient = new TACCycleClient();
+			tacCycleClient.forceUpdate();
+			VFRChartCycleClient vfrClient = new VFRChartCycleClient();
+			vfrClient.forceUpdate();
+			WallPlanningChartCycleClient wpClient = new WallPlanningChartCycleClient();
+			wpClient.forceUpdate();
+			URLCache.getInstance().flush();
+			AuditLogger.logManagementAccess("system", "flush", "success");
+		} catch (Exception e) {
+			AuditLogger.logManagementAccess("system", "flush", "failure");
+			throw e;
+		}
 		return "Cycle Reload Complete";
 	}
 
@@ -107,8 +120,13 @@ public class ManagementControl {
 	 * @return the string Config Reload Complete
 	 */
 	public String reloadConfig() {
-		AuditLogger.logManagementAccess("system", "config", "success");
-		Config.loadConfig();		
+		try {
+			Config.loadConfig();
+			AuditLogger.logManagementAccess("system", "config", "success");
+		} catch (Exception e) {
+			AuditLogger.logManagementAccess("system", "config", "failure");
+			throw e;
+		}
 		return "Config Reload Complete";
 	}
 }
