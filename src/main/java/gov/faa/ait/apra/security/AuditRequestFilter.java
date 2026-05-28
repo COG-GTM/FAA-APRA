@@ -36,7 +36,7 @@ public class AuditRequestFilter implements ContainerRequestFilter, ContainerResp
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
         requestContext.setProperty(START_TIME_PROPERTY, System.currentTimeMillis());
-        requestContext.setProperty(CLIENT_IP_PROPERTY, getClientIp(requestContext));
+        requestContext.setProperty(CLIENT_IP_PROPERTY, ClientIpResolver.resolve(requestContext, servletRequest));
         requestContext.setProperty(REQUEST_PATH_PROPERTY,
             requestContext.getMethod() + " " + requestContext.getUriInfo().getPath());
     }
@@ -62,17 +62,4 @@ public class AuditRequestFilter implements ContainerRequestFilter, ContainerResp
         AuditLogger.getInstance().logAccess(clientIp, method, path, statusCode);
     }
 
-    private String getClientIp(ContainerRequestContext requestContext) {
-        String forwarded = requestContext.getHeaderString("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isEmpty()) {
-            return forwarded.split(",")[0].trim();
-        }
-        if (servletRequest != null) {
-            String remoteAddr = servletRequest.getRemoteAddr();
-            if (remoteAddr != null && !remoteAddr.isEmpty()) {
-                return remoteAddr;
-            }
-        }
-        return "0.0.0.0";
-    }
 }

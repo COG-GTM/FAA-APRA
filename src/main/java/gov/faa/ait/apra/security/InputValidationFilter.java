@@ -12,8 +12,10 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
@@ -29,10 +31,13 @@ public class InputValidationFilter implements ContainerRequestFilter {
 
     private static final int MAX_PARAM_LENGTH = 255;
 
+    @Context
+    private HttpServletRequest servletRequest;
+
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
         MultivaluedMap<String, String> params = requestContext.getUriInfo().getQueryParameters();
-        String clientIp = getClientIp(requestContext);
+        String clientIp = ClientIpResolver.resolve(requestContext, servletRequest);
 
         for (Map.Entry<String, List<String>> entry : params.entrySet()) {
             String paramName = entry.getKey();
@@ -107,7 +112,8 @@ public class InputValidationFilter implements ContainerRequestFilter {
 
     private boolean containsDangerousChars(String value) {
         for (char c : value.toCharArray()) {
-            if (c == '<' || c == '>' || c == ';' || c == '&' || c == '|'
+            if (c == '<' || c == '>' || c == '"' || c == ';'
+                || c == '&' || c == '#' || c == '|'
                 || c == '`' || c == '$' || c == '(' || c == ')'
                 || c == '\\' || c == '\0') {
                 return true;
@@ -116,11 +122,4 @@ public class InputValidationFilter implements ContainerRequestFilter {
         return false;
     }
 
-    private String getClientIp(ContainerRequestContext requestContext) {
-        String forwarded = requestContext.getHeaderString("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isEmpty()) {
-            return forwarded.split(",")[0].trim();
-        }
-        return "unknown";
-    }
 }

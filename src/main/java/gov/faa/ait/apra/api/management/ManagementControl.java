@@ -28,6 +28,7 @@ import gov.faa.ait.apra.bootstrap.Config;
 import gov.faa.ait.apra.cycle.ChartCycleClient;
 import gov.faa.ait.apra.cycle.TACCycleClient;
 import gov.faa.ait.apra.security.AuditLogger;
+import gov.faa.ait.apra.security.ClientIpResolver;
 import gov.faa.ait.apra.util.URLCache;
 import gov.faa.ait.apra.cycle.VFRChartCycleClient;
 import gov.faa.ait.apra.cycle.WallPlanningChartCycleClient;
@@ -113,18 +114,6 @@ public class ManagementControl {
 	}
 
 	private String getClientIp(HttpHeaders headers) {
-		if (headers != null) {
-			String forwarded = headers.getHeaderString("X-Forwarded-For");
-			if (forwarded != null && !forwarded.isEmpty()) {
-				return forwarded.split(",")[0].trim();
-			}
-		}
-		if (servletRequest != null) {
-			String remoteAddr = servletRequest.getRemoteAddr();
-			if (remoteAddr != null && !remoteAddr.isEmpty()) {
-				return remoteAddr;
-			}
-		}
-		return "0.0.0.0";
+		return ClientIpResolver.resolve(headers, servletRequest);
 	}
 }

@@ -55,7 +55,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
             return;
         }
 
-        String clientIp = getClientIp(requestContext);
+        String clientIp = ClientIpResolver.resolve(requestContext, servletRequest);
         String safeClientIp = InputSanitizer.sanitizeForLog(clientIp);
         String apiKey = requestContext.getHeaderString(API_KEY_HEADER);
         String configuredKey = getConfiguredApiKey();
@@ -107,20 +107,6 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         AccountLockoutManager.getInstance().recordSuccess(clientIp);
         AuditLogger.getInstance().logAuthSuccess("admin", clientIp);
         AuditLogger.getInstance().logAdminAction(clientIp, "management_access:" + path);
-    }
-
-    private String getClientIp(ContainerRequestContext requestContext) {
-        String forwarded = requestContext.getHeaderString("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isEmpty()) {
-            return forwarded.split(",")[0].trim();
-        }
-        if (servletRequest != null) {
-            String remoteAddr = servletRequest.getRemoteAddr();
-            if (remoteAddr != null && !remoteAddr.isEmpty()) {
-                return remoteAddr;
-            }
-        }
-        return "0.0.0.0";
     }
 
     private String getConfiguredApiKey() {
