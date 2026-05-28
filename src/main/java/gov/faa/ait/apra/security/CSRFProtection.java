@@ -33,17 +33,21 @@ public final class CSRFProtection {
 
     /**
      * Validate a CSRF token using constant-time comparison.
+     * Iterates over the longer input to avoid leaking length information.
      */
     public static boolean validateToken(String token, String expected) {
         if (token == null || expected == null) {
             return false;
         }
-        if (token.length() != expected.length()) {
-            return false;
-        }
         int result = 0;
-        for (int i = 0; i < token.length(); i++) {
-            result |= token.charAt(i) ^ expected.charAt(i);
+        int maxLen = Math.max(token.length(), expected.length());
+        for (int i = 0; i < maxLen; i++) {
+            char tChar = i < token.length() ? token.charAt(i) : 0;
+            char eChar = i < expected.length() ? expected.charAt(i) : 0;
+            result |= tChar ^ eChar;
+        }
+        if (token.length() != expected.length()) {
+            result |= 1;
         }
         return result == 0;
     }

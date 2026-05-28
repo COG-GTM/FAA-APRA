@@ -44,11 +44,11 @@ public final class AuditLogger {
      */
     public void log(String eventType, String userId, String ipAddress,
                     String action, String outcome, String details) {
-        String safeUserId = InputSanitizer.sanitizeForLog(userId != null ? userId : "anonymous");
-        String safeIp = InputSanitizer.sanitizeForLog(ipAddress != null ? ipAddress : "unknown");
-        String safeAction = InputSanitizer.sanitizeForLog(action != null ? action : "");
-        String safeOutcome = InputSanitizer.sanitizeForLog(outcome != null ? outcome : "unknown");
-        String safeDetails = InputSanitizer.sanitizeForLog(details != null ? details : "");
+        String safeUserId = escapeJson(InputSanitizer.sanitizeForLog(userId != null ? userId : "anonymous"));
+        String safeIp = escapeJson(InputSanitizer.sanitizeForLog(ipAddress != null ? ipAddress : "unknown"));
+        String safeAction = escapeJson(InputSanitizer.sanitizeForLog(action != null ? action : ""));
+        String safeOutcome = escapeJson(InputSanitizer.sanitizeForLog(outcome != null ? outcome : "unknown"));
+        String safeDetails = escapeJson(InputSanitizer.sanitizeForLog(details != null ? details : ""));
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -105,5 +105,12 @@ public final class AuditLogger {
             return "unknown";
         }
         return eventType.replaceAll("[^a-zA-Z0-9_]", "");
+    }
+
+    private static String escapeJson(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 }
