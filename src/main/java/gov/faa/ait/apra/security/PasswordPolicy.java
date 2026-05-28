@@ -11,18 +11,24 @@ package gov.faa.ait.apra.security;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.security.spec.InvalidKeySpecException;
 import java.util.Base64;
+
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
 
 /**
  * STIG V-220629 (NIST IA-5): Password policy enforcement.
  * Enforces minimum 14-character passwords with complexity requirements
  * (uppercase, lowercase, digit, special character). Provides secure
- * hashing using PBKDF2 with SHA-256 (bcrypt-equivalent work factor).
+ * hashing using PBKDF2 with HMAC-SHA256 and 600,000 iterations.
  */
 public final class PasswordPolicy {
 
     public static final int MIN_LENGTH = 14;
     private static final String SPECIAL_CHARS = "!@#$%^&*()_+-=[]{}|;:,.<>?";
+    private static final int PBKDF2_ITERATIONS = 600000;
+    private static final int HASH_LENGTH_BITS = 256;
 
     private PasswordPolicy() { }
 
@@ -52,27 +58,28 @@ public final class PasswordPolicy {
     }
 
     /**
-     * Hash a password using SHA-256 with a random salt.
-     * In production, use bcrypt or Argon2 via a dedicated library.
+     * Hash a password using PBKDF2 with HMAC-SHA256 and a random salt.
      */
     public static String hashPassword(String password) {
         try {
             SecureRandom random = new SecureRandom();
             byte[] salt = new byte[16];
             random.nextBytes(salt);
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            digest.update(salt);
-            byte[] hash = digest.digest(password.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            PBEKeySpec spec = new PBEKeySpec(
+                password.toCharArray(), salt, PBKDF2_ITERATIONS, HASH_LENGTH_BITS);
+            SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+            byte[] hash = factory.generateSecret(spec).getEncoded();
+            spec.clearPassword();
             String saltBase64 = Base64.getEncoder().encodeToString(salt);
             String hashBase64 = Base64.getEncoder().encodeToString(hash);
             return saltBase64 + ":" + hashBase64;
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("SHA-256 not available", e);
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+            throw new IllegalStateException("PBKDF2WithHmacSHA256 not available", e);
         }
     }
 
     /**
-     * Verify a password against a stored hash.
+     * Verify a password against a stored PBKDF2 hash.
      */
     public static boolean verifyPassword(String password, String storedHash) {
         if (password == null || storedHash == null) return false;
@@ -81,11 +88,13 @@ public final class PasswordPolicy {
         try {
             byte[] salt = Base64.getDecoder().decode(parts[0]);
             byte[] expectedHash = Base64.getDecoder().decode(parts[1]);
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            digest.update(salt);
-            byte[] actualHash = digest.digest(password.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            PBEKeySpec spec = new PBEKeySpec(
+                password.toCharArray(), salt, PBKDF2_ITERATIONS, HASH_LENGTH_BITS);
+            SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+            byte[] actualHash = factory.generateSecret(spec).getEncoded();
+            spec.clearPassword();
             return MessageDigest.isEqual(expectedHash, actualHash);
-        } catch (NoSuchAlgorithmException | IllegalArgumentException e) {
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException | IllegalArgumentException e) {
             return false;
         }
     }

@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
  * Public data endpoints remain unauthenticated per the API's design.
  * Health endpoint is excluded from authentication for load balancer probes.
  * Fail-closed: management endpoints are denied if no API key is configured.
+ * Integrates with AccountLockoutManager for brute-force protection.
  */
 @Provider
 @PreMatching
@@ -50,8 +51,20 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         }
 
         String clientIp = getClientIp(requestContext);
+        String safeClientIp = InputSanitizer.sanitizeForLog(clientIp);
         String apiKey = requestContext.getHeaderString(API_KEY_HEADER);
         String configuredKey = getConfiguredApiKey();
+
+        // Check IP-based lockout before processing credentials
+        if (AccountLockoutManager.getInstance().isLockedOut(clientIp)) {
+            AuditLogger.getInstance().logAuthFailure(clientIp, "account_locked_out");
+            logger.warn("Management endpoint access denied: IP locked out {}", safeClientIp);
+            requestContext.abortWith(
+                Response.status(429)
+                    .entity("{\"status\":{\"code\":429,\"message\":\"Too many failed attempts. Try again later.\"}}")
+                    .build());
+            return;
+        }
 
         // Fail-closed: if no API key is configured, deny all management access
         if (configuredKey == null || configuredKey.isEmpty()) {
@@ -65,8 +78,9 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         }
 
         if (apiKey == null || apiKey.isEmpty()) {
+            AccountLockoutManager.getInstance().recordFailedAttempt(clientIp);
             AuditLogger.getInstance().logAuthFailure(clientIp, "missing_api_key");
-            logger.warn("Management endpoint access denied: missing API key from {}", clientIp);
+            logger.warn("Management endpoint access denied: missing API key from {}", safeClientIp);
             requestContext.abortWith(
                 Response.status(Response.Status.UNAUTHORIZED)
                     .entity("{\"status\":{\"code\":401,\"message\":\"Authentication required\"}}")
@@ -75,8 +89,9 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         }
 
         if (!constantTimeEquals(apiKey, configuredKey)) {
+            AccountLockoutManager.getInstance().recordFailedAttempt(clientIp);
             AuditLogger.getInstance().logAuthFailure(clientIp, "invalid_api_key");
-            logger.warn("Management endpoint access denied: invalid API key from {}", clientIp);
+            logger.warn("Management endpoint access denied: invalid API key from {}", safeClientIp);
             requestContext.abortWith(
                 Response.status(Response.Status.FORBIDDEN)
                     .entity("{\"status\":{\"code\":403,\"message\":\"Access denied\"}}")
@@ -84,6 +99,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
             return;
         }
 
+        AccountLockoutManager.getInstance().recordSuccess(clientIp);
         AuditLogger.getInstance().logAuthSuccess("admin", clientIp);
         AuditLogger.getInstance().logAdminAction(clientIp, "management_access:" + path);
     }
