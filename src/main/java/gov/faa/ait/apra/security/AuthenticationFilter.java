@@ -11,9 +11,11 @@ package gov.faa.ait.apra.security;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.PreMatching;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 
@@ -36,6 +38,9 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     private static final String MANAGEMENT_PATH = "management";
     private static final String HEALTH_PATH = "management/health";
     private static final String API_KEY_HEADER = "X-API-Key";
+
+    @Context
+    private HttpServletRequest servletRequest;
 
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
@@ -109,7 +114,13 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         if (forwarded != null && !forwarded.isEmpty()) {
             return forwarded.split(",")[0].trim();
         }
-        return "unknown";
+        if (servletRequest != null) {
+            String remoteAddr = servletRequest.getRemoteAddr();
+            if (remoteAddr != null && !remoteAddr.isEmpty()) {
+                return remoteAddr;
+            }
+        }
+        return "0.0.0.0";
     }
 
     private String getConfiguredApiKey() {

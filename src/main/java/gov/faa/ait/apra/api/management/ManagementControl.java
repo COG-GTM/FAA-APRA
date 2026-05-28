@@ -13,6 +13,7 @@
  */
 package gov.faa.ait.apra.api.management;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -42,6 +43,9 @@ import gov.faa.ait.apra.cycle.WallPlanningChartCycleClient;
 public class ManagementControl {
 	private static final Logger logger = LoggerFactory.getLogger(ManagementControl.class);
 	private static int mode = 1;
+
+	@Context
+	private HttpServletRequest servletRequest;
 
 	@Path("/health")
     @GET
@@ -115,6 +119,12 @@ public class ManagementControl {
 				return forwarded.split(",")[0].trim();
 			}
 		}
-		return "unknown";
+		if (servletRequest != null) {
+			String remoteAddr = servletRequest.getRemoteAddr();
+			if (remoteAddr != null && !remoteAddr.isEmpty()) {
+				return remoteAddr;
+			}
+		}
+		return "0.0.0.0";
 	}
 }

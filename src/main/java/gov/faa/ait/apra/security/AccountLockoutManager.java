@@ -8,21 +8,36 @@
  */
 package gov.faa.ait.apra.security;
 
+import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * STIG V-220629 (NIST IA-2): Account lockout after failed login attempts.
  * Locks out accounts after 5 failed attempts for 15 minutes.
+ * Periodically evicts expired records to prevent unbounded memory growth.
  */
 public final class AccountLockoutManager {
 
     public static final int MAX_FAILED_ATTEMPTS = 5;
     public static final long LOCKOUT_DURATION_MS = 15L * 60L * 1000L;
+    private static final long EVICTION_INTERVAL_MS = 5L * 60L * 1000L;
 
     private static final AccountLockoutManager INSTANCE = new AccountLockoutManager();
     private final ConcurrentHashMap<String, LockoutRecord> records = new ConcurrentHashMap<>();
 
-    private AccountLockoutManager() { }
+    private AccountLockoutManager() {
+        ScheduledExecutorService evictor = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = new Thread(r, "lockout-evictor");
+            t.setDaemon(true);
+            return t;
+        });
+        evictor.scheduleAtFixedRate(this::evictExpired,
+            EVICTION_INTERVAL_MS, EVICTION_INTERVAL_MS, TimeUnit.MILLISECONDS);
+    }
 
     public static AccountLockoutManager getInstance() {
         return INSTANCE;
@@ -53,6 +68,7 @@ public final class AccountLockoutManager {
                 existing = new LockoutRecord();
             }
             existing.failedAttempts++;
+            existing.lastAttempt = System.currentTimeMillis();
             if (existing.failedAttempts >= MAX_FAILED_ATTEMPTS) {
                 existing.lockedUntil = System.currentTimeMillis() + LOCKOUT_DURATION_MS;
                 AuditLogger.getInstance().log("account_locked", identifier, "n/a",
@@ -74,8 +90,24 @@ public final class AccountLockoutManager {
         return record != null ? record.failedAttempts : 0;
     }
 
+    private void evictExpired() {
+        long now = System.currentTimeMillis();
+        Iterator<Map.Entry<String, LockoutRecord>> it = records.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<String, LockoutRecord> entry = it.next();
+            LockoutRecord record = entry.getValue();
+            if (record.lockedUntil > 0 && now >= record.lockedUntil) {
+                it.remove();
+            } else if (record.lockedUntil == 0
+                       && now - record.lastAttempt > LOCKOUT_DURATION_MS) {
+                it.remove();
+            }
+        }
+    }
+
     private static class LockoutRecord {
         int failedAttempts;
         long lockedUntil;
+        long lastAttempt;
     }
 }
