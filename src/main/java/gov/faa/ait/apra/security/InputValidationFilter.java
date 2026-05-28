@@ -34,11 +34,11 @@ public class InputValidationFilter implements ContainerRequestFilter {
 
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
-        String path = requestContext.getUriInfo().getRequestUri().getPath();
+        String path = requestContext.getUriInfo().getPath();
 
         // Skip validation for management and swagger endpoints
-        if (path.startsWith("/management") || path.startsWith("/swagger")
-                || path.startsWith("/api-docs")) {
+        if (path.startsWith("management") || path.startsWith("swagger")
+                || path.startsWith("api-docs")) {
             return;
         }
 

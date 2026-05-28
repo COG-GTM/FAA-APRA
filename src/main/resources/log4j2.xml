@@ -21,7 +21,7 @@
 			</Policies>
 		</RollingFile>
 		<!-- STIG V-220635: Structured audit log for security events -->
-		<RollingFile name="audit-log" fileName="logs/apra-audit.log" filePattern="apra-audit-%d{yyyy-MM-dd}.log">
+		<RollingFile name="audit-log" fileName="logs/apra-audit.log" filePattern="logs/apra-audit-%d{yyyy-MM-dd}.log">
 			<PatternLayout>
 				<pattern>%msg%n</pattern>
 			</PatternLayout>
