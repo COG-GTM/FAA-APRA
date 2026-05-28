@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import gov.faa.ait.apra.bootstrap.Config;
 import gov.faa.ait.apra.bootstrap.ErrorCodes;
+import gov.faa.ait.apra.security.InputSanitizer;
 import gov.faa.ait.apra.jaxb.EditionCodeList;
 import gov.faa.ait.apra.jaxb.FormatCodeList;
 import gov.faa.ait.apra.jaxb.ObjectFactory;
@@ -163,7 +164,18 @@ public abstract class BaseService {
      * @param geo
      */
     public void setGeoname (String geo) {
-    	this.geoname  = geo != null ? geo.toUpperCase(Locale.ENGLISH) : EMPTY_STRING;
+    	if (geo == null) {
+    		this.geoname = EMPTY_STRING;
+    		return;
+    	}
+    	String sanitized = InputSanitizer.sanitize(geo);
+    	if (sanitized != null) {
+    		this.geoname = sanitized.toUpperCase(Locale.ENGLISH);
+    	} else if (!geo.trim().isEmpty()) {
+    		this.geoname = "INVALID_INPUT";
+    	} else {
+    		this.geoname = EMPTY_STRING;
+    	}
     }
     
     /**

@@ -20,8 +20,27 @@
 				<TimeBasedTriggeringPolicy interval="1" modulate="true"/>
 			</Policies>
 		</RollingFile>
+		<!-- STIG V-220635: Structured audit log for security events -->
+		<RollingFile name="audit-log" fileName="logs/apra-audit.log" filePattern="logs/apra-audit-%d{yyyy-MM-dd}.log">
+			<PatternLayout>
+				<pattern>%msg%n</pattern>
+			</PatternLayout>
+			<Policies>
+				<TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+			</Policies>
+			<DefaultRolloverStrategy>
+				<Delete basePath="logs" maxDepth="1">
+					<IfFileName glob="apra-audit-*.log"/>
+					<IfLastModified age="365d"/>
+				</Delete>
+			</DefaultRolloverStrategy>
+		</RollingFile>
 	</Appenders>
 	<Loggers>
+		<!-- STIG V-220635: Dedicated audit logger with 1-year retention -->
+		<Logger name="gov.faa.ait.apra.audit" level="info" additivity="false">
+			<AppenderRef ref="audit-log"/>
+		</Logger>
 		<Logger name="gov.faa.ait.apra" level="info" additivity="false">
 			<AppenderRef ref="apra-log"/>
 		</Logger>

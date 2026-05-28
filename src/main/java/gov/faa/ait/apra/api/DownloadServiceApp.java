@@ -23,6 +23,13 @@ import org.slf4j.LoggerFactory;
 
 import io.swagger.jaxrs.config.BeanConfig;
 
+import gov.faa.ait.apra.security.InputValidationFilter;
+import gov.faa.ait.apra.security.ManagementAuthFilter;
+import gov.faa.ait.apra.security.RateLimitFilter;
+import gov.faa.ait.apra.security.SecurityAuditFilter;
+import gov.faa.ait.apra.security.SecurityExceptionMapper;
+import gov.faa.ait.apra.security.SecurityHeadersFilter;
+
 /**
  * This is the base application for CIFP and represents the JAX-RS application for scanning of REST services through the classes that are specified.
  * @author FAA
@@ -56,7 +63,15 @@ public class DownloadServiceApp extends Application {
 		
 		//Manually adding MOXyJSONFeature
         s.add(org.glassfish.jersey.moxy.json.MoxyJsonFeature.class);
-        
+
+        // STIG compliance: security filters
+        s.add(SecurityHeadersFilter.class);
+        s.add(SecurityAuditFilter.class);
+        s.add(ManagementAuthFilter.class);
+        s.add(RateLimitFilter.class);
+        s.add(InputValidationFilter.class);
+        s.add(SecurityExceptionMapper.class);
+
 		return s;
 	}
 }
