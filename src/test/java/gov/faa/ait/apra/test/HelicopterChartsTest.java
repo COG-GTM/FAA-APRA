@@ -13,19 +13,17 @@
  */
 package gov.faa.ait.apra.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.stream.Stream;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,50 +36,26 @@ import gov.faa.ait.apra.jaxb.ProductSet;
  * @author Gangadhar CTR Gouri
  *
  */
-
-@RunWith(Parameterized.class)
 public class HelicopterChartsTest {
-	private Date releaseDate = null;
-
 	private static final Logger logger = LoggerFactory
 			.getLogger(HelicopterChartsTest.class);
 	private HelicopterCharts helicopter;
 
-	public HelicopterChartsTest(Date date) {
-		GregorianCalendar cal = new GregorianCalendar();
-		cal.clear();
-		cal.set(2015, 5, 1);
-		this.releaseDate = cal.getTime();
-	}
-
-	/**
-	 * initialize
-	 */
-	@Before
+	@BeforeEach
 	public void initialize() {
 		helicopter = new HelicopterCharts();
 	}
 
-	/**
-	 * cycleNumbers
-	 * 
-	 * @return
-	 */
-	@Parameterized.Parameters
-	public static Collection<Date> cycleNumbers() {
+	static Stream<Date> cycleNumbers() {
 		Date[] params = new Date[10];
-
 		GregorianCalendar cal = new GregorianCalendar();
 		cal.clear();
 		cal.set(2015, 12, 11);
-
 		params[0] = cal.getTime();
-
 		for (int i = 1; i < 6; i++) {
 			cal.add(Calendar.DATE, 56);
 			params[i] = cal.getTime();
 		}
-
 		cal.set(2016, 0, 7);
 		params[6] = cal.getTime();
 		cal.set(2016, 1, 4);
@@ -90,16 +64,12 @@ public class HelicopterChartsTest {
 		params[8] = cal.getTime();
 		cal.set(2016, 2, 31);
 		params[9] = cal.getTime();
-
-		return Arrays.asList(params);
+		return Stream.of(params);
 	}
 
-	/**
-	 * testDownloadOperations
-	 */
-	@Test
-	public void testDownloadOperations() {
-
+	@ParameterizedTest
+	@MethodSource("cycleNumbers")
+	public void testDownloadOperations(Date date) {
 		ProductSet ps = (ProductSet) helicopter.getHelicopterRelease("current", "PDF", "Houston Heli").getEntity();
 		if (ps.getEdition().size() > 0)
 			logger.info(ps.getEdition().get(0).getProduct().getUrl());
@@ -110,60 +80,52 @@ public class HelicopterChartsTest {
 				logger.info("Helicopter Product Relese Test for 'current' return url of "
 						+ ps.getEdition().get(0).getProduct().getUrl());
 				if (ps.getEdition().get(0).getProduct().getUrl() != null) {
-
 					assertTrue(VerifyValues.verifyURL(ps.getEdition().get(0)
 							.getProduct().getUrl()));
 				}
 			}
 		} else {
-			assertEquals(code, 404);
+			assertEquals(404, code);
 		}
 
 		ps = (ProductSet) helicopter.getHelicopterRelease("next", "PDF", "Houston Heli").getEntity();
 		code = ps.getStatus().getCode().intValue();
 
 		if (code == 200) {
-			logger.info("Status code is "+code);
+			logger.info("Status code is " + code);
 			if ((ps.getEdition().get(0).getEditionDate() != null)
 					&& (!ps.getEdition().get(0).getEditionDate().isEmpty())) {
 				logger.info("Helicopter Product Relese Test for 'Next' return url of "
 						+ ps.getEdition().get(0).getProduct().getUrl());
-				
 				if (ps.getEdition().get(0).getProduct().getUrl() != null) {
 					assertTrue(VerifyValues.verifyURL(ps.getEdition().get(0)
 							.getProduct().getUrl()));
 				}
 			}
 		} else {
-			assertEquals(code, 404);
+			assertEquals(404, code);
 		}
-
 	}
 
-	/**
-	 * testEditionOperations
-	 */
-	@Test
-	public void testEditionOperations() {
-
+	@ParameterizedTest
+	@MethodSource("cycleNumbers")
+	public void testEditionOperations(Date date) {
 		ProductSet ps = (ProductSet) helicopter.getHelicopterEdition("current", "Houston Heli").getEntity();
 		int code = ps.getStatus().getCode().intValue();
 
 		if (code == 200) {
-			assertEquals(code, 200);
+			assertEquals(200, code);
 		} else {
-			assertEquals(code, 404);
+			assertEquals(404, code);
 		}
 
 		ps = (ProductSet) helicopter.getHelicopterEdition("Next", "Houston Heli").getEntity();
 		code = ps.getStatus().getCode().intValue();
 
 		if (code == 200) {
-			assertEquals(code, 200);
+			assertEquals(200, code);
 		} else {
-			assertEquals(code, 404);
+			assertEquals(404, code);
 		}
-
 	}
-
 }
