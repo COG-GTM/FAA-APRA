@@ -2,9 +2,18 @@ package gov.faa.ait.apra.jaxb;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "", propOrder = {"status", "edition"})
+@XmlRootElement(name = "productSet")
 public class ProductSet {
 
+    @XmlElement(required = true)
     protected Status status;
     protected List<Edition> edition;
 
@@ -23,6 +32,8 @@ public class ProductSet {
         return this.edition;
     }
 
+    @XmlAccessorType(XmlAccessType.FIELD)
+    @XmlType(name = "")
     public static class Edition {
 
         protected EditionCodeList editionName;
@@ -58,6 +69,8 @@ public class ProductSet {
         public Product getProduct() { return product; }
         public void setProduct(Product value) { this.product = value; }
 
+        @XmlAccessorType(XmlAccessType.FIELD)
+        @XmlType(name = "")
         public static class Product {
 
             protected ProductCodeList productName;
@@ -95,6 +108,8 @@ public class ProductSet {
         }
     }
 
+    @XmlAccessorType(XmlAccessType.FIELD)
+    @XmlType(name = "")
     public static class Status {
 
         protected Integer code;

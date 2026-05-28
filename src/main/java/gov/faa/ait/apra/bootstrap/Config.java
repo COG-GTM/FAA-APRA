@@ -16,7 +16,7 @@ package gov.faa.ait.apra.bootstrap;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
+
 import java.util.Locale;
 import java.util.Properties;
 
@@ -127,17 +127,8 @@ public class Config {
 				logger.warn("Failed to load configuration from {}.", configPath, eio);
 			}
 		} else {
-			try (InputStream is = Config.class.getClassLoader().getResourceAsStream("config.properties")) {
-				if (is != null) {
-					cfg.load(is);
-					logger.info("Configuration properties loaded from classpath resource config.properties");
-				} else {
-					logger.warn("Using default configuration properties. File {} not found and no classpath fallback available.", configPath);
-				}
-			}
-			catch (IOException eio) {
-				logger.warn("Failed to load classpath configuration properties.", eio);
-			}
+			logger.warn("Configuration file {} not found. Using built-in defaults. "
+					+ "Set -Dapra.config.path or APRA_CONFIG_PATH to override.", configPath);
 		}
 	}
 	
