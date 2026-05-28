@@ -1,0 +1,31 @@
+# Build outputs
+target/
+*.war
+*.class
+
+# IDE files
+.idea/
+*.iml
+.project
+.classpath
+.settings/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# STIG: Never commit secrets, credentials, or sensitive configuration
+*.env
+.env.*
+config.properties.local
+credentials.json
+*.key
+*.pem
+*.p12
+*.jks
+*.keystore
+*.truststore
+
+# Logs
+logs/
+*.log

@@ -19,6 +19,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import gov.faa.ait.apra.bootstrap.Config;
+import gov.faa.ait.apra.security.AuditLogger;
 import gov.faa.ait.apra.cycle.ChartCycleClient;
 import gov.faa.ait.apra.cycle.TACCycleClient;
 import gov.faa.ait.apra.util.URLCache;
@@ -57,6 +58,7 @@ public class ManagementControl {
 	 * @return the String ServerDown
 	 */
 	public static String stop() {
+		AuditLogger.logManagementAccess("system", "stop", "success");
 		ManagementControl.mode = 0;
 		return "ServerDown";
 	}
@@ -69,6 +71,7 @@ public class ManagementControl {
 	 * @return the String ServerOK
 	 */
 	public static String start() {
+		AuditLogger.logManagementAccess("system", "start", "success");
 		ManagementControl.mode = 1;
 		return "ServerOK";
 	}
@@ -81,6 +84,7 @@ public class ManagementControl {
 	 * @return the string "Cycle reload complete"
 	 */
 	public String refresh() {
+		AuditLogger.logManagementAccess("system", "flush", "success");
 		ChartCycleClient cycleClient = new ChartCycleClient();
 		cycleClient.forceUpdate();
 		TACCycleClient tacCycleClient = new TACCycleClient();
@@ -103,6 +107,7 @@ public class ManagementControl {
 	 * @return the string Config Reload Complete
 	 */
 	public String reloadConfig() {
+		AuditLogger.logManagementAccess("system", "config", "success");
 		Config.loadConfig();		
 		return "Config Reload Complete";
 	}

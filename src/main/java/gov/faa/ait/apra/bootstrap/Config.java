@@ -34,9 +34,9 @@ import org.slf4j.LoggerFactory;
 public class Config {
 	private static final Logger logger  = LoggerFactory.getLogger(Config.class);
 	private static final Properties cfg = new Properties();
-	private static final String AERONAV_HOST="http://aeronav.faa.gov";
-	private static final String DDOF_HOST="http://tod.faa.gov";
-	private static final String NFDC_HOST="http://nfdc.faa.gov";
+	private static final String AERONAV_HOST="https://aeronav.faa.gov";
+	private static final String DDOF_HOST="https://tod.faa.gov";
+	private static final String NFDC_HOST="https://nfdc.faa.gov";
 	
 	private static final String CIFP_FILE_PREFIX="cifp_";
 

@@ -28,6 +28,7 @@ import gov.faa.ait.apra.jaxb.ProductSet;
 import gov.faa.ait.apra.jaxb.ProductSet.Edition;
 import gov.faa.ait.apra.jaxb.ProductSet.Edition.Product;
 import gov.faa.ait.apra.jaxb.ProductSet.Status;
+import gov.faa.ait.apra.security.InputSanitizer;
 import gov.faa.ait.apra.util.ChartInfoTable;
 import gov.faa.ait.apra.util.ChartInfoTableKey;
 import gov.faa.ait.apra.util.TableChartClient;
@@ -62,7 +63,12 @@ public abstract class AbstractTableDataService extends BaseService {
 	 * @param city
 	 */
 	public void setCity(String city) {
-		this.city = city;
+		if (city == null) {
+			this.city = "";
+			return;
+		}
+		String sanitized = InputSanitizer.sanitize(city);
+		this.city = sanitized != null ? sanitized : "";
 	}	
 	
 	/**
