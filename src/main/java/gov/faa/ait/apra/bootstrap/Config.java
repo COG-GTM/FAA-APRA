@@ -121,16 +121,30 @@ public class Config {
 		}
 	}
 	
+	/**
+	 * Resolve a configuration value with environment variable override support.
+	 * Environment variables take precedence over properties file values per STIG secrets management.
+	 */
+	private static String resolveProperty(String propertyKey, String envVar, String defaultValue) {
+		if (envVar != null) {
+			String envValue = System.getenv(envVar);
+			if (envValue != null && !envValue.isEmpty()) {
+				return envValue;
+			}
+		}
+		return cfg.getProperty(propertyKey, defaultValue);
+	}
+
 	public static String getAeronavHost () {
-		return cfg.getProperty("gov.faa.ait.aeronav.host", AERONAV_HOST);
+		return resolveProperty("gov.faa.ait.aeronav.host", "APRA_AERONAV_HOST", AERONAV_HOST);
 	}
 	
 	public static String getDDOFHost () {
-		return cfg.getProperty("gov.faa.ait.ddof.host", DDOF_HOST);
+		return resolveProperty("gov.faa.ait.ddof.host", "APRA_DDOF_HOST", DDOF_HOST);
 	}
 	
 	public static String getNFDCHost () {
-		return cfg.getProperty("gov.faa.ait.nfdc.host", NFDC_HOST);
+		return resolveProperty("gov.faa.ait.nfdc.host", "APRA_NFDC_HOST", NFDC_HOST);
 	}
 	
 	public static String getAeronavSectionalFolder () {
@@ -174,11 +188,11 @@ public class Config {
 	}	
 	
 	public static String getFAADMZProxyHost () {
-		return cfg.getProperty("gov.faa.dmz.proxy.host", FAA_DMZ_PROXY_HOST);
+		return resolveProperty("gov.faa.dmz.proxy.host", "APRA_DMZ_PROXY_HOST", FAA_DMZ_PROXY_HOST);
 	}
 	
 	public static String getFAADMZProxyPort () {
-		return cfg.getProperty("gov.faa.dmz.proxy.port", FAA_DMZ_PROXY_PORT);
+		return resolveProperty("gov.faa.dmz.proxy.port", "APRA_DMZ_PROXY_PORT", FAA_DMZ_PROXY_PORT);
 	}
 	
 	public static int getCycleAgeLimit () {

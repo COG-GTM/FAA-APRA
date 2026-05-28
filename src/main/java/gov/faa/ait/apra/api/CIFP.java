@@ -30,6 +30,7 @@ import javax.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import gov.faa.ait.apra.security.InputSanitizer;
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_400;
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_404;
 import static gov.faa.ait.apra.bootstrap.ErrorCodes.ERROR_500;
@@ -82,12 +83,12 @@ public class CIFP extends BaseService {
     		@ApiParam(name="edition", value="Requested product edition. If omitted, current edition is returned.", allowableValues="current, next", defaultValue="current", allowMultiple=false, required=false) @QueryParam("edition") String ed) {
     	ChartCycleElementsJson cycle;
     	
-    	logger.info("Received call to retrieve current CIFP product release for edition '"+ed+"'.");
+    	logger.info("Received call to retrieve current CIFP product release for edition '{}'", InputSanitizer.sanitizeForLog(ed));
     	
     	cycle = initParameters(ed);
     	   	
     	if (!verifyEdition()) {
-    		logger.error("Expected edition 'current' or 'next' and received '"+ed+"' instead. Error response being generated and returned.");
+    		logger.error("Expected edition 'current' or 'next' and received '{}' instead. Error response being generated and returned.", InputSanitizer.sanitizeForLog(ed));
     		return Response.status(400).entity(getIllegalArgumentError()).build();    		
     	}
     	
@@ -116,7 +117,7 @@ public class CIFP extends BaseService {
     	cycle = initParameters(ed);
     	
     	if (!verifyEdition()) {
-    		logger.error("Expected edition 'next' and received '"+ed+"' instead. Error response being generated and returned.");
+    		logger.error("Expected edition 'next' and received '{}' instead. Error response being generated and returned.", InputSanitizer.sanitizeForLog(ed));
     		return Response.status(400).entity(getIllegalArgumentError()).build();    		
     	}
     	ProductSet ps = getEdition(cycle);

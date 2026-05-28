@@ -20,10 +20,24 @@
 				<TimeBasedTriggeringPolicy interval="1" modulate="true"/>
 			</Policies>
 		</RollingFile>
+		<!-- STIG V-220635: Structured JSON audit log with 1-year retention -->
+		<RollingFile name="audit-log" fileName="logs/apra-audit.log" filePattern="logs/apra-audit-%d{yyyy-MM-dd}.log.gz">
+			<PatternLayout>
+				<pattern>%msg%n</pattern>
+			</PatternLayout>
+			<Policies>
+				<TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+			</Policies>
+			<DefaultRolloverStrategy max="365"/>
+		</RollingFile>
 	</Appenders>
 	<Loggers>
 		<Logger name="gov.faa.ait.apra" level="info" additivity="false">
 			<AppenderRef ref="apra-log"/>
+		</Logger>
+		<!-- STIG V-220635: Audit logger writes structured JSON -->
+		<Logger name="gov.faa.ait.apra.audit" level="info" additivity="false">
+			<AppenderRef ref="audit-log"/>
 		</Logger>
 		<Root level="info" additivity="true">
 			<AppenderRef ref="error-log" level="warn"/>
