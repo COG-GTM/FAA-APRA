@@ -46,8 +46,10 @@ public class URLCache {
 		return instance;
 	}
 	
-	public synchronized boolean contains (String url) {
-		return cache.contains(url);
+	public boolean contains (String url) {
+		synchronized (URLCache.class) {
+			return cache.contains(url);
+		}
 	}
 	
 	public static synchronized void addUrl (String url) {
