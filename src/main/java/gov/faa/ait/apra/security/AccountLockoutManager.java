@@ -52,10 +52,6 @@ public final class AccountLockoutManager {
         if (record.lockedUntil > 0 && System.currentTimeMillis() < record.lockedUntil) {
             return true;
         }
-        if (record.lockedUntil > 0 && System.currentTimeMillis() >= record.lockedUntil) {
-            records.remove(identifier);
-            return false;
-        }
         return false;
     }
 
