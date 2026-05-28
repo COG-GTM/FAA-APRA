@@ -24,7 +24,7 @@ public final class InputValidator {
     private static final Pattern ALPHA_NUMERIC_PATTERN = Pattern.compile("^[a-zA-Z0-9_\\-. ]+$");
     private static final Pattern EDITION_PATTERN = Pattern.compile("^(current|next|changeset)$", Pattern.CASE_INSENSITIVE);
     private static final Pattern FORMAT_PATTERN = Pattern.compile("^(pdf|tiff|zip)$", Pattern.CASE_INSENSITIVE);
-    private static final Pattern GEONAME_PATTERN = Pattern.compile("^[a-zA-Z0-9\\s.,'\\-]+$");
+    private static final Pattern GEONAME_PATTERN = Pattern.compile("^[a-zA-Z0-9 .,'\\-]+$");
     private static final Pattern SERIES_PATTERN = Pattern.compile("^(low|high|area)$", Pattern.CASE_INSENSITIVE);
     private static final Pattern VOLUME_PATTERN = Pattern.compile(
         "^(US|NORTHWEST|SOUTHWEST|NORTH CENTRAL|SOUTH CENTRAL|EAST CENTRAL|SOUTHEAST|NORTHEAST|PACIFIC|ALASKA)$",

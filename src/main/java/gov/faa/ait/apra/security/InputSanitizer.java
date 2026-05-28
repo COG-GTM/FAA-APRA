@@ -19,7 +19,7 @@ public final class InputSanitizer {
 
     private static final int DEFAULT_MAX_LENGTH = 255;
     private static final Pattern DANGEROUS_CHARS = Pattern.compile("[<>\";&#|`$()\\\\]");
-    private static final Pattern NULL_BYTES = Pattern.compile("\\x00");
+    private static final Pattern CONTROL_CHARS = Pattern.compile("[\\x00\\n\\r\\t]");
 
     private InputSanitizer() { }
 
@@ -44,7 +44,7 @@ public final class InputSanitizer {
         }
         String sanitized = input.trim();
         sanitized = DANGEROUS_CHARS.matcher(sanitized).replaceAll("");
-        sanitized = NULL_BYTES.matcher(sanitized).replaceAll("");
+        sanitized = CONTROL_CHARS.matcher(sanitized).replaceAll("");
         return sanitized.isEmpty() ? null : sanitized;
     }
 
