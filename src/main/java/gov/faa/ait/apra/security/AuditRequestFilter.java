@@ -21,14 +21,13 @@ import javax.ws.rs.ext.Provider;
 /**
  * STIG V-220635 (NIST AU-2, AU-3): Request/response audit logging filter.
  * Logs all API access with structured JSON entries including client IP,
- * HTTP method, request path, and response status code.
+ * HTTP method, request path, response status code, and request duration.
  */
 @Provider
 public class AuditRequestFilter implements ContainerRequestFilter, ContainerResponseFilter {
 
     private static final String START_TIME_PROPERTY = "gov.faa.ait.apra.startTime";
     private static final String CLIENT_IP_PROPERTY = "gov.faa.ait.apra.clientIp";
-    private static final String REQUEST_PATH_PROPERTY = "gov.faa.ait.apra.requestPath";
 
     @Context
     private HttpServletRequest servletRequest;
@@ -37,8 +36,6 @@ public class AuditRequestFilter implements ContainerRequestFilter, ContainerResp
     public void filter(ContainerRequestContext requestContext) throws IOException {
         requestContext.setProperty(START_TIME_PROPERTY, System.currentTimeMillis());
         requestContext.setProperty(CLIENT_IP_PROPERTY, ClientIpResolver.resolve(requestContext, servletRequest));
-        requestContext.setProperty(REQUEST_PATH_PROPERTY,
-            requestContext.getMethod() + " " + requestContext.getUriInfo().getPath());
     }
 
     @Override
@@ -46,20 +43,19 @@ public class AuditRequestFilter implements ContainerRequestFilter, ContainerResp
                        ContainerResponseContext responseContext) throws IOException {
 
         String clientIp = (String) requestContext.getProperty(CLIENT_IP_PROPERTY);
-        String requestPath = (String) requestContext.getProperty(REQUEST_PATH_PROPERTY);
         int statusCode = responseContext.getStatus();
 
         if (clientIp == null) {
-            clientIp = "0.0.0.0";
-        }
-        if (requestPath == null) {
-            requestPath = "unknown";
+            clientIp = ClientIpResolver.resolve(requestContext, servletRequest);
         }
 
         String method = requestContext.getMethod();
         String path = requestContext.getUriInfo().getPath();
 
-        AuditLogger.getInstance().logAccess(clientIp, method, path, statusCode);
+        Long startTime = (Long) requestContext.getProperty(START_TIME_PROPERTY);
+        long durationMs = startTime != null ? System.currentTimeMillis() - startTime : -1;
+
+        AuditLogger.getInstance().logAccess(clientIp, method, path, statusCode, durationMs);
     }
 
 }
