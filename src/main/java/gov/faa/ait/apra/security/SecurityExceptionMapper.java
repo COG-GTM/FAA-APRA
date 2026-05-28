@@ -37,7 +37,7 @@ public class SecurityExceptionMapper implements ExceptionMapper<Throwable> {
             int status = original.getStatus();
             logger.warn("JAX-RS exception: {} (status {})", exception.getMessage(), status);
             return Response.status(status)
-                .entity("{\"status\":{\"code\":" + status + ",\"message\":\"" + original.getStatusInfo().getReasonPhrase() + "\"}}")
+                .entity("{\"status\":{\"code\":" + status + ",\"message\":\"" + escapeJson(original.getStatusInfo().getReasonPhrase()) + "\"}}")
                 .type(MediaType.APPLICATION_JSON)
                 .build();
         }
@@ -51,5 +51,13 @@ public class SecurityExceptionMapper implements ExceptionMapper<Throwable> {
             .entity("{\"status\":{\"code\":500,\"message\":\"An internal error occurred. Please try again later.\"}}")
             .type(MediaType.APPLICATION_JSON)
             .build();
+    }
+
+    private static String escapeJson(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value.replace("\\", "\\\\")
+                     .replace("\"", "\\\"");
     }
 }

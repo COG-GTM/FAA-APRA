@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 public final class InputSanitizer {
 
     private static final int DEFAULT_MAX_LENGTH = 255;
-    private static final Pattern DANGEROUS_CHARS = Pattern.compile("[<>\"';&#|`$()\\\\]");
+    private static final Pattern DANGEROUS_CHARS = Pattern.compile("[<>\";&#|`$()\\\\]");
     private static final Pattern NULL_BYTES = Pattern.compile("\\x00");
 
     private InputSanitizer() { }
