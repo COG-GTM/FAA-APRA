@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
+import java.nio.charset.StandardCharsets;
 
 import gov.faa.ait.apra.bootstrap.Config;
 import gov.faa.ait.apra.cycle.ChartCycleData;
@@ -151,7 +151,7 @@ public class HelicopterChartCycleClient {
 			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
 					false);
 			mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
-			cycle = mapper.readValue(unbound.getBytes(Charsets.UTF_16), ChartCycleData.class);
+			cycle = mapper.readValue(unbound.getBytes(StandardCharsets.UTF_16), ChartCycleData.class);
 		} catch (Exception ex) {
 			logger.error("getChartCycle", ex);
 			cycle = null;

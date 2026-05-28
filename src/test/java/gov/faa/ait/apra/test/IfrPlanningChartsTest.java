@@ -13,11 +13,11 @@
  */
 package gov.faa.ait.apra.test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Calendar;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import gov.faa.ait.apra.api.UsIfrVfrPlanning;
 import gov.faa.ait.apra.jaxb.ProductSet;
@@ -34,8 +34,8 @@ public class IfrPlanningChartsTest {
 		ProductSet result = (ProductSet) api.getIfrPlanningChart("current", "pdf").getEntity();
 		assertTrue(!result.getEdition().isEmpty());
 		String url = result.getEdition().get(0).getProduct().getUrl();
-		assertTrue("URL was null",url!=null);
-		assertTrue("URL did not match pattern",url.matches("http://aeronav.faa.gov/enroute/IFR_Planning/[0-9]{2}-[0-9]{2}-[0-9]{4}/US_IFR_Planning_pdf.zip"));
+		assertTrue(url!=null, "URL was null");
+		assertTrue(url.matches("http://aeronav.faa.gov/enroute/IFR_Planning/[0-9]{2}-[0-9]{2}-[0-9]{4}/US_IFR_Planning_pdf.zip"), "URL did not match pattern");
 	}
 
 }

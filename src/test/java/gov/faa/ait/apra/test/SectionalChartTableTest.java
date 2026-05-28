@@ -13,12 +13,12 @@
  */
 package gov.faa.ait.apra.test;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
 import gov.faa.ait.apra.cycle.ChartCycleData;
@@ -39,9 +39,9 @@ public class SectionalChartTableTest {
 		ChartCycleData jsonData = buildJson();
 		ChartInfoTable table = new ChartInfoTable(jsonData);
 		ChartInfoTableKey key = new ChartInfoTableKey("ALBUQUERQUE", "CURRENT", "SECTIONAL");
-		assertTrue("Expected Key not found", table.containsKey(key));
+		assertTrue(table.containsKey(key), "Expected Key not found");
 		ChartInfoTableKey key2 = new ChartInfoTableKey("ALBUQUERQUE", "NEXT", "SECTIONAL");
-		assertTrue("Expected Key not found", table.containsKey(key2));
+		assertTrue(table.containsKey(key2), "Expected Key not found");
 		
 	}
 	

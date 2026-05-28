@@ -49,14 +49,33 @@ public class DownloadServiceApp extends Application {
 		if (logger.isDebugEnabled())
 			logger.debug("Resource classes being retrieved from AirportStatus jersey application.");
 		Set<Class<?>> s = new HashSet <>();
-		s.add(gov.faa.ait.apra.api.CIFP.class);
-		s.add(gov.faa.ait.apra.api.ProductApiListener.class);
+
+		// Endpoint resource classes
+		s.add(CIFP.class);
+		s.add(DailyDigitalObstacleFile.class);
+		s.add(DigitalEnrouteCharts.class);
+		s.add(DigitalEnrouteSupplementCharts.class);
+		s.add(GulfOfMexicoEnrouteCharts.class);
+		s.add(HelicopterCharts.class);
+		s.add(IFREnrouteCharts.class);
+		s.add(NASRSubscription.class);
+		s.add(OceanicRouteCharts.class);
+		s.add(SectionalCharts.class);
+		s.add(SupplementCharts.class);
+		s.add(TerminalAreaCharts.class);
+		s.add(TerminalProcedureCharts.class);
+		s.add(UsIfrVfrPlanning.class);
+		s.add(VFRCharts.class);
+		s.add(WallPlanningCharts.class);
+
+		// Swagger and lifecycle
+		s.add(ProductApiListener.class);
 		s.add(io.swagger.jaxrs.listing.ApiListingResource.class);
 		s.add(io.swagger.jaxrs.listing.SwaggerSerializers.class);
-		
-		//Manually adding MOXyJSONFeature
-        s.add(org.glassfish.jersey.moxy.json.MoxyJsonFeature.class);
-        
+
+		// MOXy JSON provider
+		s.add(org.glassfish.jersey.moxy.json.MoxyJsonFeature.class);
+
 		return s;
 	}
 }

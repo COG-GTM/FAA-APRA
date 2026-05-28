@@ -13,7 +13,8 @@
  */
 package gov.faa.ait.apra.util;
 
-import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -29,7 +30,9 @@ import gov.faa.ait.apra.bootstrap.Config;
 import gov.faa.ait.apra.cycle.ChartCycleData;
 
 public class TableChartClient {
-	
+
+	private static final Client HTTP_CLIENT = ClientBuilder.newClient();
+	private static final DateTimeFormatter VFR_DATE_FORMATTER = DateTimeFormatter.ofPattern("MM/dd/yyyy");
 	private static Logger logger = LoggerFactory.getLogger(TableChartClient.class);
 	private static ChartInfoTable sectionalTable;
 	private static Date lastUpdate;
@@ -69,18 +72,16 @@ public class TableChartClient {
 		 */
 		String unbound = "";
 
-		SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy");
 		StringBuilder url = new StringBuilder();
 		url.append(Config.getDenodoHost()).append(Config.getDenodoVFRCycleResource()).append("?query_date=")
-										.append(sdf.format(targetDate))
+										.append(VFR_DATE_FORMATTER.format(
+											targetDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()))
 										.append("&%24format=json");
 		logger.info("Calling denodo for sectional at "+url.toString());
 		TableChartClient.lastUpdate = new Date(System.currentTimeMillis());
 		
 		try {
-			Client client = ClientBuilder.newClient();	
-			
-			WebTarget webTarget = client.target(url.toString());
+			WebTarget webTarget = HTTP_CLIENT.target(url.toString());
 			
 			long now = System.currentTimeMillis();
 			unbound = webTarget.request(MediaType.APPLICATION_JSON_TYPE).get(String.class);

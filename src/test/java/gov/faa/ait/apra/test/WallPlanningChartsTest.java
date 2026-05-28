@@ -13,19 +13,17 @@
  */
 package gov.faa.ait.apra.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
-import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.stream.Stream;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,46 +35,26 @@ import gov.faa.ait.apra.jaxb.ProductSet;
  * @author FAA
  *
  */
-		
-@RunWith(Parameterized.class)
 public class WallPlanningChartsTest {
-	private Date releaseDate = null;
-
 	private static final Logger logger = LoggerFactory
 			.getLogger(WallPlanningChartsTest.class);
 	private WallPlanningCharts wallPlan;
 
-	public WallPlanningChartsTest (Date date) {
-		GregorianCalendar cal = new GregorianCalendar();
-		cal.clear();
-		cal.set(2015,  5, 1);
-		this.releaseDate = cal.getTime();
-	}
-	/**
-	 * initialize
-	 */
-	@Before
+	@BeforeEach
 	public void initialize() {
 		wallPlan = new WallPlanningCharts();
 	}
-/**
- * cycleNumbers
- * @return
- */
-	@Parameterized.Parameters
-	public static Collection<Date> cycleNumbers() {
-		Date[] params = new Date[10];
 
+	static Stream<Date> cycleNumbers() {
+		Date[] params = new Date[10];
 		GregorianCalendar cal = new GregorianCalendar();
 		cal.clear();
 		cal.set(2015, 12, 11);
-
 		params[0] = cal.getTime();
 		for (int i = 1; i < 6; i++) {
 			cal.add(Calendar.DATE, 56);
 			params[i] = cal.getTime();
 		}
-
 		cal.set(2016, 0, 7);
 		params[6] = cal.getTime();
 		cal.set(2016, 1, 4);
@@ -85,20 +63,16 @@ public class WallPlanningChartsTest {
 		params[8] = cal.getTime();
 		cal.set(2016, 2, 31);
 		params[9] = cal.getTime();
-
-		return Arrays.asList(params);
+		return Stream.of(params);
 	}
 
-	/**
-	 * testDownloadOperations
-	 */
-	@Test
-	public void testDownloadOperations() {
-		
+	@ParameterizedTest
+	@MethodSource("cycleNumbers")
+	public void testDownloadOperations(Date date) {
 		ProductSet current = (ProductSet) wallPlan.getProductRelease("current", "pdf").getEntity();
 		if (current.getEdition().size() > 0)
 			logger.info(current.getEdition().get(0).getProduct().getUrl());
-		assertEquals(Integer.valueOf(current.getStatus().getCode()), 
+		assertEquals(Integer.valueOf(current.getStatus().getCode()),
 			Integer.valueOf(200));
 		ProductSet next = (ProductSet) wallPlan.getProductRelease("next", "pdf").getEntity();
 		if (next.getEdition().size() > 0)
@@ -106,26 +80,24 @@ public class WallPlanningChartsTest {
 		assertEquals(Integer.valueOf(next.getStatus().getCode()), Integer.valueOf(404));
 	}
 
-	/**
-	 * testEditionOperations
-	 */
-	@Test
-	public void testEditionOperations() {
+	@ParameterizedTest
+	@MethodSource("cycleNumbers")
+	public void testEditionOperations(Date date) {
 		ProductSet current = (ProductSet) wallPlan.getProductEdition("current", "pdf").getEntity();
-		assertEquals(Integer.valueOf(current.getStatus().getCode()), 
+		assertEquals(Integer.valueOf(current.getStatus().getCode()),
 			Integer.valueOf(200));
 
 		ProductSet next = (ProductSet) wallPlan.getProductEdition("Next", "pdf").getEntity();
-			
+
 		switch (next.getStatus().getCode()) {
-			case 200: assertEquals(Integer.valueOf(200), Integer.valueOf(next.getStatus().getCode()));
+			case 200:
+				assertEquals(Integer.valueOf(200), Integer.valueOf(next.getStatus().getCode()));
 				break;
-			case 404: assertEquals(Integer.valueOf(404), Integer.valueOf(next.getStatus().getCode()));
+			case 404:
+				assertEquals(Integer.valueOf(404), Integer.valueOf(next.getStatus().getCode()));
 				break;
-			
 			default:
 				fail();
 		}
-		
 	}
 }

@@ -13,94 +13,111 @@
  */
 package gov.faa.ait.apra.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.Mockito.when;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
+import java.util.stream.Stream;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import gov.faa.ait.apra.cycle.ChartCycleClient;
+import gov.faa.ait.apra.cycle.ChartCycleData;
 import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
 
-@RunWith(Parameterized.class)
+@ExtendWith(MockitoExtension.class)
 public class ChartCycleTest {
-	private Date checkDate;
-	private Integer expectedCycle;
+	@Mock
 	private ChartCycleClient client;
-	
-	public ChartCycleTest (Date date, Integer cycle) {
-		this.checkDate = new Date(date.getTime());
-		this.expectedCycle = cycle;
-	}
-	
-	@Before
-	public void initialize() {
-		client = new ChartCycleClient();
-	}
-	
-	@Parameterized.Parameters
-	public static List<Object[]> cycleNumbers () {
-		SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy");
-		Object [] [] params = null;
-		
-		try { 
-			params = new Object [] [] {
-				{formatter.parse("06/17/2016"), Integer.valueOf(3)},
-				{formatter.parse("10/13/2016"), Integer.valueOf(5)},
-				{formatter.parse("11/10/2016"), Integer.valueOf(6)},
-				{formatter.parse("01/01/2017"), Integer.valueOf(6)},
-				{formatter.parse("12/25/2016"), Integer.valueOf(6)},
-				{formatter.parse("01/05/2017"), Integer.valueOf(1)},
-				{formatter.parse("02/03/2017"), Integer.valueOf(1)},
-				{formatter.parse("06/14/2017"), Integer.valueOf(3)},
-				{formatter.parse("09/15/2017"), Integer.valueOf(5)},
-				{formatter.parse("11/09/2017"), Integer.valueOf(6)}
-			};
-		}
-		catch (ParseException e) {
-			params = new Object [] [] {
-				{new Date(System.currentTimeMillis()), Integer.valueOf(1) }
-			};
-		}
 
-		return Arrays.asList(params);
+	private static ChartCycleElementsJson buildElement(String periodCode, String typeCode, String cycleNumber) {
+		ChartCycleElementsJson e = new ChartCycleElementsJson();
+		e.setChart_cycle_period_code(periodCode);
+		e.setChart_cycle_type_code(typeCode);
+		e.setChart_cycle_number(cycleNumber);
+		e.setChart_effective_date(new Date());
+		return e;
 	}
-	
-	@Test
-	public void testChartCycle() {
+
+	private static ChartCycleData buildCycleData(String cycleNumber) {
+		ChartCycleElementsJson[] elements = new ChartCycleElementsJson[] {
+			buildElement("CURRENT", "28 DAY", cycleNumber),
+			buildElement("NEXT", "28 DAY", String.valueOf(Integer.parseInt(cycleNumber) + 1)),
+			buildElement("CURRENT", "56 DAY", cycleNumber),
+			buildElement("NEXT", "56 DAY", String.valueOf(Integer.parseInt(cycleNumber) + 1))
+		};
+		return new ChartCycleData("chart_cycle", elements);
+	}
+
+	static Stream<Arguments> cycleNumbers() {
+		SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy");
+		try {
+			return Stream.of(
+				Arguments.of(formatter.parse("06/17/2016"), 3),
+				Arguments.of(formatter.parse("10/13/2016"), 5),
+				Arguments.of(formatter.parse("11/10/2016"), 6),
+				Arguments.of(formatter.parse("01/01/2017"), 6),
+				Arguments.of(formatter.parse("12/25/2016"), 6),
+				Arguments.of(formatter.parse("01/05/2017"), 1),
+				Arguments.of(formatter.parse("02/03/2017"), 1),
+				Arguments.of(formatter.parse("06/14/2017"), 3),
+				Arguments.of(formatter.parse("09/15/2017"), 5),
+				Arguments.of(formatter.parse("11/09/2017"), 6)
+			);
+		} catch (ParseException e) {
+			return Stream.of(Arguments.of(new Date(), 1));
+		}
+	}
+
+	@ParameterizedTest
+	@MethodSource("cycleNumbers")
+	public void testChartCycle(Date checkDate, int expectedCycle) {
+		ChartCycleData data = buildCycleData(String.valueOf(expectedCycle));
+		when(client.getChartCycle(any(Date.class), anyBoolean())).thenReturn(data);
+		when(client.getCurrent56DayCycle()).thenReturn(
+			buildElement("CURRENT", "56 DAY", String.valueOf(expectedCycle)));
+
 		client.getChartCycle(checkDate, true);
 		String cycleNumber = client.getCurrent56DayCycle().getChart_cycle_number();
-		assertEquals (expectedCycle.intValue(), Integer.parseInt(cycleNumber));	
+		assertEquals(expectedCycle, Integer.parseInt(cycleNumber));
 	}
-	
+
 	@Test
-	public void getCurrent28DayCycle () {
+	public void getCurrent28DayCycle() {
+		when(client.getCurrent28DayCycle()).thenReturn(buildElement("CURRENT", "28 DAY", "1"));
 		ChartCycleElementsJson cc = client.getCurrent28DayCycle();
 		assertNotNull(cc);
 	}
-	
+
 	@Test
-	public void getNext28DayCycle () {
+	public void getNext28DayCycle() {
+		when(client.getNext28DayCycle()).thenReturn(buildElement("NEXT", "28 DAY", "2"));
 		ChartCycleElementsJson cc = client.getNext28DayCycle();
 		assertNotNull(cc);
 	}
-	
+
 	@Test
-	public void getCurrent56DayCycle () {
+	public void getCurrent56DayCycle() {
+		when(client.getCurrent56DayCycle()).thenReturn(buildElement("CURRENT", "56 DAY", "1"));
 		ChartCycleElementsJson cc = client.getCurrent56DayCycle();
 		assertNotNull(cc);
 	}
-	
+
 	@Test
-	public void getNext56DayCycle () {
+	public void getNext56DayCycle() {
+		when(client.getNext56DayCycle()).thenReturn(buildElement("NEXT", "56 DAY", "2"));
 		ChartCycleElementsJson cc = client.getNext56DayCycle();
 		assertNotNull(cc);
 	}

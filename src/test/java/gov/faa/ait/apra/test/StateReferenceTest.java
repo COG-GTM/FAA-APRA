@@ -13,12 +13,12 @@
  */
 package gov.faa.ait.apra.test;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.Locale;
 
-import org.apache.commons.lang3.text.WordUtils;
-import org.junit.Test;
+import org.apache.commons.text.WordUtils;
+import org.junit.jupiter.api.Test;
 
 
 import gov.faa.ait.apra.bootstrap.USStateReferenceData;
