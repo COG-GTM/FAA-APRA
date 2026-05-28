@@ -13,9 +13,11 @@
  */
 package gov.faa.ait.apra.api.management;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import gov.faa.ait.apra.bootstrap.Config;
@@ -34,6 +36,9 @@ import gov.faa.ait.apra.cycle.WallPlanningChartCycleClient;
  */
 public class ManagementControl {
 	private static int mode = 1;
+
+	@Context
+	private HttpServletRequest servletRequest;
 
 	@Path("/health")
     @GET
@@ -57,12 +62,13 @@ public class ManagementControl {
 	 * Stop the service. This will cause the service healthcheck to return "ServerDown" indicating to the load balancer that the service is offline
 	 * @return the String ServerDown
 	 */
-	public static String stop() {
+	public String stop() {
+		String clientIp = getClientIp();
 		try {
 			ManagementControl.mode = 0;
-			AuditLogger.logManagementAccess("system", "stop", "success");
+			AuditLogger.logManagementAccess(clientIp, "stop", "success");
 		} catch (Exception e) {
-			AuditLogger.logManagementAccess("system", "stop", "failure");
+			AuditLogger.logManagementAccess(clientIp, "stop", "failure");
 			throw e;
 		}
 		return "ServerDown";
@@ -75,12 +81,13 @@ public class ManagementControl {
 	 * Start or restart the service. This will cause the healthcheck to return "ServerOK" indicating to the load balancer that the service is online
 	 * @return the String ServerOK
 	 */
-	public static String start() {
+	public String start() {
+		String clientIp = getClientIp();
 		try {
 			ManagementControl.mode = 1;
-			AuditLogger.logManagementAccess("system", "start", "success");
+			AuditLogger.logManagementAccess(clientIp, "start", "success");
 		} catch (Exception e) {
-			AuditLogger.logManagementAccess("system", "start", "failure");
+			AuditLogger.logManagementAccess(clientIp, "start", "failure");
 			throw e;
 		}
 		return "ServerOK";
@@ -94,6 +101,7 @@ public class ManagementControl {
 	 * @return the string "Cycle reload complete"
 	 */
 	public String refresh() {
+		String clientIp = getClientIp();
 		try {
 			ChartCycleClient cycleClient = new ChartCycleClient();
 			cycleClient.forceUpdate();
@@ -104,9 +112,9 @@ public class ManagementControl {
 			WallPlanningChartCycleClient wpClient = new WallPlanningChartCycleClient();
 			wpClient.forceUpdate();
 			URLCache.getInstance().flush();
-			AuditLogger.logManagementAccess("system", "flush", "success");
+			AuditLogger.logManagementAccess(clientIp, "flush", "success");
 		} catch (Exception e) {
-			AuditLogger.logManagementAccess("system", "flush", "failure");
+			AuditLogger.logManagementAccess(clientIp, "flush", "failure");
 			throw e;
 		}
 		return "Cycle Reload Complete";
@@ -120,13 +128,21 @@ public class ManagementControl {
 	 * @return the string Config Reload Complete
 	 */
 	public String reloadConfig() {
+		String clientIp = getClientIp();
 		try {
 			Config.loadConfig();
-			AuditLogger.logManagementAccess("system", "config", "success");
+			AuditLogger.logManagementAccess(clientIp, "config", "success");
 		} catch (Exception e) {
-			AuditLogger.logManagementAccess("system", "config", "failure");
+			AuditLogger.logManagementAccess(clientIp, "config", "failure");
 			throw e;
 		}
 		return "Config Reload Complete";
+	}
+
+	private String getClientIp() {
+		if (servletRequest == null) {
+			return "unknown";
+		}
+		return servletRequest.getRemoteAddr();
 	}
 }
