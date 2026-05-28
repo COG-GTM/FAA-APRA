@@ -24,7 +24,8 @@ import org.slf4j.LoggerFactory;
  * STIG V-220629: Authentication filter for management endpoints.
  * Restricts access to /management/* paths by requiring a valid
  * API key provided via the X-Management-Key header or by
- * verifying the request originates from localhost.
+ * verifying the request originates from localhost (using the
+ * direct TCP peer address, not the spoofable X-Forwarded-For header).
  */
 @Provider
 public class ManagementAuthFilter implements ContainerRequestFilter {
@@ -49,11 +50,13 @@ public class ManagementAuthFilter implements ContainerRequestFilter {
             return;
         }
 
-        String clientIp = getClientIp();
+        String directIp = getDirectClientIp();
+        String loggableIp = getLoggableClientIp();
 
-        // Allow localhost access for operational tooling
-        if (isLocalhost(clientIp)) {
-            AuditLogger.logManagementAccess(clientIp, path, "success");
+        // Allow localhost access for operational tooling.
+        // Uses getRemoteAddr() (TCP peer) to prevent X-Forwarded-For spoofing.
+        if (isLocalhost(directIp)) {
+            AuditLogger.logManagementAccess(loggableIp, path, "success");
             return;
         }
 
@@ -62,8 +65,8 @@ public class ManagementAuthFilter implements ContainerRequestFilter {
         String expectedKey = System.getenv(MGMT_KEY_ENV);
 
         if (expectedKey == null || expectedKey.isEmpty()) {
-            logger.warn("Management key not configured. Denying remote management access from " + clientIp);
-            AuditLogger.logAuthFailure(clientIp, path, "management_key_not_configured");
+            logger.warn("Management key not configured. Denying remote management access from " + loggableIp);
+            AuditLogger.logAuthFailure(loggableIp, path, "management_key_not_configured");
             requestContext.abortWith(
                 Response.status(Response.Status.FORBIDDEN)
                     .entity("{\"error\":\"Access denied\"}")
@@ -72,8 +75,8 @@ public class ManagementAuthFilter implements ContainerRequestFilter {
         }
 
         if (providedKey == null || !constantTimeEquals(providedKey, expectedKey)) {
-            logger.warn("Invalid management key from " + clientIp);
-            AuditLogger.logAuthFailure(clientIp, path, "invalid_management_key");
+            logger.warn("Invalid management key from " + loggableIp);
+            AuditLogger.logAuthFailure(loggableIp, path, "invalid_management_key");
             requestContext.abortWith(
                 Response.status(Response.Status.FORBIDDEN)
                     .entity("{\"error\":\"Access denied\"}")
@@ -81,10 +84,25 @@ public class ManagementAuthFilter implements ContainerRequestFilter {
             return;
         }
 
-        AuditLogger.logManagementAccess(clientIp, path, "success");
+        AuditLogger.logManagementAccess(loggableIp, path, "success");
     }
 
-    private String getClientIp() {
+    /**
+     * Returns the actual TCP peer address for authentication decisions.
+     * This cannot be spoofed by client-supplied headers.
+     */
+    private String getDirectClientIp() {
+        if (servletRequest == null) {
+            return "unknown";
+        }
+        return servletRequest.getRemoteAddr();
+    }
+
+    /**
+     * Returns the client IP for logging/auditing purposes.
+     * Prefers X-Forwarded-For when behind a trusted reverse proxy.
+     */
+    private String getLoggableClientIp() {
         if (servletRequest == null) {
             return "unknown";
         }
@@ -101,17 +119,19 @@ public class ManagementAuthFilter implements ContainerRequestFilter {
 
     /**
      * Constant-time string comparison to prevent timing attacks.
+     * Compares all characters regardless of length difference to avoid
+     * leaking the expected key length.
      */
     private static boolean constantTimeEquals(String a, String b) {
         if (a == null || b == null) {
             return false;
         }
-        if (a.length() != b.length()) {
-            return false;
-        }
-        int result = 0;
-        for (int i = 0; i < a.length(); i++) {
-            result |= a.charAt(i) ^ b.charAt(i);
+        int maxLen = Math.max(a.length(), b.length());
+        int result = a.length() ^ b.length();
+        for (int i = 0; i < maxLen; i++) {
+            char ca = i < a.length() ? a.charAt(i) : 0;
+            char cb = i < b.length() ? b.charAt(i) : 0;
+            result |= ca ^ cb;
         }
         return result == 0;
     }
