@@ -57,9 +57,16 @@ public final class AuditLogger {
     }
 
     public static void logAccess(String ipAddress, String method, String path, int statusCode) {
+        logAccess(ipAddress, method, path, statusCode, -1);
+    }
+
+    public static void logAccess(String ipAddress, String method, String path, int statusCode, long durationMs) {
         String outcome = statusCode < 400 ? "success" : "failure";
-        log("api_access", ipAddress, method, path, outcome,
-            "status_code=" + statusCode);
+        String details = "status_code=" + statusCode;
+        if (durationMs >= 0) {
+            details += ",duration_ms=" + durationMs;
+        }
+        log("api_access", ipAddress, method, path, outcome, details);
     }
 
     public static void logSecurityViolation(String ipAddress, String method, String path, String violation) {

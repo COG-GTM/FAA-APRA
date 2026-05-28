@@ -53,7 +53,7 @@ public class SecurityAuditFilter implements ContainerRequestFilter, ContainerRes
         Long startTime = (Long) requestContext.getProperty(START_TIME_PROPERTY);
         long duration = startTime != null ? System.currentTimeMillis() - startTime : -1;
 
-        AuditLogger.logAccess(clientIp, method, path, statusCode);
+        AuditLogger.logAccess(clientIp, method, path, statusCode, duration);
 
         if (statusCode == 401 || statusCode == 403) {
             AuditLogger.logSecurityViolation(clientIp, method, path,

@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import io.swagger.jaxrs.config.BeanConfig;
 
+import gov.faa.ait.apra.security.InputValidationFilter;
 import gov.faa.ait.apra.security.ManagementAuthFilter;
 import gov.faa.ait.apra.security.RateLimitFilter;
 import gov.faa.ait.apra.security.SecurityAuditFilter;
@@ -68,6 +69,7 @@ public class DownloadServiceApp extends Application {
         s.add(SecurityAuditFilter.class);
         s.add(ManagementAuthFilter.class);
         s.add(RateLimitFilter.class);
+        s.add(InputValidationFilter.class);
         s.add(SecurityExceptionMapper.class);
 
 		return s;
