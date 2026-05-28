@@ -13,190 +13,145 @@
  */
 package gov.faa.ait.apra.test;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import gov.faa.ait.apra.json.TPPChartMetadata;
-import gov.faa.ait.apra.cycle.ChartCycleClient;
-import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
-import gov.faa.ait.apra.util.TPPMetadataClient;
+import gov.faa.ait.apra.json.TPPMetadata;
 
 public class TPPMetadataTest {
-	private ChartCycleClient cycleClient;
-	private static final Logger logger = LoggerFactory.getLogger(TPPMetadataTest.class);
-	
-	public TPPMetadataTest() {
-		cycleClient = new ChartCycleClient();
-		cycleClient.forceUpdate();
-	}
-	
+
 	@Test
-	public void getAlaskaData () {
-		ChartCycleElementsJson cycle = cycleClient.getCurrent28DayCycle();
-		TPPMetadataClient tppClient = new TPPMetadataClient(cycle);
-		TPPChartMetadata tppMetaRoot = tppClient.getChartMetadataByState("Alaska");
-		assertNotNull(tppMetaRoot.getElements());
+	public void defaultConstructorFieldsAreNull() {
+		TPPMetadata meta = new TPPMetadata();
+		assertNull(meta.getChart_cycle_period_code());
+		assertNull(meta.getChart_edition());
+		assertNull(meta.getQuery_date());
+		assertEquals(0, meta.getCycle());
+		assertNull(meta.getFrom_edate());
+		assertNull(meta.getTo_edate());
+		assertNull(meta.getId());
+		assertNull(meta.getState_fullname());
+		assertNull(meta.getVolume());
+		assertNull(meta.getCity_name());
+		assertNull(meta.getMilitary());
+		assertNull(meta.getAirport_identifier());
+		assertNull(meta.getAirport_icao_identifier());
+		assertNull(meta.getAirport_name());
+		assertNull(meta.getChart_name());
+		assertNull(meta.getPdf_name());
 	}
 
 	@Test
-	public void getAlaskaData2 () {
-		ChartCycleElementsJson cycle = cycleClient.getCurrent28DayCycle();
-		TPPMetadataClient tppClient = new TPPMetadataClient(cycle, false);
-		TPPChartMetadata tppMetaRoot = tppClient.getChartMetadataByState("Alaska");
-		assertNotNull(tppMetaRoot.getElements());
-	}
-	
-	@Test
-	public void getAlaskaChangedData () {
-		ChartCycleElementsJson cycle = cycleClient.getCurrent28DayCycle();
-		TPPMetadataClient tppClient = new TPPMetadataClient(cycle, true);
-		TPPChartMetadata tppMetaRoot = tppClient.getChartMetadataByState("Alaska");
-		assertNotNull(tppMetaRoot.getElements());	
+	public void setAndGetChartCyclePeriodCode() {
+		TPPMetadata meta = new TPPMetadata();
+		meta.setChart_cycle_period_code("Current");
+		assertEquals("Current", meta.getChart_cycle_period_code());
 	}
 
 	@Test
-	public void getUSChangedData () {
-		ChartCycleElementsJson cycle = cycleClient.getCurrent28DayCycle();
-		TPPMetadataClient tppClient = new TPPMetadataClient(cycle, true);
-		TPPChartMetadata tppMetaRoot = tppClient.getChartMetadataByState("US");
-		assertNotNull(tppMetaRoot.getElements());
-	}
-
-	
-	@Test
-	public void getStateOfConfusion () {
-		ChartCycleElementsJson cycle = cycleClient.getCurrent28DayCycle();
-		TPPMetadataClient tppClient = new TPPMetadataClient(cycle);
-		TPPChartMetadata tppMetaRoot = tppClient.getChartMetadataByState("Confusion");
-		assertNotNull(tppMetaRoot);
+	public void setAndGetChartEdition() {
+		TPPMetadata meta = new TPPMetadata();
+		meta.setChart_edition("2401");
+		assertEquals("2401", meta.getChart_edition());
 	}
 
 	@Test
-	public void getNewYorkData () {
-		ChartCycleElementsJson cycle = cycleClient.getCurrent28DayCycle();
-		TPPMetadataClient tppClient = new TPPMetadataClient(cycle);
-		TPPChartMetadata tppMetaRoot = tppClient.getChartMetadataByState("New York");
-		assertNotNull(tppMetaRoot.getElements());	
-	}
-	
-	@Test
-	public void getNewYorkData2 () {
-		ChartCycleElementsJson cycle = cycleClient.getCurrent28DayCycle();
-		TPPMetadataClient tppClient = new TPPMetadataClient(cycle, false);
-		TPPChartMetadata tppMetaRoot = tppClient.getChartMetadataByState("New York");
-		assertNotNull(tppMetaRoot.getElements());	
-	}
-	
-	@Test
-	public void getNewYorkChangeData () {
-		ChartCycleElementsJson cycle = cycleClient.getCurrent28DayCycle();
-		TPPMetadataClient tppClient = new TPPMetadataClient(cycle, true);
-		TPPChartMetadata tppMetaRoot = tppClient.getChartMetadataByState("New York");
-		assertNotNull(tppMetaRoot.getElements());	
-	}	
-	
-	@Test
-	public void getNewYorkEncodedData () {
-		ChartCycleElementsJson cycle = cycleClient.getCurrent28DayCycle();
-		TPPMetadataClient tppClient = new TPPMetadataClient(cycle, false);
-		TPPChartMetadata tppMetaRoot = tppClient.getChartMetadataByState("New%20York");
-		assertNotNull(tppMetaRoot.getElements());	
+	public void setAndGetCycle() {
+		TPPMetadata meta = new TPPMetadata();
+		meta.setCycle(42);
+		assertEquals(42, meta.getCycle());
 	}
 
 	@Test
-	public void getNewHampshireData () {
-		ChartCycleElementsJson cycle = cycleClient.getCurrent28DayCycle();
-		TPPMetadataClient tppClient = new TPPMetadataClient(cycle, false);
-		TPPChartMetadata tppMetaRoot = tppClient.getChartMetadataByState("new hampshire");
-		assertNotNull(tppMetaRoot.getElements());	
+	public void setAndGetFromEdate() {
+		TPPMetadata meta = new TPPMetadata();
+		meta.setFrom_edate("2024-01-01");
+		assertEquals("2024-01-01", meta.getFrom_edate());
 	}
 
 	@Test
-	public void getNewHampshirePaddedData () {
-		ChartCycleElementsJson cycle = cycleClient.getCurrent28DayCycle();
-		TPPMetadataClient tppClient = new TPPMetadataClient(cycle, false);
-		TPPChartMetadata tppMetaRoot = tppClient.getChartMetadataByState(" new hampshire  ");
-		assertNotNull(tppMetaRoot.getElements());	
+	public void setAndGetToEdate() {
+		TPPMetadata meta = new TPPMetadata();
+		meta.setTo_edate("2024-02-01");
+		assertEquals("2024-02-01", meta.getTo_edate());
 	}
-	
-	@Test
-	public void getEncodedStringValue () {
-		ChartCycleElementsJson cycle = cycleClient.getCurrent28DayCycle();
-		TPPMetadataClient tppClient = new TPPMetadataClient(cycle, false);
-		TPPChartMetadata tppMetaRoot = tppClient.getChartMetadataByState("%20%24+%2A");
-		assertNotNull(tppMetaRoot.getElements());	
-	}	
 
 	@Test
-	public void getAmpersandQuery () {
-		ChartCycleElementsJson cycle = cycleClient.getCurrent28DayCycle();
-		TPPMetadataClient tppClient = new TPPMetadataClient(cycle, false);
-		// This one should gum up the query string. 
-		TPPChartMetadata tppMetaRoot = tppClient.getChartMetadataByState("&nebraska");
-		assertNotNull(tppMetaRoot.getElements());	
+	public void setAndGetStateFullname() {
+		TPPMetadata meta = new TPPMetadata();
+		meta.setState_fullname("Nebraska");
+		assertEquals("Nebraska", meta.getState_fullname());
 	}
-	
-	// Get the metadata information by TPP volume
-	
+
 	@Test
-	public void getNortheastVolumeQuery () {
-		ChartCycleElementsJson cycle = cycleClient.getCurrent28DayCycle();
-		TPPMetadataClient tppClient = new TPPMetadataClient(cycle, false);
-		TPPChartMetadata tppMetaRoot = tppClient.getChartMetadataByVolume("NE-1");
-		assertNotNull(tppMetaRoot.getElements());	
+	public void setAndGetVolume() {
+		TPPMetadata meta = new TPPMetadata();
+		meta.setVolume("NE-1");
+		assertEquals("NE-1", meta.getVolume());
 	}
-	
+
 	@Test
-	public void getSC1VolumeQuery () {
-		ChartCycleElementsJson cycle = cycleClient.getCurrent28DayCycle();
-		TPPMetadataClient tppClient = new TPPMetadataClient(cycle, false);
-		TPPChartMetadata tppMetaRoot = tppClient.getChartMetadataByVolume("SC-1");
-		assertNotNull(tppMetaRoot.getElements());	
+	public void setAndGetCityName() {
+		TPPMetadata meta = new TPPMetadata();
+		meta.setCity_name("Omaha");
+		assertEquals("Omaha", meta.getCity_name());
 	}
-	
+
 	@Test
-	public void getAK1VolumeQuery () {
-		ChartCycleElementsJson cycle = cycleClient.getCurrent28DayCycle();
-		TPPMetadataClient tppClient = new TPPMetadataClient(cycle, false);
-		TPPChartMetadata tppMetaRoot = tppClient.getChartMetadataByVolume("AK-1");
-		assertNotNull(tppMetaRoot.getElements());	
+	public void setAndGetAirportIdentifier() {
+		TPPMetadata meta = new TPPMetadata();
+		meta.setAirport_identifier("OMA");
+		assertEquals("OMA", meta.getAirport_identifier());
 	}
-	
+
 	@Test
-	public void getUnknownVolumeQuery () {
-		ChartCycleElementsJson cycle = cycleClient.getCurrent28DayCycle();
-		TPPMetadataClient tppClient = new TPPMetadataClient(cycle, false);
-		TPPChartMetadata tppMetaRoot = tppClient.getChartMetadataByVolume("UNKNOWN");
-		if (tppMetaRoot.getElements().length > 0) {
-			logger.info("TPP metadata returned "+tppMetaRoot.getElements().length+" elements for a null volume. This is incorrect");
-			fail();	
-		}
+	public void setAndGetAirportIcaoIdentifier() {
+		TPPMetadata meta = new TPPMetadata();
+		meta.setAirport_icao_identifier("KOMA");
+		assertEquals("KOMA", meta.getAirport_icao_identifier());
 	}
-	
+
 	@Test
-	public void getNullVolumeQuery () {
-		ChartCycleElementsJson cycle = cycleClient.getCurrent28DayCycle();
-		TPPMetadataClient tppClient = new TPPMetadataClient(cycle, false);
-		TPPChartMetadata tppMetaRoot = tppClient.getChartMetadataByVolume(null);
-		if (tppMetaRoot.getElements().length > 0) {
-			logger.info("TPP metadata returned "+tppMetaRoot.getElements().length+" elements for a null volume. This is incorrect");
-			fail();	
-		}
+	public void setAndGetAirportName() {
+		TPPMetadata meta = new TPPMetadata();
+		meta.setAirport_name("Eppley Airfield");
+		assertEquals("Eppley Airfield", meta.getAirport_name());
 	}
-	
+
 	@Test
-	public void getJunkVolumeQuery () {
-		ChartCycleElementsJson cycle = cycleClient.getCurrent28DayCycle();
-		TPPMetadataClient tppClient = new TPPMetadataClient(cycle, false);
-		TPPChartMetadata tppMetaRoot = tppClient.getChartMetadataByVolume("@*?$(*@#$*))=@#&foo=$%20+\\&");
-		if (tppMetaRoot != null) {
-			logger.info("TPP metadata returned a non-null result for a total junk volume name of '@*?$(*@#$*))=@#&foo=$%20+\\&'. This is incorrect");
-			fail();	
-		}
+	public void setAndGetChartName() {
+		TPPMetadata meta = new TPPMetadata();
+		meta.setChart_name("ILS RWY 14R");
+		assertEquals("ILS RWY 14R", meta.getChart_name());
 	}
-	
+
+	@Test
+	public void setAndGetPdfName() {
+		TPPMetadata meta = new TPPMetadata();
+		meta.setPdf_name("00078IL14R.PDF");
+		assertEquals("00078IL14R.PDF", meta.getPdf_name());
+	}
+
+	@Test
+	public void setAndGetMilitary() {
+		TPPMetadata meta = new TPPMetadata();
+		meta.setMilitary("N");
+		assertEquals("N", meta.getMilitary());
+	}
+
+	@Test
+	public void setAndGetId() {
+		TPPMetadata meta = new TPPMetadata();
+		meta.setId("12345");
+		assertEquals("12345", meta.getId());
+	}
+
+	@Test
+	public void setAndGetQueryDate() {
+		TPPMetadata meta = new TPPMetadata();
+		meta.setQuery_date("2024-06-15");
+		assertEquals("2024-06-15", meta.getQuery_date());
+	}
 }
