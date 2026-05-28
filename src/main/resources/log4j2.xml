@@ -28,7 +28,12 @@
 			<Policies>
 				<TimeBasedTriggeringPolicy interval="1" modulate="true"/>
 			</Policies>
-			<DefaultRolloverStrategy max="365"/>
+			<DefaultRolloverStrategy>
+				<Delete basePath="logs" maxDepth="1">
+					<IfFileName glob="apra-audit-*.log.gz" />
+					<IfLastModified age="365d" />
+				</Delete>
+			</DefaultRolloverStrategy>
 		</RollingFile>
 	</Appenders>
 	<Loggers>

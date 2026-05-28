@@ -8,6 +8,8 @@
  */
 package gov.faa.ait.apra.security;
 
+import java.security.Security;
+
 import javax.net.ssl.SSLContext;
 
 import org.slf4j.Logger;
@@ -31,7 +33,7 @@ public final class TLSConfig {
     public static void enforceMinimumTLS() {
         System.setProperty("https.protocols", "TLSv1.2,TLSv1.3");
         System.setProperty("jdk.tls.client.protocols", "TLSv1.2,TLSv1.3");
-        System.setProperty("jdk.tls.disabledAlgorithms",
+        Security.setProperty("jdk.tls.disabledAlgorithms",
             "SSLv3, TLSv1, TLSv1.1, RC4, DES, MD5withRSA, DH keySize < 1024, "
             + "EC keySize < 224, 3DES_EDE_CBC, anon, NULL");
 
