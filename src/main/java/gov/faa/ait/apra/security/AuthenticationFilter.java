@@ -10,7 +10,6 @@ package gov.faa.ait.apra.security;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -25,6 +24,8 @@ import org.slf4j.LoggerFactory;
  * STIG V-220629 (NIST IA-2, IA-5): Authentication filter for management endpoints.
  * Protects administrative endpoints (/management/*) with API key authentication.
  * Public data endpoints remain unauthenticated per the API's design.
+ * Health endpoint is excluded from authentication for load balancer probes.
+ * Fail-closed: management endpoints are denied if no API key is configured.
  */
 @Provider
 @PreMatching
@@ -32,8 +33,8 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthenticationFilter.class);
     private static final String MANAGEMENT_PATH = "management";
+    private static final String HEALTH_PATH = "management/health";
     private static final String API_KEY_HEADER = "X-API-Key";
-    private static final String AUTH_HEADER = "Authorization";
 
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
@@ -43,34 +44,47 @@ public class AuthenticationFilter implements ContainerRequestFilter {
             return;
         }
 
+        // Health endpoint remains unauthenticated for load balancer probes
+        if (path.equals(HEALTH_PATH) || path.startsWith(HEALTH_PATH + "/")) {
+            return;
+        }
+
         String clientIp = getClientIp(requestContext);
         String apiKey = requestContext.getHeaderString(API_KEY_HEADER);
         String configuredKey = getConfiguredApiKey();
 
-        if (configuredKey != null && !configuredKey.isEmpty()) {
-            if (apiKey == null || apiKey.isEmpty()) {
-                AuditLogger.getInstance().logAuthFailure(clientIp, "missing_api_key");
-                logger.warn("Management endpoint access denied: missing API key from {}", clientIp);
-                requestContext.abortWith(
-                    Response.status(Response.Status.UNAUTHORIZED)
-                        .entity("{\"status\":{\"code\":401,\"message\":\"Authentication required\"}}")
-                        .build());
-                return;
-            }
-
-            if (!constantTimeEquals(apiKey, configuredKey)) {
-                AuditLogger.getInstance().logAuthFailure(clientIp, "invalid_api_key");
-                logger.warn("Management endpoint access denied: invalid API key from {}", clientIp);
-                requestContext.abortWith(
-                    Response.status(Response.Status.FORBIDDEN)
-                        .entity("{\"status\":{\"code\":403,\"message\":\"Access denied\"}}")
-                        .build());
-                return;
-            }
-
-            AuditLogger.getInstance().logAuthSuccess("admin", clientIp);
+        // Fail-closed: if no API key is configured, deny all management access
+        if (configuredKey == null || configuredKey.isEmpty()) {
+            AuditLogger.getInstance().logAuthFailure(clientIp, "api_key_not_configured");
+            logger.error("Management endpoint access denied: APRA_MANAGEMENT_API_KEY not configured");
+            requestContext.abortWith(
+                Response.status(Response.Status.FORBIDDEN)
+                    .entity("{\"status\":{\"code\":403,\"message\":\"Management endpoints not configured\"}}")
+                    .build());
+            return;
         }
 
+        if (apiKey == null || apiKey.isEmpty()) {
+            AuditLogger.getInstance().logAuthFailure(clientIp, "missing_api_key");
+            logger.warn("Management endpoint access denied: missing API key from {}", clientIp);
+            requestContext.abortWith(
+                Response.status(Response.Status.UNAUTHORIZED)
+                    .entity("{\"status\":{\"code\":401,\"message\":\"Authentication required\"}}")
+                    .build());
+            return;
+        }
+
+        if (!constantTimeEquals(apiKey, configuredKey)) {
+            AuditLogger.getInstance().logAuthFailure(clientIp, "invalid_api_key");
+            logger.warn("Management endpoint access denied: invalid API key from {}", clientIp);
+            requestContext.abortWith(
+                Response.status(Response.Status.FORBIDDEN)
+                    .entity("{\"status\":{\"code\":403,\"message\":\"Access denied\"}}")
+                    .build());
+            return;
+        }
+
+        AuditLogger.getInstance().logAuthSuccess("admin", clientIp);
         AuditLogger.getInstance().logAdminAction(clientIp, "management_access:" + path);
     }
 
@@ -88,6 +102,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
     /**
      * Constant-time string comparison to prevent timing attacks (STIG V-220629).
+     * Iterates over the longer of the two inputs to avoid leaking length information.
      */
     private boolean constantTimeEquals(String a, String b) {
         if (a == null || b == null) {
@@ -95,12 +110,15 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         }
         byte[] aBytes = a.getBytes(StandardCharsets.UTF_8);
         byte[] bBytes = b.getBytes(StandardCharsets.UTF_8);
-        if (aBytes.length != bBytes.length) {
-            return false;
-        }
         int result = 0;
-        for (int i = 0; i < aBytes.length; i++) {
-            result |= aBytes[i] ^ bBytes[i];
+        int maxLen = Math.max(aBytes.length, bBytes.length);
+        for (int i = 0; i < maxLen; i++) {
+            byte aByte = i < aBytes.length ? aBytes[i] : 0;
+            byte bByte = i < bBytes.length ? bBytes[i] : 0;
+            result |= aByte ^ bByte;
+        }
+        if (aBytes.length != bBytes.length) {
+            result |= 1;
         }
         return result == 0;
     }

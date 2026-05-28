@@ -18,6 +18,7 @@ public final class InputSanitizer {
 
     private static final int DEFAULT_MAX_LENGTH = 255;
     private static final Pattern DANGEROUS_CHARS = Pattern.compile("[<>\"';&#|`$()\\\\]");
+    private static final Pattern GEONAME_DANGEROUS_CHARS = Pattern.compile("[<>\";&#|`$()\\\\]");
     private static final Pattern NULL_BYTES = Pattern.compile("\\x00");
 
     private InputSanitizer() { }
@@ -45,10 +46,18 @@ public final class InputSanitizer {
     }
 
     /**
-     * Sanitize a geoname parameter specifically.
+     * Sanitize a geoname parameter. Allows apostrophes since they are
+     * legitimate in geographic names (e.g., O'Hare) but strips all other
+     * dangerous characters.
      */
     public static String sanitizeGeoname(String geoname) {
-        return sanitize(geoname, 100);
+        if (geoname == null || geoname.isEmpty() || geoname.length() > 100) {
+            return null;
+        }
+        String sanitized = geoname.trim();
+        sanitized = NULL_BYTES.matcher(sanitized).replaceAll("");
+        sanitized = GEONAME_DANGEROUS_CHARS.matcher(sanitized).replaceAll("");
+        return sanitized.isEmpty() ? null : sanitized;
     }
 
     /**
