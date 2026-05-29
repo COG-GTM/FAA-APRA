@@ -21,6 +21,12 @@ import javax.ws.rs.core.Application;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import gov.faa.ait.apra.security.AuthenticationFilter;
+import gov.faa.ait.apra.security.AuditRequestFilter;
+import gov.faa.ait.apra.security.GlobalExceptionMapper;
+import gov.faa.ait.apra.security.InputValidationFilter;
+import gov.faa.ait.apra.security.SecurityHeadersFilter;
+import gov.faa.ait.apra.security.TLSConfig;
 import io.swagger.jaxrs.config.BeanConfig;
 
 /**
@@ -32,6 +38,8 @@ public class DownloadServiceApp extends Application {
 	private static final Logger logger = LoggerFactory.getLogger(DownloadServiceApp.class);
 
 	public DownloadServiceApp () {
+		TLSConfig.enforceMinimumTLS();
+
 		BeanConfig beanConfig = new BeanConfig();
 		beanConfig.setTitle("FAA Aeronautic Product Release API");
 		beanConfig.setVersion("1.1.0");
@@ -42,6 +50,8 @@ public class DownloadServiceApp extends Application {
 		beanConfig.setLicense("US Public Domain");
 		beanConfig.setLicenseUrl("http://www.usa.gov/publicdomain/label/1.0/");
 		beanConfig.setScan(true);
+
+		logger.info("APRA initialized with STIG security controls enabled");
 	}
 
 	@Override
@@ -56,7 +66,18 @@ public class DownloadServiceApp extends Application {
 		
 		//Manually adding MOXyJSONFeature
         s.add(org.glassfish.jersey.moxy.json.MoxyJsonFeature.class);
-        
+
+        // STIG V-220641: Security headers on all responses
+        s.add(SecurityHeadersFilter.class);
+        // STIG V-220631/V-220632: Input validation and sanitization
+        s.add(InputValidationFilter.class);
+        // STIG V-220635: Audit logging on all requests
+        s.add(AuditRequestFilter.class);
+        // STIG V-220629: Authentication for management endpoints
+        s.add(AuthenticationFilter.class);
+        // STIG V-220641: Generic error handling
+        s.add(GlobalExceptionMapper.class);
+
 		return s;
 	}
 }

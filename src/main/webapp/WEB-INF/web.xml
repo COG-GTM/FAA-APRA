@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- This web.xml file is not required when using Servlet 3.0 container,
      see implementation details http://jersey.java.net/nonav/documentation/latest/jax-rs.html -->
-<web-app version="2.5" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
+<web-app version="3.0" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
     <servlet>
         <servlet-name>gov.faa.ait.apra.api.DownloadServiceApp</servlet-name>
         
@@ -12,26 +12,13 @@
         </init-param>
         <init-param>
             <param-name>jersey.config.server.provider.packages</param-name>
-            <param-value>io.swagger.jaxrs.listing, gov.faa.ait.apra.api</param-value>
+            <param-value>io.swagger.jaxrs.listing, gov.faa.ait.apra.api, gov.faa.ait.apra.security</param-value>
         </init-param>
+        <!-- STIG V-220641: Debug mode disabled in production -->
         <init-param>
         	<param-name>com.sun.jersey.config.feature.Debug</param-name>
-        	<param-value>true</param-value>
+        	<param-value>false</param-value>
         </init-param>
-        <!-- 
-        <init-param>
-        	<param-name>gov.faa.proxy.host</param-name>
-        	<param-value>dmzproxy.esc.gov</param-value>
-        </init-param>
-        <init-param>
-        	<param-name>gov.faa.proxy.port</param-name>
-        	<param-value>8080</param-value>
-        </init-param>
-        <init-param>
-        	<param-name>jersey.config.server.tracing</param-name>
-        	<param-value>ALL</param-value>
-        </init-param>
-        -->
         <load-on-startup>1</load-on-startup>       
     </servlet>
     	
@@ -57,19 +44,45 @@
     </init-param>
     <load-on-startup>2</load-on-startup>
   </servlet>
-      
-	<security-constraint>
-		<display-name>APRA Security</display-name>
-		<web-resource-collection>
-			<web-resource-name>APRAInfo</web-resource-name>
-			<url-pattern>/foo/*</url-pattern>
-			<http-method>GET</http-method>
-		</web-resource-collection>
-		<auth-constraint>
-			<role-name>*</role-name>
-		</auth-constraint>
-		<user-data-constraint>
-			<transport-guarantee>NONE</transport-guarantee>
-		</user-data-constraint>
-	</security-constraint>
+
+    <!-- STIG V-220630: Secure session configuration -->
+    <session-config>
+        <session-timeout>15</session-timeout>
+        <cookie-config>
+            <secure>true</secure>
+            <http-only>true</http-only>
+        </cookie-config>
+        <tracking-mode>COOKIE</tracking-mode>
+    </session-config>
+
+    <!-- STIG V-220634: Require TLS for all resources -->
+    <security-constraint>
+        <display-name>APRA TLS Enforcement</display-name>
+        <web-resource-collection>
+            <web-resource-name>AllResources</web-resource-name>
+            <url-pattern>/*</url-pattern>
+        </web-resource-collection>
+        <user-data-constraint>
+            <transport-guarantee>CONFIDENTIAL</transport-guarantee>
+        </user-data-constraint>
+    </security-constraint>
+
+    <!-- STIG V-220629: Management endpoint auth is handled by the JAX-RS
+         AuthenticationFilter (fail-closed API key check). No container-level
+         auth-constraint is needed since there is no login-config. TLS is
+         already enforced by the /* security-constraint above. -->
+
+    <!-- STIG V-220641: Custom error pages to prevent information leakage -->
+    <error-page>
+        <error-code>404</error-code>
+        <location>/error/404</location>
+    </error-page>
+    <error-page>
+        <error-code>500</error-code>
+        <location>/error/500</location>
+    </error-page>
+    <error-page>
+        <exception-type>java.lang.Throwable</exception-type>
+        <location>/error/500</location>
+    </error-page>
 </web-app>

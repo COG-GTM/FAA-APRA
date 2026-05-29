@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import gov.faa.ait.apra.bootstrap.Config;
 import gov.faa.ait.apra.bootstrap.ErrorCodes;
+import gov.faa.ait.apra.security.InputSanitizer;
 import gov.faa.ait.apra.jaxb.EditionCodeList;
 import gov.faa.ait.apra.jaxb.FormatCodeList;
 import gov.faa.ait.apra.jaxb.ObjectFactory;
@@ -91,7 +92,7 @@ public abstract class BaseService {
 	 * @return
 	 */
     public ProductSet getIllegalArgumentError () {
-    	return getErrorResponse (400, "Illegal arguments provided to service. Format parameter must be one of tiff or pdf and edition parameter must be one of current or next");   	
+    	return getErrorResponse (400, ErrorCodes.ERROR_400);   	
     }
     
     /**
@@ -163,7 +164,12 @@ public abstract class BaseService {
      * @param geo
      */
     public void setGeoname (String geo) {
-    	this.geoname  = geo != null ? geo.toUpperCase(Locale.ENGLISH) : EMPTY_STRING;
+    	if (geo != null) {
+    		String sanitized = InputSanitizer.sanitizeGeoname(geo);
+    		this.geoname = sanitized != null ? sanitized.toUpperCase(Locale.ENGLISH) : EMPTY_STRING;
+    	} else {
+    		this.geoname = EMPTY_STRING;
+    	}
     }
     
     /**

@@ -13,34 +13,44 @@
  */
 package gov.faa.ait.apra.api.management;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import gov.faa.ait.apra.bootstrap.Config;
 import gov.faa.ait.apra.cycle.ChartCycleClient;
 import gov.faa.ait.apra.cycle.TACCycleClient;
+import gov.faa.ait.apra.security.AuditLogger;
+import gov.faa.ait.apra.security.ClientIpResolver;
 import gov.faa.ait.apra.util.URLCache;
 import gov.faa.ait.apra.cycle.VFRChartCycleClient;
 import gov.faa.ait.apra.cycle.WallPlanningChartCycleClient;
 
 @Path("/management")
 /**
- * This class provides management and control functions to assist with configuration reload, cache flush, start, stop, and health
+ * This class provides management and control functions to assist with configuration reload, cache flush, start, stop, and health.
+ * STIG V-220629: Management endpoints require authentication via AuthenticationFilter.
+ * STIG V-220635: All management actions are audit-logged.
  * @author FAA
  *
  */
 public class ManagementControl {
+	private static final Logger logger = LoggerFactory.getLogger(ManagementControl.class);
 	private static int mode = 1;
+
+	@Context
+	private HttpServletRequest servletRequest;
 
 	@Path("/health")
     @GET
     @Produces(MediaType.TEXT_PLAIN)
-	/**
-	 * Return the status of the application. This is the healthcheck URL for the application.
-	 * @return the string ServerOK or ServerDown depending on the state of the application
-	 */
 	public String getStatus () {
 		if (ManagementControl.mode == 0) 
 			return "ServerDown";
@@ -51,12 +61,10 @@ public class ManagementControl {
 	@Path("/stop") 
     @GET
     @Produces(MediaType.TEXT_PLAIN)
-	
-	/**
-	 * Stop the service. This will cause the service healthcheck to return "ServerDown" indicating to the load balancer that the service is offline
-	 * @return the String ServerDown
-	 */
-	public static String stop() {
+	public String stop(@Context HttpHeaders headers) {
+		AuditLogger.getInstance().logAdminAction(
+			getClientIp(headers), "server_stop");
+		logger.warn("Management: Server stop requested");
 		ManagementControl.mode = 0;
 		return "ServerDown";
 	}
@@ -64,11 +72,10 @@ public class ManagementControl {
 	@Path("/start") 
     @GET
     @Produces(MediaType.TEXT_PLAIN)
-	/**
-	 * Start or restart the service. This will cause the healthcheck to return "ServerOK" indicating to the load balancer that the service is online
-	 * @return the String ServerOK
-	 */
-	public static String start() {
+	public String start(@Context HttpHeaders headers) {
+		AuditLogger.getInstance().logAdminAction(
+			getClientIp(headers), "server_start");
+		logger.info("Management: Server start requested");
 		ManagementControl.mode = 1;
 		return "ServerOK";
 	}
@@ -76,11 +83,11 @@ public class ManagementControl {
 	@Path("/flush")
     @GET
     @Produces(MediaType.TEXT_PLAIN)
-	/**
-	 * This method flushes the cache for the ChartCycleClient, TAC cycle, VFR cycle, and Wall Planning cycle
-	 * @return the string "Cycle reload complete"
-	 */
-	public String refresh() {
+	public String refresh(@Context HttpHeaders headers) {
+		AuditLogger.getInstance().logAdminAction(
+			getClientIp(headers), "cache_flush");
+		logger.info("Management: Cache flush requested");
+
 		ChartCycleClient cycleClient = new ChartCycleClient();
 		cycleClient.forceUpdate();
 		TACCycleClient tacCycleClient = new TACCycleClient();
@@ -98,12 +105,15 @@ public class ManagementControl {
 	@Path("/config")
     @GET
     @Produces(MediaType.TEXT_PLAIN)
-	/**
-	 * This causes the application to reload its configuration from disk. This reloads the properties file without an app restart
-	 * @return the string Config Reload Complete
-	 */
-	public String reloadConfig() {
+	public String reloadConfig(@Context HttpHeaders headers) {
+		AuditLogger.getInstance().logAdminAction(
+			getClientIp(headers), "config_reload");
+		logger.info("Management: Config reload requested");
 		Config.loadConfig();		
 		return "Config Reload Complete";
+	}
+
+	private String getClientIp(HttpHeaders headers) {
+		return ClientIpResolver.resolve(headers, servletRequest);
 	}
 }
