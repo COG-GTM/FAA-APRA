@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 public final class TLSConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(TLSConfig.class);
+    private static volatile boolean configured = false;
 
     private TLSConfig() { }
 
@@ -30,7 +31,10 @@ public final class TLSConfig {
      * Configure JVM-wide TLS settings to enforce TLS 1.2+ only.
      * Should be called during application startup.
      */
-    public static void enforceMinimumTLS() {
+    public static synchronized void enforceMinimumTLS() {
+        if (configured) {
+            return;
+        }
         System.setProperty("https.protocols", "TLSv1.2,TLSv1.3");
         System.setProperty("jdk.tls.client.protocols", "TLSv1.2,TLSv1.3");
         String required = "SSLv3, TLSv1, TLSv1.1, RC4, DES, MD5withRSA, DH keySize < 1024, "
@@ -50,5 +54,6 @@ public final class TLSConfig {
         } catch (Exception e) {
             logger.error("Failed to enforce TLS 1.2+ configuration", e);
         }
+        configured = true;
     }
 }
