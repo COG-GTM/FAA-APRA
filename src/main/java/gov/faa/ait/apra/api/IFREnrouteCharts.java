@@ -15,10 +15,8 @@ package gov.faa.ait.apra.api;
 
 import gov.faa.ait.apra.bootstrap.Config;
 import gov.faa.ait.apra.bootstrap.ErrorCodes;
-import gov.faa.ait.apra.jaxb.AltitudeCategoryCodeList;
 import gov.faa.ait.apra.jaxb.EditionCodeList;
 import gov.faa.ait.apra.jaxb.ObjectFactory;
-import gov.faa.ait.apra.jaxb.ProductCodeList;
 import gov.faa.ait.apra.jaxb.ProductSet;
 import gov.faa.ait.apra.jaxb.ProductSet.Edition;
 import gov.faa.ait.apra.jaxb.ProductSet.Status;
@@ -342,37 +340,8 @@ public class IFREnrouteCharts extends BaseService {
 
 	@Override
 	public ProductSet buildResponse(ChartCycleElementsJson cycle) {
-		ObjectFactory of = new ObjectFactory();
-		ProductSet response = of.createProductSet();
-		Status status = of.createProductSetStatus();
-		status.setCode(200);
-		status.setMessage("OK");
-
-		ProductSet.Edition ed = of.createProductSetEdition();
-
-		Edition.Product product = new Edition.Product();
-
-		ed.setEditionDate(DATE_FMT.format(cycle.getChart_effective_date().toInstant().atZone(ZoneId.systemDefault()).toLocalDate()));
-		ed.setEditionNumber(Integer.valueOf(cycle.getChart_cycle_number()));
-		ed.setEditionName(EditionCodeList.valueOf(cycle
-				.getChart_cycle_period_code()));
-		ed.setGeoname(this.getGeoname());
-		if(HIGH.equalsIgnoreCase(this.getSeriesType())){
-			ed.setAltitude(AltitudeCategoryCodeList.HIGH);
-		}else{
-			ed.setAltitude(AltitudeCategoryCodeList.LOW);
-		}
-		product.setProductName(ProductCodeList.IFR_ENROUTE);
-
-		status.setCode(404);
-		status.setMessage(ErrorCodes.ERROR_404);
-		product.setUrl("");
-		ed.setProduct(product);
-		response.setStatus(status);
-		response.getEdition().add(ed);
-
-		return response;
-
+		throw new UnsupportedOperationException(
+			"IFREnrouteCharts uses getRelease()/getEdition() instead of buildResponse()");
 	}
 
 	/**
