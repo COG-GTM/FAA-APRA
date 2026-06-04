@@ -21,6 +21,7 @@ import javax.ws.rs.core.Application;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import gov.faa.ait.apra.api.management.ManagementControl;
 import io.swagger.jaxrs.config.BeanConfig;
 
 /**
@@ -49,8 +50,24 @@ public class DownloadServiceApp extends Application {
 		if (logger.isDebugEnabled())
 			logger.debug("Resource classes being retrieved from AirportStatus jersey application.");
 		Set<Class<?>> s = new HashSet <>();
-		s.add(gov.faa.ait.apra.api.CIFP.class);
-		s.add(gov.faa.ait.apra.api.ProductApiListener.class);
+		s.add(CIFP.class);
+		s.add(SectionalCharts.class);
+		s.add(IFREnrouteCharts.class);
+		s.add(TerminalProcedureCharts.class);
+		s.add(HelicopterCharts.class);
+		s.add(TerminalAreaCharts.class);
+		s.add(NASRSubscription.class);
+		s.add(DailyDigitalObstacleFile.class);
+		s.add(DigitalEnrouteCharts.class);
+		s.add(DigitalEnrouteSupplementCharts.class);
+		s.add(GulfOfMexicoEnrouteCharts.class);
+		s.add(OceanicRouteCharts.class);
+		s.add(SupplementCharts.class);
+		s.add(UsIfrVfrPlanning.class);
+		s.add(VFRCharts.class);
+		s.add(WallPlanningCharts.class);
+		s.add(ManagementControl.class);
+		s.add(ProductApiListener.class);
 		s.add(io.swagger.jaxrs.listing.ApiListingResource.class);
 		s.add(io.swagger.jaxrs.listing.SwaggerSerializers.class);
 		

@@ -20,9 +20,9 @@ import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.util.HashSet;
 import java.util.Locale;
-
-import org.apache.commons.lang3.text.WordUtils;
+import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -143,7 +143,7 @@ public abstract class BaseService {
     		this.setChangeFlag(true);
     	}
     	
-    	this.edition = edition == CHANGE_SET ? CURRENT : getEdition();
+    	this.edition = CHANGE_SET.equalsIgnoreCase(edition) ? CURRENT : getEdition();
     	
     	if (! verifyEdition() ) {
     		this.edition = EMPTY_STRING;
@@ -227,11 +227,11 @@ public abstract class BaseService {
 			}
 		}
 		catch (IllegalArgumentException eillegal) {
-			logger.error("HEAD heck failed for url: "+url.toExternalForm(), eillegal);
+			logger.error("HEAD check failed for url: "+url.toExternalForm(), eillegal);
 			ok = false;
 		}
 		catch (IOException eio) {
-			logger.error("HEAD heck failed for url: "+url.toExternalForm(), eio);
+			logger.error("HEAD check failed for url: "+url.toExternalForm(), eio);
 			ok = false;
 		}
 		
@@ -252,7 +252,32 @@ public abstract class BaseService {
 	 */
 	public String capitalizeGeoname () {
 		char[] separators = {'-', '_', ' '};
-		return WordUtils.capitalize(getGeoname().toLowerCase(Locale.ENGLISH), separators);
+		return capitalizeWords(getGeoname().toLowerCase(Locale.ENGLISH), separators);
+	}
+
+	private static String capitalizeWords(String str, char... delimiters) {
+		if (str == null || str.isEmpty()) {
+			return str;
+		}
+		Set<Character> delimSet = new HashSet<>();
+		if (delimiters == null || delimiters.length == 0) {
+			delimSet.add(' ');
+		} else {
+			for (char d : delimiters) {
+				delimSet.add(d);
+			}
+		}
+		char[] chars = str.toCharArray();
+		boolean capitalizeNext = true;
+		for (int i = 0; i < chars.length; i++) {
+			if (delimSet.contains(chars[i])) {
+				capitalizeNext = true;
+			} else if (capitalizeNext) {
+				chars[i] = Character.toTitleCase(chars[i]);
+				capitalizeNext = false;
+			}
+		}
+		return new String(chars);
 	}
 
 	/**

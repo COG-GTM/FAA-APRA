@@ -199,7 +199,7 @@ public class Config {
 		return Boolean.valueOf(flag);	
 	}
 	
-	public static boolean getSectioanlCheckFlag() {
+	public static boolean getSectionalCheckFlag() {
 		String flag = cfg.getProperty("gov.faa.ait.sectional.check.flag", SEC_CHECK_FLAG);
 		
 		if (flag == null) 
