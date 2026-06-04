@@ -39,6 +39,7 @@ import gov.faa.ait.apra.json.USStateReference;
  *
  */
 public class USStateReferenceData {
+	private static final Client HTTP_CLIENT = ClientBuilder.newClient();
 	private static final Logger logger  = LoggerFactory.getLogger(USStateReferenceData.class);
 	private static HashMap <String, String> stateByName = new HashMap <> ();
 	private static HashMap <String, String> stateByAbbreviation = new HashMap <> ();
@@ -58,9 +59,7 @@ public class USStateReferenceData {
 			StringBuilder url = new StringBuilder();
 			url = url.append(Config.getDenodoHost()).append(Config.getDenodoViewPath()).append("/state_reference?%24format=json");
 			
-			Client client = ClientBuilder.newClient();	
-			
-			WebTarget webTarget = client.target(url.toString());
+			WebTarget webTarget = HTTP_CLIENT.target(url.toString());
 			long now = System.currentTimeMillis();
 			String unbound = webTarget.request(MediaType.APPLICATION_XML_TYPE).get(String.class);
 			long duration = System.currentTimeMillis() - now;

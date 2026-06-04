@@ -38,6 +38,7 @@ import gov.faa.ait.apra.bootstrap.Config;
 
 
 public class VFRChartCycleClient {
+	private static final Client HTTP_CLIENT = ClientBuilder.newClient();
 	private static ChartCycleData cycle;
 	private static Date lastUpdate;
 	private Date today;
@@ -160,9 +161,7 @@ public class VFRChartCycleClient {
 
 		try {
 			logger.info("Calling denodo for vfr chart cycle at " + url.toString());
-			Client client = ClientBuilder.newClient();
-
-			WebTarget webTarget = client.target(url.toString());
+			WebTarget webTarget = HTTP_CLIENT.target(url.toString());
 			long now = System.currentTimeMillis();
 			unbound = webTarget.request(MediaType.APPLICATION_XML_TYPE).get(
 					String.class);

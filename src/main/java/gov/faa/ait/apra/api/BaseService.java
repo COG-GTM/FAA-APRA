@@ -19,7 +19,8 @@ import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
-import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
 import org.apache.commons.lang3.text.WordUtils;
@@ -59,6 +60,7 @@ public abstract class BaseService {
 	private String format = EMPTY_STRING;
 	private String edition = EMPTY_STRING;
 	private String geoname = EMPTY_STRING;
+	private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("MM/dd/yyyy");
 	private static final Logger logger = LoggerFactory.getLogger(BaseService.class);
 
 	/**
@@ -216,6 +218,8 @@ public abstract class BaseService {
 			 * This is the actual HTTP HEAD check to determine if the URL is valid
 			 * and exists on the FAA web server
 			 */
+			connection.setConnectTimeout(5000);
+			connection.setReadTimeout(5000);
 			connection.setRequestMethod("HEAD");
 			int responseCode = connection.getResponseCode();
 			if (responseCode == 200 || responseCode == 302) {
@@ -304,8 +308,7 @@ public abstract class BaseService {
 
     	ProductSet.Edition ed = of.createProductSetEdition();
 	   	
-    	SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy");
-    	ed.setEditionDate(formatter.format(cycle.getChart_effective_date()));
+    	ed.setEditionDate(DATE_FMT.format(cycle.getChart_effective_date().toInstant().atZone(ZoneId.systemDefault()).toLocalDate()));
     	ed.setEditionNumber(Integer.valueOf(cycle.getChart_cycle_number()));
     	ed.setEditionName(EditionCodeList.fromValue(cycle.getChart_cycle_period_code()));
     	ed.setFormat(FormatCodeList.fromValue(getFormat()));

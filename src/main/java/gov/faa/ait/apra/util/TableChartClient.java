@@ -29,7 +29,7 @@ import gov.faa.ait.apra.bootstrap.Config;
 import gov.faa.ait.apra.cycle.ChartCycleData;
 
 public class TableChartClient {
-	
+	private static final Client HTTP_CLIENT = ClientBuilder.newClient();
 	private static Logger logger = LoggerFactory.getLogger(TableChartClient.class);
 	private static ChartInfoTable sectionalTable;
 	private static Date lastUpdate;
@@ -78,9 +78,7 @@ public class TableChartClient {
 		TableChartClient.lastUpdate = new Date(System.currentTimeMillis());
 		
 		try {
-			Client client = ClientBuilder.newClient();	
-			
-			WebTarget webTarget = client.target(url.toString());
+			WebTarget webTarget = HTTP_CLIENT.target(url.toString());
 			
 			long now = System.currentTimeMillis();
 			unbound = webTarget.request(MediaType.APPLICATION_JSON_TYPE).get(String.class);

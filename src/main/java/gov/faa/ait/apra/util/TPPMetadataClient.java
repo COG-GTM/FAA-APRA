@@ -43,6 +43,7 @@ import gov.faa.ait.apra.json.TPPChartMetadata;
  *
  */
 public class TPPMetadataClient {
+	private static final Client HTTP_CLIENT = ClientBuilder.newClient();
 	private StringBuilder url; 
 	private String edition;
 	private static final Logger logger = LoggerFactory.getLogger(TPPMetadataClient.class);
@@ -145,8 +146,7 @@ public class TPPMetadataClient {
 		try {
 			logger.info("Calling denodo for TPP metadata at "+url.toString());
 			
-			Client client = ClientBuilder.newClient();	
-			WebTarget webTarget = client.target(this.url.toString());
+			WebTarget webTarget = HTTP_CLIENT.target(this.url.toString());
 
 			long now = System.currentTimeMillis();
 			unbound = webTarget.request(MediaType.APPLICATION_XML_TYPE).get(String.class);
