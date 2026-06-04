@@ -40,6 +40,7 @@ import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
  */
 
 public class HelicopterChartCycleClient {
+	private static final Client HTTP_CLIENT = ClientBuilder.newClient();
 	private static final Logger logger = LoggerFactory
 			.getLogger(HelicopterChartCycleClient.class);
 	private ChartCycleData cycle = null;
@@ -138,9 +139,7 @@ public class HelicopterChartCycleClient {
 		String unbound = "";
 
 		try {
-			Client client = ClientBuilder.newClient();
-
-			WebTarget webTarget = client.target(url.toString());
+			WebTarget webTarget = HTTP_CLIENT.target(url.toString());
 			long now = System.currentTimeMillis();
 			unbound = webTarget.request(MediaType.APPLICATION_XML_TYPE).get(
 					String.class);

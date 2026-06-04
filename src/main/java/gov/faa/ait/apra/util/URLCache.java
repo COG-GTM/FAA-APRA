@@ -13,10 +13,12 @@
  */
 package gov.faa.ait.apra.util;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.GregorianCalendar;
-import java.util.HashSet;
+import java.util.Set;
 import java.util.TimeZone;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,8 +26,8 @@ import org.slf4j.LoggerFactory;
 public class URLCache {
 	private static final Logger logger = LoggerFactory.getLogger(URLCache.class);
 	private static URLCache instance;
-	private static HashSet <String> cache;
-	private static Date lastFlush;
+	private static final Set<String> cache = ConcurrentHashMap.newKeySet();
+	private static final AtomicReference<Instant> lastFlush = new AtomicReference<>(Instant.now());
 	
 	private URLCache () {
 		flush();
@@ -34,7 +36,7 @@ public class URLCache {
 	public static synchronized URLCache getInstance() {
 		if(instance == null) {
 			instance = new URLCache();
-			URLCache.lastFlush = new Date (System.currentTimeMillis());
+			URLCache.lastFlush.set(Instant.now());
 		}
 		
 		if (instance.isUpdateRequired()) {
@@ -48,21 +50,13 @@ public class URLCache {
 	}
 	
 	public static void addUrl (String url) {
-		if (URLCache.cache ==  null) {
-			URLCache.cache = new HashSet<>();
-		}
-		
 		cache.add(url);
 	}
 	
-	public static synchronized void flush () {		
+	public static void flush () {		
 		logger.info("URL cache is being flushed.");
-		if (URLCache.cache == null) {
-			URLCache.cache = new HashSet<>();
-		}
-		
 		cache.clear();
-		URLCache.lastFlush = new Date (System.currentTimeMillis());
+		URLCache.lastFlush.set(Instant.now());
 	}
 	
 	private boolean isUpdateRequired () {
@@ -72,7 +66,7 @@ public class URLCache {
 		GregorianCalendar cycle = new GregorianCalendar(TimeZone.getDefault());
 		GregorianCalendar lastRefresh = new GregorianCalendar(TimeZone.getDefault());
 		
-		lastRefresh.setTime(URLCache.lastFlush);
+		lastRefresh.setTime(java.util.Date.from(URLCache.lastFlush.get()));
 		cycle.setTime(cdu.getCurrentCycle());
 		
 		if (cycle.after(lastRefresh)) {

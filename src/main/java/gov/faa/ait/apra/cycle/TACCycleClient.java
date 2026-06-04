@@ -86,9 +86,7 @@ public class TACCycleClient extends DenodoClient {
 		
 		try {
 			logger.info("Updating the TAC chart cycle cache.");
-			Client client = ClientBuilder.newClient();	
-			
-			WebTarget webTarget = client.target(url);
+			WebTarget webTarget = HTTP_CLIENT.target(url);
 			long now = System.currentTimeMillis();
 			unbound = webTarget.request(MediaType.APPLICATION_XML_TYPE).get(String.class);
 			long duration = System.currentTimeMillis() - now;

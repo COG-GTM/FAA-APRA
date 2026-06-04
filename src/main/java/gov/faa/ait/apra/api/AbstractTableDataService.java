@@ -13,7 +13,8 @@
  */
 package gov.faa.ait.apra.api;
 
-import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
 import org.slf4j.Logger;
@@ -40,6 +41,7 @@ import gov.faa.ait.apra.util.TableChartClient;
  *
  */
 public abstract class AbstractTableDataService extends BaseService {
+	private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("MM/dd/yyyy");
 	private static final int NOT_FOUND = 404;
 	private static final int OK = 200;
 	private static final Logger LOGGER = 
@@ -227,13 +229,12 @@ public abstract class AbstractTableDataService extends BaseService {
 		gov.faa.ait.apra.jaxb.ObjectFactory of = 
 				new gov.faa.ait.apra.jaxb.ObjectFactory();
 		
-		SimpleDateFormat sdfUSA = new SimpleDateFormat("MM/dd/yyyy");
 		Edition ed = of.createProductSetEdition();		
 		ed.setGeoname(element.getChart_city_name());
 		
 		if(element.getChart_effective_date()!=null) {
-			ed.setEditionDate(sdfUSA.format(
-				element.getChart_effective_date()));
+			ed.setEditionDate(DATE_FMT.format(
+				element.getChart_effective_date().toInstant().atZone(ZoneId.systemDefault()).toLocalDate()));
 		}
 		
 		ed.setEditionName(EditionCodeList.fromValue(

@@ -99,9 +99,7 @@ public class WallPlanningChartCycleClient extends DenodoClient {
 		String unbound = "";
 
 		try {
-			Client client = ClientBuilder.newClient();
-
-			WebTarget webTarget = client.target(url.toString());
+			WebTarget webTarget = HTTP_CLIENT.target(url.toString());
 			long now = System.currentTimeMillis();
 			unbound = webTarget.request(MediaType.APPLICATION_XML_TYPE).get(
 					String.class);
