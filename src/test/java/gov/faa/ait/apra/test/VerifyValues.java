@@ -60,7 +60,7 @@ public class VerifyValues {
 			}
 		}
 		catch (IOException eio) {
-			logger.error("HEAD heck failed!", eio);
+			logger.error("HEAD check failed!", eio);
 			logger.error(eio.getMessage());
 			ok = false;
 		}
