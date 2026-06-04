@@ -22,6 +22,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -35,6 +36,7 @@ import gov.faa.ait.apra.cycle.ChartCycleClient;
 import gov.faa.ait.apra.cycle.ChartCycleData;
 
 @RunWith(Parameterized.class)
+@Ignore("Requires live Denodo connection") // TODO: replace with mocked integration test
 public class CIFPTest {
 	private Date releaseDate = null;
 	

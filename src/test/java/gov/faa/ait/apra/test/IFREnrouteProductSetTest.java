@@ -23,6 +23,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -37,6 +38,7 @@ import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
 import gov.faa.ait.apra.cycle.ChartCycleData;
 
 @RunWith(Parameterized.class)
+@Ignore("Requires live Denodo connection") // TODO: replace with mocked integration test
 public class IFREnrouteProductSetTest {
 	
 	private TestParameter testParameterSet;

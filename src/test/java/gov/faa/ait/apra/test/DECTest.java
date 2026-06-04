@@ -19,6 +19,7 @@ import static org.junit.Assert.fail;
 
 import javax.ws.rs.core.Response;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +28,7 @@ import gov.faa.ait.apra.api.DigitalEnrouteCharts;
 import gov.faa.ait.apra.cycle.ChartCycleClient;
 import gov.faa.ait.apra.jaxb.ProductSet;
 
+@Ignore("Requires live Denodo connection") // TODO: replace with mocked integration test
 public class DECTest {
 	private DigitalEnrouteCharts dec;
 	private static final Logger logger = LoggerFactory.getLogger(DECTest.class);
