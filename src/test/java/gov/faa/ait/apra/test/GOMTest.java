@@ -15,6 +15,7 @@ package gov.faa.ait.apra.test;
 
 import static org.junit.Assert.assertEquals;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +24,7 @@ import gov.faa.ait.apra.api.GulfOfMexicoEnrouteCharts;
 import gov.faa.ait.apra.jaxb.ProductSet;
 import gov.faa.ait.apra.cycle.VFRChartCycleClient;
 
+@Ignore("Requires live Denodo connection") // TODO: replace with mocked integration test
 public class GOMTest {
 	private final static Logger logger = LoggerFactory.getLogger(GOMTest.class);
 	

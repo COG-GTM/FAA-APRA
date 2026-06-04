@@ -16,6 +16,7 @@ package gov.faa.ait.apra.test;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +26,7 @@ import gov.faa.ait.apra.cycle.ChartCycleClient;
 import gov.faa.ait.apra.cycle.ChartCycleElementsJson;
 import gov.faa.ait.apra.util.TPPMetadataClient;
 
+@Ignore("Requires live Denodo connection") // TODO: replace with mocked integration test
 public class TPPMetadataTest {
 	private ChartCycleClient cycleClient;
 	private static final Logger logger = LoggerFactory.getLogger(TPPMetadataTest.class);

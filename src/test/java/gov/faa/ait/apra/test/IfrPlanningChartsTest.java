@@ -17,12 +17,14 @@ import static org.junit.Assert.*;
 
 import java.util.Calendar;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import gov.faa.ait.apra.api.UsIfrVfrPlanning;
 import gov.faa.ait.apra.jaxb.ProductSet;
 import gov.faa.ait.apra.util.TableChartClient;
 
+@Ignore("Requires live Denodo connection") // TODO: replace with mocked integration test
 public class IfrPlanningChartsTest {
 
 	@Test
